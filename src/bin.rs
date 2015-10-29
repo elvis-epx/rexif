@@ -18,7 +18,7 @@ fn main()
 				println!("{} {} {}", exif.file, exif.size, exif.mime);
 			},
 			Err(e) => {
-				writeln!(std::io::stderr(), "Error in {}: {}", &arg, Error::description(&e));
+				writeln!(std::io::stderr(), "Error in {}: {} {}", &arg, Error::description(&e), e.extra);
 			},
 	 	}
 	}
