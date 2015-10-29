@@ -1,0 +1,12 @@
+[package]
+name = "rexif"
+version = "0.1.0"
+authors = ["epx"]
+
+[lib]
+name = "rexif"
+path = "src/lib.rs"
+
+[[bin]]
+name = "main"
+path = "src/bin.rs"
