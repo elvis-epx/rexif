@@ -18,6 +18,7 @@ pub enum ExifErrorKind {
 	FileSeekError,
 	FileReadError,
 	FileTypeUnknown,
+	JpegWithoutTiff,
 }
 
 pub struct ExifError {
@@ -32,6 +33,7 @@ impl ExifError {
 			ExifErrorKind::FileSeekError => "File could not be seeked",
 			ExifErrorKind::FileReadError => "File could not be read",
 			ExifErrorKind::FileTypeUnknown => "File type unknown",
+			ExifErrorKind::JpegWithoutTiff => "JPEG without embedded TIFF that contains EXIF",
 		};
 		return msg;
 	}
@@ -84,19 +86,103 @@ pub fn detect_type(contents: &Vec<u8>) -> &str
 	return "";
 }
 
+pub fn find_embedded_tiff(contents: &Vec<u8>) -> (usize, usize)
+{
+	let mut offset = 2 as usize;
+	let mut size = 0 as usize;
+	loop {
+		if contents.len() < (offset + 4) {
+			println!("JPEG truncated in marker header");
+			offset = 0;
+			size = 0;
+			break;
+		}
+
+		let marker: u16 = (contents[offset] as u16) * 256 + (contents[offset + 1] as u16);
+
+		if (marker < 0xff00) {
+			println!("Invalid marker {}", marker);
+			offset = 0;
+			size = 0;
+			break;
+		}
+
+		offset += 2;
+		size = (contents[offset] as usize) * 256 + (contents[offset + 1] as usize);
+
+		if size < 2 {
+			println!("JPEG marker size must be at least 2 (because of the size word)");
+			offset = 0;
+			size = 0;
+			break;
+		}
+		if contents.len() < (offset + size) {
+			println!("JPEG truncated in marker body");
+			offset = 0;
+			size = 0;
+			break;
+		}
+
+		if marker == 0xffe1 {
+			println!("Found Tiff marker");
+			// Discard the size word
+			offset += 2;
+			size -= 2;
+			break;
+		}
+		if marker == 0xffda {
+			// last marker
+			println!("Last mark found and no EXIF");
+			offset = 0;
+			size = 0;
+			break;
+		}
+
+		println!("Jumping marker {}", marker);
+		offset += size;
+	}
+
+	return (offset, size);
+}
+
+pub fn parse_tiff(contents: &Vec<u8>, offset: usize, size: usize) -> ExifResult
+{
+	return Ok(ExifData{file: "".to_string(), size: 0, mime: "".to_string()});
+}
+
 pub fn parse_buffer(fname: &str, contents: &Vec<u8>) -> ExifResult
 {
 	let mime = detect_type(&contents);
 
 	if mime == "" {
-		return Err(ExifError{kind: ExifErrorKind::FileTypeUnknown,
+		return Err(ExifError{
+				kind: ExifErrorKind::FileTypeUnknown,
 				extra: "".to_string()});
 	}
 
-	return Ok(ExifData{
-		file: fname.to_string(),
-		size: contents.len(),
-		mime: mime.to_string()});
+	let mut offset = 0 as usize;
+	let mut size = contents.len() as usize;
+
+	if mime == "image/jpeg" {
+		let (offset, size) = find_embedded_tiff(&contents);
+		if offset == 0 {
+			return Err(ExifError{
+				kind: ExifErrorKind::JpegWithoutTiff,
+				extra: "".to_string()});
+		}
+	}
+	match parse_tiff(&contents, offset, size) {
+		Ok(d) => {
+				/* FIXME
+				d.size = contents.len();
+				d.file = fname.to_string();
+				d.mime = mime.to_string();
+				*/
+				Ok(d)
+			},
+		Err(e) => Err(e)
+	}
+
 }
 
 pub fn read_file(fname: &str, f: &mut File) -> ExifResult
