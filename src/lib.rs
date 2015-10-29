@@ -6,6 +6,7 @@ use std::fmt;
 use std::fmt::Debug;
 use std::fmt::Display;
 use std::fmt::Formatter;
+use std::cell::RefCell;
 
 pub struct ExifData {
 	pub file: String,
@@ -57,7 +58,7 @@ impl Display for ExifError {
 	}
 }
 
-pub type ExifResult = Result<ExifData, ExifError>;
+pub type ExifResult = Result<RefCell<ExifData>, ExifError>;
 
 pub fn detect_type(contents: &Vec<u8>) -> &str
 {
@@ -101,7 +102,7 @@ pub fn find_embedded_tiff(contents: &Vec<u8>) -> (usize, usize)
 		let marker: u16 = (contents[offset] as u16) * 256 + (contents[offset + 1] as u16);
 
 		if (marker < 0xff00) {
-			println!("Invalid marker {}", marker);
+			println!("Invalid marker {:x}", marker);
 			offset = 0;
 			size = 0;
 			break;
@@ -138,7 +139,7 @@ pub fn find_embedded_tiff(contents: &Vec<u8>) -> (usize, usize)
 			break;
 		}
 
-		println!("Jumping marker {}", marker);
+		println!("Jumping marker {:x}", marker);
 		offset += size;
 	}
 
@@ -147,7 +148,7 @@ pub fn find_embedded_tiff(contents: &Vec<u8>) -> (usize, usize)
 
 pub fn parse_tiff(contents: &Vec<u8>, offset: usize, size: usize) -> ExifResult
 {
-	return Ok(ExifData{file: "".to_string(), size: 0, mime: "".to_string()});
+	return Ok(RefCell::new(ExifData{file: "".to_string(), size: 0, mime: "".to_string()}));
 }
 
 pub fn parse_buffer(fname: &str, contents: &Vec<u8>) -> ExifResult
@@ -173,11 +174,9 @@ pub fn parse_buffer(fname: &str, contents: &Vec<u8>) -> ExifResult
 	}
 	match parse_tiff(&contents, offset, size) {
 		Ok(d) => {
-				/* FIXME
-				d.size = contents.len();
-				d.file = fname.to_string();
-				d.mime = mime.to_string();
-				*/
+				d.borrow_mut().size = contents.len();
+				d.borrow_mut().file = fname.to_string();
+				d.borrow_mut().mime = mime.to_string();
 				Ok(d)
 			},
 		Err(e) => Err(e)
