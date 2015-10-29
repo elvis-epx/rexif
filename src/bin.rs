@@ -14,10 +14,10 @@ fn main()
 	for arg in &args {
 		match rexif::parse_file(&arg) {
 			Ok(exif) => {
-				println!("{} {}", exif.size, exif.file);
+				println!("{} {} {}", exif.file, exif.size, exif.mime);
 			},
 			Err(e) => {
-				writeln!(std::io::stderr(), "{}: {}", &arg, Error::description(&e));
+				writeln!(std::io::stderr(), "Error in {}: {}", &arg, Error::description(&e));
 			},
 	 	}
 	}
