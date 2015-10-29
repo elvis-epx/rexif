@@ -19,7 +19,7 @@ pub enum ExifErrorKind {
 	FileSeekError,
 	FileReadError,
 	FileTypeUnknown,
-	JpegWithoutTiff,
+	JpegWithoutExif,
 }
 
 pub struct ExifError {
@@ -34,7 +34,7 @@ impl ExifError {
 			ExifErrorKind::FileSeekError => "File could not be seeked",
 			ExifErrorKind::FileReadError => "File could not be read",
 			ExifErrorKind::FileTypeUnknown => "File type unknown",
-			ExifErrorKind::JpegWithoutTiff => "JPEG without embedded TIFF that contains EXIF",
+			ExifErrorKind::JpegWithoutExif => "JPEG without EXIF section",
 		};
 		return msg;
 	}
@@ -87,24 +87,24 @@ pub fn detect_type(contents: &Vec<u8>) -> &str
 	return "";
 }
 
-pub fn find_embedded_tiff(contents: &Vec<u8>) -> (usize, usize)
+pub fn find_embedded_tiff(contents: &Vec<u8>) -> (usize, usize, String)
 {
 	let mut offset = 2 as usize;
 	let mut size = 0 as usize;
+	let mut err = "".to_string();
+
 	loop {
 		if contents.len() < (offset + 4) {
-			println!("JPEG truncated in marker header");
+			err = "JPEG truncated in marker header".to_string();
 			offset = 0;
-			size = 0;
 			break;
 		}
 
 		let marker: u16 = (contents[offset] as u16) * 256 + (contents[offset + 1] as u16);
 
-		if (marker < 0xff00) {
-			println!("Invalid marker {:x}", marker);
+		if marker < 0xff00 {
+			err = format!("Invalid marker {:x}", marker);
 			offset = 0;
-			size = 0;
 			break;
 		}
 
@@ -112,30 +112,44 @@ pub fn find_embedded_tiff(contents: &Vec<u8>) -> (usize, usize)
 		size = (contents[offset] as usize) * 256 + (contents[offset + 1] as usize);
 
 		if size < 2 {
-			println!("JPEG marker size must be at least 2 (because of the size word)");
+			err = "JPEG marker size must be at least 2 (because of the size word)".to_string();
 			offset = 0;
-			size = 0;
 			break;
 		}
 		if contents.len() < (offset + size) {
-			println!("JPEG truncated in marker body");
+			err = "JPEG truncated in marker body".to_string();
 			offset = 0;
-			size = 0;
 			break;
 		}
 
 		if marker == 0xffe1 {
-			println!("Found Tiff marker");
 			// Discard the size word
 			offset += 2;
 			size -= 2;
+
+			if size < 6 {
+				err = "EXIF preamble truncated".to_string();
+				offset = 0;
+				break;
+			}
+
+			if contents[offset + 0] != ('E' as u8) &&
+					contents[offset + 1] != ('x' as u8) &&
+					contents[offset + 2] != ('i' as u8) &&
+					contents[offset + 3] != ('f' as u8) &&
+					contents[offset + 4] != 0 &&
+					contents[offset + 5] != 0 {
+				err = "EXIF preamble unrecognized".to_string();
+				offset = 0;
+				break;
+			}
+
 			break;
 		}
 		if marker == 0xffda {
 			// last marker
-			println!("Last mark found and no EXIF");
+			err = "Last mark found and no EXIF".to_string();
 			offset = 0;
-			size = 0;
 			break;
 		}
 
@@ -143,7 +157,7 @@ pub fn find_embedded_tiff(contents: &Vec<u8>) -> (usize, usize)
 		offset += size;
 	}
 
-	return (offset, size);
+	return (offset, size, err);
 }
 
 pub fn parse_tiff(contents: &Vec<u8>, offset: usize, size: usize) -> ExifResult
@@ -165,11 +179,11 @@ pub fn parse_buffer(fname: &str, contents: &Vec<u8>) -> ExifResult
 	let mut size = contents.len() as usize;
 
 	if mime == "image/jpeg" {
-		let (offset, size) = find_embedded_tiff(&contents);
+		let (offset, size, err) = find_embedded_tiff(&contents);
 		if offset == 0 {
 			return Err(ExifError{
-				kind: ExifErrorKind::JpegWithoutTiff,
-				extra: "".to_string()});
+				kind: ExifErrorKind::JpegWithoutExif,
+				extra: err.to_string()});
 		}
 	}
 	match parse_tiff(&contents, offset, size) {
