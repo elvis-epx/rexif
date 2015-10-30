@@ -117,12 +117,12 @@ impl IfdEntry {
 		self.length() <= 4
 	}
 
-	fn copy_data(&self, contents: &[u8]) -> bool
+	fn copy_data(&mut self, contents: &[u8]) -> bool
 	{
 		if self.in_ifd() {
 			// the 4 bytes from IFD have all data
 			self.data.clear();
-			self.data.push_all(&self.ifd_data[..]);
+			self.data.extend(&self.ifd_data[..]);
 			return true;
 		}
 
@@ -134,7 +134,7 @@ impl IfdEntry {
 
 		let ext_data = &contents[offset..offset + self.length()];
 		self.ext_data.clear();	
-		self.ext_data.push_all(ext_data);
+		self.ext_data.extend(ext_data);
 		return true;
 	}
 }
@@ -348,7 +348,7 @@ fn parse_exif_ifd_entry(le: bool, contents: &[u8], ioffset: usize) -> ExifResult
 			extra: "Truncated at dir listing".to_string()});
 	}
 
-	let (ifd, _) = parse_ifd(true, le, count, &contents[offset..offset + ifd_length]);
+	let (mut ifd, _) = parse_ifd(true, le, count, &contents[offset..offset + ifd_length]);
 	let exif_entries: Vec<ExifEntry> = Vec::new();
 
 	for entry in &mut ifd {
