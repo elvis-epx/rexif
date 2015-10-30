@@ -22,11 +22,28 @@ pub enum ExifErrorKind {
 	JpegWithoutExif,
 	TiffTruncated,
 	TiffBadPreamble,
+	IfdTruncated,
+	ExifIfdTruncated,
+	ExifIfdEntryNotFound,
 }
 
 pub struct ExifError {
 	pub kind: ExifErrorKind,
 	pub extra: String
+}
+
+pub struct IfdEntry {
+	pub tag: u16,
+	pub format: u16,
+	pub count: u32,
+	pub data: [u8; 4],
+	pub le: bool,
+}
+
+impl IfdEntry {
+	fn data_as_offset(&self) -> usize {
+		read_u32(self.le, &self.data[0..4]) as usize
+	}
 }
 
 impl ExifError {
@@ -37,8 +54,11 @@ impl ExifError {
 			ExifErrorKind::FileReadError => "File could not be read",
 			ExifErrorKind::FileTypeUnknown => "File type unknown",
 			ExifErrorKind::JpegWithoutExif => "JPEG without EXIF section",
-			ExifErrorKind::TiffTruncated => "TIFF (file or embedded) truncated at start",
-			ExifErrorKind::TiffBadPreamble => "TIFF (file or embedded) with bad preamble",
+			ExifErrorKind::TiffTruncated => "TIFF truncated at start",
+			ExifErrorKind::TiffBadPreamble => "TIFF with bad preamble",
+			ExifErrorKind::IfdTruncated => "TIFF IFD truncated",
+			ExifErrorKind::ExifIfdTruncated => "TIFF Exif IFD truncated",
+			ExifErrorKind::ExifIfdEntryNotFound => "TIFF Exif IFD not found",
 		};
 		return msg;
 	}
@@ -163,32 +183,139 @@ pub fn find_embedded_tiff(contents: &Vec<u8>) -> (usize, usize, String)
 	return (0, 0, err);
 }
 
-pub fn parse_tiff(contents: &Vec<u8>, offset: usize, size: usize) -> ExifResult
+fn read_u16(le: bool, raw: &[u8]) -> u16
+{
+	if le {
+		(raw[1] as u16) * 256 + raw[0] as u16
+	} else {
+		(raw[0] as u16) * 256 + raw[1] as u16
+	}
+}
+
+fn read_u32(le: bool, raw: &[u8]) -> u32
+{
+	if le {
+		((raw[3] as u32) << 24) + ((raw[2] as u32) << 16) +
+		((raw[1] as u32) << 8) + raw[0] as u32
+	} else {
+		((raw[0] as u32) << 24) + ((raw[1] as u32) << 16) +
+		((raw[2] as u32) << 8) + raw[3] as u32
+	}
+}
+
+fn parse_ifd(le: bool, count: u16, contents: &[u8]) -> (Vec<IfdEntry>, usize)
+{
+	let mut entries: Vec<IfdEntry> = Vec::new();
+
+	for i in 0..count {
+		// println!("Parsing IFD entry {}", i);
+		let mut offset = ((i as usize) * 12);
+		let tag = read_u16(le, &contents[offset..offset + 2]);
+		offset += 2;
+		let format = read_u16(le, &contents[offset..offset + 2]);
+		offset += 2;
+		let count = read_u32(le, &contents[offset..offset + 4]);
+		offset += 4;
+		let data = [contents[offset], contents[offset + 1],
+			contents[offset + 2], contents[offset + 3]];
+
+		let entry = IfdEntry{tag: tag, format: format, count: count, data: data, le: le};
+		entries.push(entry);
+	}
+
+	let next_ifd = read_u32(le, &contents[count as usize * 12..]) as usize;
+
+	return (entries, next_ifd);
+}
+
+fn parse_exif_ifd_entry(le: bool, contents: &[u8], offset: usize) -> ExifResult
+{
+	return Ok(RefCell::new(ExifData{file: "".to_string(), size: 0, mime: "".to_string()}));
+}
+
+fn parse_ifds(le: bool, first_offset: usize, contents: &[u8]) -> ExifResult
+{
+	let mut offset = first_offset;
+
+	// FIXME handle circular reference (when some IFD points to a former one)
+
+	while offset != 0 {
+		// println!("Offset is {}", offset);
+		if contents.len() < (offset + 2) {
+			return Err(ExifError{
+				kind: ExifErrorKind::IfdTruncated,
+				extra: "Truncated at dir entry count".to_string()});
+		}
+
+		let count = read_u16(le, &contents[offset..offset + 2]);
+		// println!("IFD entry count is {}", count);
+		let ifd_length = ((count as usize) * 12 + 4);
+		offset += 2;
+
+		if contents.len() < (offset + ifd_length) {
+			return Err(ExifError{
+				kind: ExifErrorKind::IfdTruncated,
+				extra: "Truncated at dir listing".to_string()});
+		}
+
+		let (ifd, next_ifd) = parse_ifd(le, count, &contents[offset..offset + ifd_length]);
+
+		for entry in &ifd {
+			// println!("Reading tag {:x}", entry.tag);
+			if entry.tag == 0x8769 {
+				let exif_offset = entry.data_as_offset();
+
+				if contents.len() < exif_offset {
+					return Err(ExifError{
+						kind: ExifErrorKind::ExifIfdTruncated,
+						extra: "Exif IFD goes past EOF".to_string()});
+				}
+
+				return parse_exif_ifd_entry(le, &contents, exif_offset);
+			}
+		}
+
+		offset = next_ifd;
+
+		if offset == 0 {
+			// End of IFD chain
+			break;
+		}
+	}
+
+	return Err(ExifError{
+			kind: ExifErrorKind::ExifIfdEntryNotFound,
+			extra: "".to_string()});
+}
+
+pub fn parse_tiff(contents: &[u8]) -> ExifResult
 {
 	let mut le = false;
 
-	if contents.len() < (offset + 8) {
+	if contents.len() < 8 {
 		return Err(ExifError{
 			kind: ExifErrorKind::TiffTruncated,
 			extra: "".to_string()});
-	} else if contents[offset + 0] == ('I' as u8) &&
-			contents[offset + 1] == ('I' as u8) &&
-			contents[offset + 2] == 42 && contents[3] == 0 {
+	} else if contents[0] == ('I' as u8) &&
+			contents[1] == ('I' as u8) &&
+			contents[2] == 42 && contents[3] == 0 {
 		/* TIFF little-endian */
 		le = true;
-	} else if contents[offset + 0] == ('M' as u8) && contents[offset + 1] == ('M' as u8) &&
-			contents[offset + 2] == 0 && contents[offset + 3] == 42 {
+	} else if contents[0] == ('M' as u8) && contents[1] == ('M' as u8) &&
+			contents[2] == 0 && contents[3] == 42 {
 		/* TIFF big-endian */
 	} else {
 		let err = format!("Preamble is {:x} {:x} {:x} {:x}",
-			contents[offset + 0], contents[offset + 1],
-			contents[offset + 2], contents[offset + 3]);
+			contents[0], contents[1],
+			contents[2], contents[3]);
 		return Err(ExifError{
 			kind: ExifErrorKind::TiffBadPreamble,
 			extra: err.to_string()});
 	}
 
-	return Ok(RefCell::new(ExifData{file: "".to_string(), size: 0, mime: "".to_string()}));
+	let offset = read_u32(le, &contents[4..8]) as usize;
+
+	return parse_ifds(le, offset, &contents);
 }
 
 pub fn parse_buffer(fname: &str, contents: &Vec<u8>) -> ExifResult
@@ -215,7 +342,7 @@ pub fn parse_buffer(fname: &str, contents: &Vec<u8>) -> ExifResult
 		size = esize;
 		// println!("Offset {} size {}", offset, size);
 	}
-	match parse_tiff(&contents, offset, size) {
+	match parse_tiff(&contents[offset .. offset + size]) {
 		Ok(d) => {
 				d.borrow_mut().size = contents.len();
 				d.borrow_mut().file = fname.to_string();
@@ -235,7 +362,7 @@ pub fn read_file(fname: &str, f: &mut File) -> ExifResult
 				extra: fname.to_string()}),
 	}
 
-	// FIXME: should read only the relevant parts of a file,
+	// TODO: should read only the relevant parts of a file,
 	// and pass a StringIO-like object instead of a Vec buffer
 
 	let mut contents: Vec<u8> = Vec::new();

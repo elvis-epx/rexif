@@ -11,7 +11,7 @@ fn main()
 		writeln!(std::io::stderr(), "Usage: {} image1 image2 ...", args[0]);
 		process::exit(2);
 	}
-	for arg in &args {
+	for arg in &args[1..] {
 		match rexif::parse_file(&arg) {
 			Ok(exif) => {
 				let exif = exif.into_inner();
