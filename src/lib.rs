@@ -12,7 +12,10 @@ pub struct ExifData {
 	pub file: String,
 	pub size: usize,
 	pub mime: String,
+	pub entries: Vec<ExifEntry>,
 }
+
+pub struct ExifEntry;
 
 pub enum ExifErrorKind {
 	FileOpenError,
@@ -32,11 +35,46 @@ pub struct ExifError {
 	pub extra: String
 }
 
+pub enum IfdFormat {
+	Invalid = 0,
+	U8 = 1,
+	Str = 2,
+	U16 = 3,
+	U32 = 4,
+	URational = 5,
+	I8 = 6,
+	Undefined = 7, // one byte
+	I16 = 8,
+	I32 = 9,
+	IRational = 10,
+	F32 = 11,
+	F64 = 12,
+}
+
+fn to_ifdformat(n: u16) -> IfdFormat
+{
+	match n {
+		1 => IfdFormat::U8,
+		2 => IfdFormat::Str,
+		3 => IfdFormat::U16,
+		4 => IfdFormat::U32,
+		5 => IfdFormat::URational,
+		6 => IfdFormat::I8,
+		7 => IfdFormat::Undefined,
+		8 => IfdFormat::I16,
+		9 => IfdFormat::I32,
+		10 => IfdFormat::IRational,
+		11 => IfdFormat::F32,
+		12 => IfdFormat::F64,
+		_ => IfdFormat::Invalid,
+	}
+}
+
 pub struct IfdEntry {
 	pub tag: u16,
-	pub format: u16,
+	pub format: IfdFormat,
 	pub count: u32,
-	pub data: [u8; 4],
+	pub data: Box<[u8]>,
 	pub le: bool,
 }
 
@@ -117,7 +155,7 @@ pub fn find_embedded_tiff(contents: &Vec<u8>) -> (usize, usize, String)
 	
 	{
 	let mut offset = 2 as usize;
-	let mut size = 0 as usize;
+	let mut size: usize;
 
 	while offset < contents.len() {
 		if contents.len() < (offset + 4) {
@@ -209,7 +247,7 @@ fn parse_ifd(subifd: bool, le: bool, count: u16, contents: &[u8]) -> (Vec<IfdEnt
 
 	for i in 0..count {
 		// println!("Parsing IFD entry {}", i);
-		let mut offset = ((i as usize) * 12);
+		let mut offset = (i as usize) * 12;
 		let tag = read_u16(le, &contents[offset..offset + 2]);
 		offset += 2;
 		let format = read_u16(le, &contents[offset..offset + 2]);
@@ -219,7 +257,8 @@ fn parse_ifd(subifd: bool, le: bool, count: u16, contents: &[u8]) -> (Vec<IfdEnt
 		let data = [contents[offset], contents[offset + 1],
 			contents[offset + 2], contents[offset + 3]];
 
-		let entry = IfdEntry{tag: tag, format: format, count: count, data: data, le: le};
+		let entry = IfdEntry{tag: tag, format: to_ifdformat(format), count: count,
+					data: Box::new(data), le: le};
 		entries.push(entry);
 	}
 
@@ -253,13 +292,18 @@ fn parse_exif_ifd_entry(le: bool, contents: &[u8], ioffset: usize) -> ExifResult
 			extra: "Truncated at dir listing".to_string()});
 	}
 
-	let (ifd, next_ifd) = parse_ifd(true, le, count, &contents[offset..offset + ifd_length]);
+	let (ifd, _) = parse_ifd(true, le, count, &contents[offset..offset + ifd_length]);
+	let exif_entries: Vec<ExifEntry> = Vec::new();
 
 	for entry in &ifd {
+		
 		println!("Reading EXIF tag {:x}", entry.tag);
 	}
 
-	return Ok(RefCell::new(ExifData{file: "".to_string(), size: 0, mime: "".to_string()}));
+	return Ok(RefCell::new(ExifData{file: "".to_string(),
+				size: 0,
+				mime: "".to_string(),
+				entries: exif_entries}));
 }
 
 fn parse_ifds(le: bool, first_offset: usize, contents: &[u8]) -> ExifResult
@@ -278,7 +322,7 @@ fn parse_ifds(le: bool, first_offset: usize, contents: &[u8]) -> ExifResult
 
 		let count = read_u16(le, &contents[offset..offset + 2]);
 		// println!("IFD entry count is {}", count);
-		let ifd_length = ((count as usize) * 12 + 4);
+		let ifd_length = (count as usize) * 12 + 4;
 		offset += 2;
 
 		if contents.len() < (offset + ifd_length) {
