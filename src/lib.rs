@@ -203,7 +203,7 @@ fn read_u32(le: bool, raw: &[u8]) -> u32
 	}
 }
 
-fn parse_ifd(le: bool, count: u16, contents: &[u8]) -> (Vec<IfdEntry>, usize)
+fn parse_ifd(subifd: bool, le: bool, count: u16, contents: &[u8]) -> (Vec<IfdEntry>, usize)
 {
 	let mut entries: Vec<IfdEntry> = Vec::new();
 
@@ -223,13 +223,42 @@ fn parse_ifd(le: bool, count: u16, contents: &[u8]) -> (Vec<IfdEntry>, usize)
 		entries.push(entry);
 	}
 
-	let next_ifd = read_u32(le, &contents[count as usize * 12..]) as usize;
+	let next_ifd = match subifd {
+		true => 0,
+		false => read_u32(le, &contents[count as usize * 12..]) as usize
+	};
 
 	return (entries, next_ifd);
 }
 
-fn parse_exif_ifd_entry(le: bool, contents: &[u8], offset: usize) -> ExifResult
+fn parse_exif_ifd_entry(le: bool, contents: &[u8], ioffset: usize) -> ExifResult
 {
+	let mut offset = ioffset;
+
+	// println!("Offset is {}", offset);
+	if contents.len() < (offset + 2) {
+		return Err(ExifError{
+			kind: ExifErrorKind::ExifIfdTruncated,
+			extra: "Truncated at dir entry count".to_string()});
+	}
+
+	let count = read_u16(le, &contents[offset..offset + 2]);
+	// println!("IFD entry count is {}", count);
+	let ifd_length = (count as usize) * 12;
+	offset += 2;
+
+	if contents.len() < (offset + ifd_length) {
+		return Err(ExifError{
+			kind: ExifErrorKind::ExifIfdTruncated,
+			extra: "Truncated at dir listing".to_string()});
+	}
+
+	let (ifd, next_ifd) = parse_ifd(true, le, count, &contents[offset..offset + ifd_length]);
+
+	for entry in &ifd {
+		println!("Reading EXIF tag {:x}", entry.tag);
+	}
+
 	return Ok(RefCell::new(ExifData{file: "".to_string(), size: 0, mime: "".to_string()}));
 }
 
@@ -258,7 +287,8 @@ fn parse_ifds(le: bool, first_offset: usize, contents: &[u8]) -> ExifResult
 				extra: "Truncated at dir listing".to_string()});
 		}
 
-		let (ifd, next_ifd) = parse_ifd(le, count, &contents[offset..offset + ifd_length]);
+		let (ifd, next_ifd) = parse_ifd(false, le, count,
+			&contents[offset..offset + ifd_length]);
 
 		for entry in &ifd {
 			// println!("Reading tag {:x}", entry.tag);
