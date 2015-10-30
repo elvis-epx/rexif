@@ -7,6 +7,7 @@ use std::fmt::Debug;
 use std::fmt::Display;
 use std::fmt::Formatter;
 use std::cell::RefCell;
+use std::cell::Cell;
 
 pub struct ExifData {
 	pub file: String,
@@ -14,8 +15,6 @@ pub struct ExifData {
 	pub mime: String,
 	pub entries: Vec<ExifEntry>,
 }
-
-pub struct ExifEntry;
 
 pub enum ExifErrorKind {
 	FileOpenError,
@@ -74,13 +73,69 @@ pub struct IfdEntry {
 	pub tag: u16,
 	pub format: IfdFormat,
 	pub count: u32,
-	pub data: Box<[u8]>,
+	pub data: Vec<u8>,
+	pub ifd_data: Vec<u8>,
+	pub ext_data: Vec<u8>,
 	pub le: bool,
+}
+
+pub struct ExifEntry {
+	ifd: IfdEntry,
 }
 
 impl IfdEntry {
 	fn data_as_offset(&self) -> usize {
-		read_u32(self.le, &self.data[0..4]) as usize
+		read_u32(self.le, &(self.ifd_data[0..4])) as usize
+	}
+
+	fn size(&self) -> u8
+	{
+		match self.format {
+			IfdFormat::U8 => 1,
+			IfdFormat::Str => 1,
+			IfdFormat::U16 => 2,
+			IfdFormat::U32 => 4,
+			IfdFormat::URational => 8,
+			IfdFormat::I8 => 1,
+			IfdFormat::Undefined => 1,
+			IfdFormat::I16 => 2,
+			IfdFormat::I32 => 4,
+			IfdFormat::IRational => 8,
+			IfdFormat::F32 => 4,
+			IfdFormat::F64 => 8,
+			IfdFormat::Invalid => 0,
+		}
+	}
+
+	fn length(&self) -> usize
+	{
+		(self.size() as usize) * (self.count as usize)
+	}
+
+	fn in_ifd(&self) -> bool
+	{
+		self.length() <= 4
+	}
+
+	fn copy_data(&self, contents: &[u8]) -> bool
+	{
+		if self.in_ifd() {
+			// the 4 bytes from IFD have all data
+			self.data.clear();
+			self.data.push_all(&self.ifd_data[..]);
+			return true;
+		}
+
+		let offset = self.data_as_offset();
+		if contents.len() < (offset + self.length()) {
+			println!("EXIF data block goes beyond EOF");
+			return false;
+		}
+
+		let ext_data = &contents[offset..offset + self.length()];
+		self.ext_data.clear();	
+		self.ext_data.push_all(ext_data);
+		return true;
 	}
 }
 
@@ -254,11 +309,12 @@ fn parse_ifd(subifd: bool, le: bool, count: u16, contents: &[u8]) -> (Vec<IfdEnt
 		offset += 2;
 		let count = read_u32(le, &contents[offset..offset + 4]);
 		offset += 4;
-		let data = [contents[offset], contents[offset + 1],
-			contents[offset + 2], contents[offset + 3]];
+		let data = &contents[offset..offset + 4];
+		let data = data.to_vec();
 
 		let entry = IfdEntry{tag: tag, format: to_ifdformat(format), count: count,
-					data: Box::new(data), le: le};
+					ifd_data: data, le: le,
+					ext_data: Vec::new(), data: Vec::new()};
 		entries.push(entry);
 	}
 
@@ -295,8 +351,8 @@ fn parse_exif_ifd_entry(le: bool, contents: &[u8], ioffset: usize) -> ExifResult
 	let (ifd, _) = parse_ifd(true, le, count, &contents[offset..offset + ifd_length]);
 	let exif_entries: Vec<ExifEntry> = Vec::new();
 
-	for entry in &ifd {
-		
+	for entry in &mut ifd {
+		entry.copy_data(&contents);
 		println!("Reading EXIF tag {:x}", entry.tag);
 	}
 
