@@ -9,6 +9,7 @@ use std::fmt::Formatter;
 use std::cell::RefCell;
 use std::cell::Cell;
 
+#[derive(Clone)]
 pub struct ExifData {
 	pub file: String,
 	pub size: usize,
@@ -16,6 +17,7 @@ pub struct ExifData {
 	pub entries: Vec<ExifEntry>,
 }
 
+#[derive(Copy, Clone)]
 pub enum ExifErrorKind {
 	FileOpenError,
 	FileSeekError,
@@ -29,20 +31,22 @@ pub enum ExifErrorKind {
 	ExifIfdEntryNotFound,
 }
 
+#[derive(Clone)]
 pub struct ExifError {
 	pub kind: ExifErrorKind,
 	pub extra: String
 }
 
+#[derive(Copy, Clone)]
 pub enum IfdFormat {
-	Invalid = 0,
+	Unknown = 0,
 	U8 = 1,
 	Str = 2,
 	U16 = 3,
 	U32 = 4,
 	URational = 5,
 	I8 = 6,
-	Undefined = 7, // one byte
+	Undefined = 7, // u8
 	I16 = 8,
 	I32 = 9,
 	IRational = 10,
@@ -65,10 +69,11 @@ fn to_ifdformat(n: u16) -> IfdFormat
 		10 => IfdFormat::IRational,
 		11 => IfdFormat::F32,
 		12 => IfdFormat::F64,
-		_ => IfdFormat::Invalid,
+		_ => IfdFormat::Unknown,
 	}
 }
 
+#[derive(Clone)]
 pub struct IfdEntry {
 	pub tag: u16,
 	pub format: IfdFormat,
@@ -79,7 +84,9 @@ pub struct IfdEntry {
 	pub le: bool,
 }
 
+#[derive(Copy, Clone)]
 pub enum ExifTag {
+	Unrecognized,
 	ImageDescription,
 	Make,
 	Model,
@@ -129,29 +136,32 @@ pub enum ExifTag {
 	SceneType,
 }
 
+#[derive(Clone)]
 pub struct ExifEntry {
 	ifd: IfdEntry,
 	tag: ExifTag,
+	format: IfdFormat,
+	value: TagValue,
+	unit: String,
 	tag_readable: String,
-	data_format: IfdFormat,
-	data_count: IfdFormat,
-	data_value: TagValue,
 	data_readable: String,
-	data_unit: String,
 }
 
+#[derive(Copy, Clone)]
 pub struct URational {
 	numerator: u32,
 	denominator: u32,
 	value: f64,
 }
 
+#[derive(Copy, Clone)]
 pub struct IRational {
 	numerator: i32,
 	denominator: i32,
 	value: f64,
 }
 
+#[derive(Clone)]
 pub enum TagValue {
 	U8(Vec<u8>),
 	Str(String),
@@ -165,7 +175,7 @@ pub enum TagValue {
 	IRational(Vec<IRational>),
 	F32(Vec<f32>),
 	F64(Vec<f64>),
-	Invalid(Vec<u8>),
+	Unknown(Vec<u8>),
 }
 
 impl IfdEntry {
@@ -188,7 +198,7 @@ impl IfdEntry {
 			IfdFormat::IRational => 8,
 			IfdFormat::F32 => 4,
 			IfdFormat::F64 => 8,
-			IfdFormat::Invalid => 0,
+			IfdFormat::Unknown => 0,
 		}
 	}
 
@@ -386,6 +396,25 @@ fn read_u32(le: bool, raw: &[u8]) -> u32
 	}
 }
 
+/* Parse of raw IFD entry into EXIF data, if it is of a known type */
+fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
+{
+	let mut e = ExifEntry{
+			ifd: f.clone(),
+			tag: ExifTag::Unrecognized,
+			tag_readable: "Unrecognized".to_string(),
+			format: IfdFormat::Unknown,
+			value: TagValue::Unknown(f.data.clone()),
+			unit: "Unknown".to_string(),
+			data_readable: "".to_string(),
+			};
+
+	// FIXME
+
+	return e;
+}
+
+
 /* Superficial parse of IFD that can't fail */
 fn parse_ifd(subifd: bool, le: bool, count: u16, contents: &[u8]) -> (Vec<IfdEntry>, usize)
 {
@@ -446,7 +475,7 @@ fn parse_exif_ifd(le: bool, contents: &[u8], ioffset: usize,
 	for entry in &mut ifd {
 		println!("Reading EXIF tag {:x}", entry.tag);
 		entry.copy_data(&contents);
-		let exif_entry = parse_exif_entry(entry);
+		let exif_entry = parse_exif_entry(&entry);
 		exif_entries.push(exif_entry);
 	}
 
