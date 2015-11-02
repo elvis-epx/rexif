@@ -79,8 +79,93 @@ pub struct IfdEntry {
 	pub le: bool,
 }
 
+pub enum ExifTag {
+	ImageDescription,
+	Make,
+	Model,
+	Orientation,
+	XResolution,
+	YResolution,
+	ResolutionUnit,
+	Software,
+	DateTime,
+	WhitePoint,
+	PrimaryChromaticities,
+	YCbCrCoefficients,
+	YCbCrPositioning,
+	ReferenceBlackWhite,
+	Copyright,
+	ExposureTime,
+	FNumber,
+	ExposureProgram,
+	ISOSpeedRatings,
+	ExifVersion,
+	DateTimeOriginal,
+	DateTimeDigitized,
+	ComponentConfiguration,
+	CompressedBitsPerPixel,
+	ShutterSpeedValue,
+	ApertureValue,
+	BrightnessValue,
+	ExposureBiasValue,
+	MaxApertureValue,
+	SubjectDistance,
+	MeteringMode,
+	LightSource,
+	Flash,
+	FocalLength,
+	MakerNote,
+	UserComment,
+	FlashPixVersion,
+	ColorSpace,
+	ExifImageWidth,
+	ExifImageHeight,
+	RelatedSoundFile,
+	FocalPlaneXResolution,
+	FocalPlaneYResolution,
+	FocalPlaneResolutionUnit,
+	SensingMethod,
+	FileSource,
+	SceneType,
+}
+
 pub struct ExifEntry {
 	ifd: IfdEntry,
+	tag: ExifTag,
+	tag_readable: String,
+	data_format: IfdFormat,
+	data_count: IfdFormat,
+	data_value: TagValue,
+	data_readable: String,
+	data_unit: String,
+}
+
+pub struct URational {
+	numerator: u32,
+	denominator: u32,
+	value: f64,
+}
+
+pub struct IRational {
+	numerator: i32,
+	denominator: i32,
+	value: f64,
+}
+
+pub enum TagValue {
+	U8(Vec<u8>),
+	Str(String),
+	U16(Vec<u16>),
+	U32(Vec<u32>),
+	URational(Vec<URational>),
+	I8(Vec<i8>),
+	Undefined(Vec<u8>),
+	I16(Vec<i16>),
+	I32(Vec<i32>),
+	IRational(Vec<IRational>),
+	F32(Vec<f32>),
+	F64(Vec<f64>),
+	Invalid(Vec<u8>),
 }
 
 impl IfdEntry {
@@ -176,7 +261,9 @@ impl Display for ExifError {
 }
 
 pub type ExifResult = Result<RefCell<ExifData>, ExifError>;
+pub type InExifResult = Result<(), ExifError>;
 
+/* Detect the type of an image contained in a byte buffer */
 pub fn detect_type(contents: &Vec<u8>) -> &str
 {
 	if contents.len() < 11 {
@@ -204,7 +291,8 @@ pub fn detect_type(contents: &Vec<u8>) -> &str
 	return "";
 }
 
-pub fn find_embedded_tiff(contents: &Vec<u8>) -> (usize, usize, String)
+/* Find the embedded TIFF in a JPEG image, that contains in turn the EXIF data */
+pub fn find_embedded_tiff_in_jpeg(contents: &Vec<u8>) -> (usize, usize, String)
 {
 	let mut err = "Scan past EOF and no EXIF found".to_string();
 	
@@ -276,6 +364,7 @@ pub fn find_embedded_tiff(contents: &Vec<u8>) -> (usize, usize, String)
 	return (0, 0, err);
 }
 
+/* Read a u16 from a stream of bytes */
 fn read_u16(le: bool, raw: &[u8]) -> u16
 {
 	if le {
@@ -285,6 +374,7 @@ fn read_u16(le: bool, raw: &[u8]) -> u16
 	}
 }
 
+/* Read a u32 from a stream of bytes */
 fn read_u32(le: bool, raw: &[u8]) -> u32
 {
 	if le {
@@ -296,6 +386,7 @@ fn read_u32(le: bool, raw: &[u8]) -> u32
 	}
 }
 
+/* Superficial parse of IFD that can't fail */
 fn parse_ifd(subifd: bool, le: bool, count: u16, contents: &[u8]) -> (Vec<IfdEntry>, usize)
 {
 	let mut entries: Vec<IfdEntry> = Vec::new();
@@ -326,7 +417,9 @@ fn parse_ifd(subifd: bool, le: bool, count: u16, contents: &[u8]) -> (Vec<IfdEnt
 	return (entries, next_ifd);
 }
 
-fn parse_exif_ifd_entry(le: bool, contents: &[u8], ioffset: usize) -> ExifResult
+/* Deep parse of IFD that grabs EXIF data from IFD0 or SubIFD */
+fn parse_exif_ifd(le: bool, contents: &[u8], ioffset: usize,
+				exif_entries: &mut Vec<ExifEntry>) -> InExifResult
 {
 	let mut offset = ioffset;
 
@@ -349,11 +442,59 @@ fn parse_exif_ifd_entry(le: bool, contents: &[u8], ioffset: usize) -> ExifResult
 	}
 
 	let (mut ifd, _) = parse_ifd(true, le, count, &contents[offset..offset + ifd_length]);
-	let exif_entries: Vec<ExifEntry> = Vec::new();
 
 	for entry in &mut ifd {
-		entry.copy_data(&contents);
 		println!("Reading EXIF tag {:x}", entry.tag);
+		entry.copy_data(&contents);
+		let exif_entry = parse_exif_entry(entry);
+		exif_entries.push(exif_entry);
+	}
+
+	return Ok(());
+}
+
+/* Parses IFD0 and looks for SubIFD within IFD0 */
+fn parse_ifds(le: bool, ifd0_offset: usize, contents: &[u8]) -> ExifResult
+{
+	let mut offset = ifd0_offset;
+	let mut exif_entries: Vec<ExifEntry> = Vec::new();
+
+	// fills exif_entries with data from IFD0
+
+	match parse_exif_ifd(le, &contents, offset, &mut exif_entries) {
+		Ok(_) => true,
+		Err(e) => return Err(e),
+	};
+
+	// at this point we knot that IFD0 is good
+	// looks for SubIFD (EXIF)
+
+	let count = read_u16(le, &contents[offset..offset + 2]);
+	let ifd_length = (count as usize) * 12 + 4;
+	offset += 2;
+
+	let (ifd, _) = parse_ifd(false, le, count, &contents[offset..offset + ifd_length]);
+
+	for entry in &ifd {
+		// println!("Reading tag {:x}", entry.tag);
+		if entry.tag != 0x8769 {
+			continue;
+		}
+
+		let exif_offset = entry.data_as_offset();
+
+		if contents.len() < exif_offset {
+			return Err(ExifError{
+				kind: ExifErrorKind::ExifIfdTruncated,
+				extra: "Exif SubIFD goes past EOF".to_string()});
+		}
+
+		match parse_exif_ifd(le, &contents, exif_offset, &mut exif_entries) {
+			Ok(_) => true,
+			Err(e) => return Err(e),
+		};
+
+		break;
 	}
 
 	return Ok(RefCell::new(ExifData{file: "".to_string(),
@@ -362,62 +503,7 @@ fn parse_exif_ifd_entry(le: bool, contents: &[u8], ioffset: usize) -> ExifResult
 				entries: exif_entries}));
 }
 
-fn parse_ifds(le: bool, first_offset: usize, contents: &[u8]) -> ExifResult
-{
-	let mut offset = first_offset;
-
-	// FIXME handle circular reference (when some IFD points to a former one)
-
-	while offset != 0 {
-		// println!("Offset is {}", offset);
-		if contents.len() < (offset + 2) {
-			return Err(ExifError{
-				kind: ExifErrorKind::IfdTruncated,
-				extra: "Truncated at dir entry count".to_string()});
-		}
-
-		let count = read_u16(le, &contents[offset..offset + 2]);
-		// println!("IFD entry count is {}", count);
-		let ifd_length = (count as usize) * 12 + 4;
-		offset += 2;
-
-		if contents.len() < (offset + ifd_length) {
-			return Err(ExifError{
-				kind: ExifErrorKind::IfdTruncated,
-				extra: "Truncated at dir listing".to_string()});
-		}
-
-		let (ifd, next_ifd) = parse_ifd(false, le, count,
-			&contents[offset..offset + ifd_length]);
-
-		for entry in &ifd {
-			// println!("Reading tag {:x}", entry.tag);
-			if entry.tag == 0x8769 {
-				let exif_offset = entry.data_as_offset();
-
-				if contents.len() < exif_offset {
-					return Err(ExifError{
-						kind: ExifErrorKind::ExifIfdTruncated,
-						extra: "Exif IFD goes past EOF".to_string()});
-				}
-
-				return parse_exif_ifd_entry(le, &contents, exif_offset);
-			}
-		}
-
-		offset = next_ifd;
-
-		if offset == 0 {
-			// End of IFD chain
-			break;
-		}
-	}
-
-	return Err(ExifError{
-			kind: ExifErrorKind::ExifIfdEntryNotFound,
-			extra: "".to_string()});
-}
-
+/* Parse a TIFF image, or embedded TIFF in JPEG, in order to get IFDs and then the EXIF data */
 pub fn parse_tiff(contents: &[u8]) -> ExifResult
 {
 	let mut le = false;
@@ -448,6 +534,7 @@ pub fn parse_tiff(contents: &[u8]) -> ExifResult
 	return parse_ifds(le, offset, &contents);
 }
 
+/* Parse an image buffer that may be of any format. Detect format and find EXIF data */
 pub fn parse_buffer(fname: &str, contents: &Vec<u8>) -> ExifResult
 {
 	let mime = detect_type(&contents);
@@ -462,7 +549,7 @@ pub fn parse_buffer(fname: &str, contents: &Vec<u8>) -> ExifResult
 	let mut size = contents.len() as usize;
 
 	if mime == "image/jpeg" {
-		let (eoffset, esize, err) = find_embedded_tiff(&contents);
+		let (eoffset, esize, err) = find_embedded_tiff_in_jpeg(&contents);
 		if eoffset == 0 {
 			return Err(ExifError{
 				kind: ExifErrorKind::JpegWithoutExif,
@@ -484,6 +571,7 @@ pub fn parse_buffer(fname: &str, contents: &Vec<u8>) -> ExifResult
 
 }
 
+/* Read and interpret an image file */
 pub fn read_file(fname: &str, f: &mut File) -> ExifResult
 {
 	match f.seek(SeekFrom::Start(0)) {
@@ -503,6 +591,7 @@ pub fn read_file(fname: &str, f: &mut File) -> ExifResult
 	}
 }
 
+/* Parse an image file */
 pub fn parse_file(fname: &str) -> ExifResult
 {
 	let mut f = match File::open(fname) {
