@@ -37,42 +37,6 @@ pub struct ExifError {
 	pub extra: String
 }
 
-#[derive(Copy, Clone, PartialEq)]
-pub enum IfdFormat {
-	Unknown = 0,
-	U8 = 1,
-	Str = 2,
-	U16 = 3,
-	U32 = 4,
-	URational = 5,
-	I8 = 6,
-	Undefined = 7, // u8
-	I16 = 8,
-	I32 = 9,
-	IRational = 10,
-	F32 = 11,
-	F64 = 12,
-}
-
-fn to_ifdformat(n: u16) -> IfdFormat
-{
-	match n {
-		1 => IfdFormat::U8,
-		2 => IfdFormat::Str,
-		3 => IfdFormat::U16,
-		4 => IfdFormat::U32,
-		5 => IfdFormat::URational,
-		6 => IfdFormat::I8,
-		7 => IfdFormat::Undefined,
-		8 => IfdFormat::I16,
-		9 => IfdFormat::I32,
-		10 => IfdFormat::IRational,
-		11 => IfdFormat::F32,
-		12 => IfdFormat::F64,
-		_ => IfdFormat::Unknown,
-	}
-}
-
 #[derive(Clone)]
 pub struct IfdEntry {
 	pub tag: u16,
@@ -136,6 +100,23 @@ pub enum ExifTag {
 	SceneType,
 }
 
+#[derive(Copy, Clone, PartialEq)]
+pub enum IfdFormat {
+	Unknown = 0,
+	U8 = 1,
+	Str = 2,
+	U16 = 3,
+	U32 = 4,
+	URational = 5,
+	I8 = 6,
+	Undefined = 7, // u8
+	I16 = 8,
+	I32 = 9,
+	IRational = 10,
+	F32 = 11,
+	F64 = 12,
+}
+
 #[derive(Clone)]
 pub struct ExifEntry {
 	pub ifd: IfdEntry,
@@ -150,14 +131,14 @@ pub struct ExifEntry {
 pub struct URational {
 	pub numerator: u32,
 	pub denominator: u32,
-	pub value: f64,
+	pub value: f64, /* FIXME implement as method */
 }
 
 #[derive(Copy, Clone)]
 pub struct IRational {
 	pub numerator: i32,
 	pub denominator: i32,
-	pub value: f64,
+	pub value: f64, /* FIXME implement as method */
 }
 
 #[derive(Clone)]
@@ -175,6 +156,25 @@ pub enum TagValue {
 	F32(Vec<f32>),
 	F64(Vec<f64>),
 	Unknown(Vec<u8>),
+}
+
+fn to_ifdformat(n: u16) -> IfdFormat
+{
+	match n {
+		1 => IfdFormat::U8,
+		2 => IfdFormat::Str,
+		3 => IfdFormat::U16,
+		4 => IfdFormat::U32,
+		5 => IfdFormat::URational,
+		6 => IfdFormat::I8,
+		7 => IfdFormat::Undefined,
+		8 => IfdFormat::I16,
+		9 => IfdFormat::I32,
+		10 => IfdFormat::IRational,
+		11 => IfdFormat::F32,
+		12 => IfdFormat::F64,
+		_ => IfdFormat::Unknown,
+	}
 }
 
 impl IfdEntry {
@@ -383,6 +383,39 @@ fn read_u16(le: bool, raw: &[u8]) -> u16
 	}
 }
 
+/* Read a u16 array from a stream of bytes. Caller must be sure of count and buffer size */
+fn read_u16_array(le: bool, count: u32, raw: &[u8]) -> Vec<u16>
+{
+	let mut a = Vec::<u16>::new();
+	let mut offset = 0;
+	for i in 0..count {
+		a.push(read_u16(le, &raw[offset..offset + 2]));
+		offset += 2;
+	}
+	return a;
+}
+
+fn numarray_to_string<T>(numbers: Vec<T>) -> String
+{
+	if (numbers.len() < 1) {
+		return "".to_string();
+	} else if (numbers.len() == 1) {
+		return format!("{}", numbers[0]);
+	}
+
+	let mut s = "".to_string();
+	let mut first = true;
+	for number in &numbers {
+		if !first {
+			s += ", ".to_string();
+		}
+		first = false;
+		s += format!("{}", number);
+	}
+
+	return s;
+}
+
 fn tag_value(f: &IfdEntry) -> (TagValue, String)
 {
 	match f.format {
@@ -391,9 +424,14 @@ fn tag_value(f: &IfdEntry) -> (TagValue, String)
 			let s = s.into_owned();
 			(TagValue::Str(s.to_string()), s.to_string())
 		},
+		IfdFormat::U16 => {
+			let a = read_u16_array(f.le, f.count, &f.data[..]);
+			(TagValue::U16(a), numarray_to_string(a))
+		},
+
 /*
+		FIXME
 		IfdFormat::U8 => (f.data.clone(), ),
-		IfdFormat::U16 => 2,
 		IfdFormat::U32 => 4,
 		IfdFormat::URational => 8,
 		IfdFormat::I8 => 1,
@@ -423,18 +461,28 @@ fn read_u32(le: bool, raw: &[u8]) -> u32
 	}
 }
 
+/* Convert a numeric tag into EXIF tag and yiels info about the tag */
+// FIXME
+// FIXME pointer to function to make enumerations readable
 fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32)
 {
 	match (f) {
-		0x010e =>
-		(ExifTag::ImageDescription, "Image Description", "String",
-			IfdFormat::Str, 0),
-		0x010f =>
-		(ExifTag::Make, "Manufacturer", "String",
-			IfdFormat::Str, 0),
-		_ =>
-		(ExifTag::Unrecognized, "Unrecognized or manufacturer-specific", "Unitless",
-			IfdFormat::Unknown, 0)
+
+	0x010e =>
+	(ExifTag::ImageDescription, "Image Description", "", IfdFormat::Str, 0),
+
+	0x010f =>
+	(ExifTag::Make, "Manufacturer", "", IfdFormat::Str, 0),
+
+	0x0110 =>
+	(ExifTag::Model, "Model", "", IfdFormat::Str, 0),
+
+	0x0112 =>
+	(ExifTag::Orientation, "Orientation", "", IfdFormat::U16, 0),
+
+	_ =>
+	(ExifTag::Unrecognized, "Unrecognized or manufacturer-specific", "Unknown unit",
+		IfdFormat::Unknown, 0)
 	}
 }
 
