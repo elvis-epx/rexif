@@ -7,7 +7,6 @@ use std::fmt::Debug;
 use std::fmt::Display;
 use std::fmt::Formatter;
 use std::cell::RefCell;
-use std::cell::Cell;
 
 #[derive(Clone)]
 pub struct ExifData {
@@ -140,6 +139,12 @@ impl URational {
 	}
 }
 
+impl Display for URational {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		write!(f, "{}/{}", self.numerator, self.denominator)
+	}
+}
+
 #[derive(Copy, Clone)]
 pub struct IRational {
 	pub numerator: i32,
@@ -149,6 +154,12 @@ pub struct IRational {
 impl IRational {
 	fn value(&self) -> f64 {
 		(self.numerator as f64) / (self.denominator as f64)
+	}
+}
+
+impl Display for IRational {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		write!(f, "{}/{}", self.numerator, self.denominator)
 	}
 }
 
@@ -384,7 +395,17 @@ pub fn find_embedded_tiff_in_jpeg(contents: &Vec<u8>) -> (usize, usize, String)
 	return (0, 0, err);
 }
 
-/* Read a u16 from a stream of bytes */
+/* Convert u8 to i8 */
+fn read_i8(raw: u8) -> i8
+{
+	let mut u = raw as i16;
+	if u >= 0x80 {
+		u = u - 0x100;
+	}
+	return u as i8;
+}
+
+/* Read value from a stream of bytes */
 fn read_u16(le: bool, raw: &[u8]) -> u16
 {
 	if le {
@@ -394,7 +415,88 @@ fn read_u16(le: bool, raw: &[u8]) -> u16
 	}
 }
 
-/* Read a u16 array from a stream of bytes. Caller must be sure of count and buffer size */
+/* Read value from a stream of bytes */
+fn read_i16(le: bool, raw: &[u8]) -> i16
+{
+	let mut u = read_u16(le, raw) as i32;
+	if u >= 0x8000 {
+		u = u - 0x10000;
+	}
+	return u as i16;
+}
+
+/* Read value from a stream of bytes */
+fn read_u32(le: bool, raw: &[u8]) -> u32
+{
+	if le {
+		((raw[3] as u32) << 24) + ((raw[2] as u32) << 16) +
+		((raw[1] as u32) << 8) + raw[0] as u32
+	} else {
+		((raw[0] as u32) << 24) + ((raw[1] as u32) << 16) +
+		((raw[2] as u32) << 8) + raw[3] as u32
+	}
+}
+
+/* Read value from a stream of bytes */
+fn read_i32(le: bool, raw: &[u8]) -> i32
+{
+	let mut u = read_u32(le, raw) as i64;
+	if u >= 0x80000000 {
+		u = u - 0x100000000;
+	}
+	return u as i32;
+}
+
+/* Read value from a stream of bytes */
+fn read_f32(le: bool, raw: &[u8]) -> f32
+{
+	let mut a = [0 as u8; 4];
+	// idiot, but guarantees that transmute gets a 4-byte buffer
+	for i in 0..4 {
+		a[i] = raw[i];
+	}
+	let f: f32 = unsafe { std::mem::transmute(a) }; 
+	return f;
+}
+
+/* Read value from a stream of bytes */
+fn read_f64(le: bool, raw: &[u8]) -> f64
+{
+	let mut a = [0 as u8; 8];
+	for i in 0..8 {
+		a[i] = raw[i];
+	}
+	let f: f64 = unsafe { std::mem::transmute(a) };
+	return f;
+}
+
+/* Read value from a stream of bytes */
+fn read_urational(le: bool, raw: &[u8]) -> URational
+{
+	let n = read_u32(le, &raw[0..4]);
+	let d = read_u32(le, &raw[4..8]);
+	return URational{numerator: n, denominator: d};
+}
+
+/* Read value from a stream of bytes */
+fn read_irational(le: bool, raw: &[u8]) -> IRational
+{
+	let n = read_i32(le, &raw[0..4]);
+	let d = read_i32(le, &raw[4..8]);
+	return IRational{numerator: n, denominator: d};
+}
+
+/* Read array from a stream of bytes. Caller must be sure of count and buffer size */
+fn read_i8_array(count: u32, raw: &[u8]) -> Vec<i8>
+{
+	let mut a = Vec::<i8>::new();
+	for i in 0..count {
+		a.push(read_i8(raw[i as usize]));
+	}
+	return a;
+}
+
+/* Read array from a stream of bytes. Caller must be sure of count and buffer size */
 fn read_u16_array(le: bool, count: u32, raw: &[u8]) -> Vec<u16>
 {
 	let mut a = Vec::<u16>::new();
@@ -406,11 +508,95 @@ fn read_u16_array(le: bool, count: u32, raw: &[u8]) -> Vec<u16>
 	return a;
 }
 
+/* Read array from a stream of bytes. Caller must be sure of count and buffer size */
+fn read_i16_array(le: bool, count: u32, raw: &[u8]) -> Vec<i16>
+{
+	let mut a = Vec::<i16>::new();
+	let mut offset = 0;
+	for _ in 0..count {
+		a.push(read_i16(le, &raw[offset..offset + 2]));
+		offset += 2;
+	}
+	return a;
+}
+
+/* Read array from a stream of bytes. Caller must be sure of count and buffer size */
+fn read_u32_array(le: bool, count: u32, raw: &[u8]) -> Vec<u32>
+{
+	let mut a = Vec::<u32>::new();
+	let mut offset = 0;
+	for _ in 0..count {
+		a.push(read_u32(le, &raw[offset..offset + 4]));
+		offset += 4;
+	}
+	return a;
+}
+
+/* Read array from a stream of bytes. Caller must be sure of count and buffer size */
+fn read_i32_array(le: bool, count: u32, raw: &[u8]) -> Vec<i32>
+{
+	let mut a = Vec::<i32>::new();
+	let mut offset = 0;
+	for _ in 0..count {
+		a.push(read_i32(le, &raw[offset..offset + 4]));
+		offset += 4;
+	}
+	return a;
+}
+
+/* Read array from a stream of bytes. Caller must be sure of count and buffer size */
+fn read_f32_array(le: bool, count: u32, raw: &[u8]) -> Vec<f32>
+{
+	let mut a = Vec::<f32>::new();
+	let mut offset = 0;
+	for _ in 0..count {
+		a.push(read_f32(le, &raw[offset..offset + 4]));
+		offset += 4;
+	}
+	return a;
+}
+
+/* Read array from a stream of bytes. Caller must be sure of count and buffer size */
+fn read_f64_array(le: bool, count: u32, raw: &[u8]) -> Vec<f64>
+{
+	let mut a = Vec::<f64>::new();
+	let mut offset = 0;
+	for _ in 0..count {
+		a.push(read_f64(le, &raw[offset..offset + 8]));
+		offset += 8;
+	}
+	return a;
+}
+
+/* Read array from a stream of bytes. Caller must be sure of count and buffer size */
+fn read_urational_array(le: bool, count: u32, raw: &[u8]) -> Vec<URational>
+{
+	let mut a = Vec::<URational>::new();
+	let mut offset = 0;
+	for _ in 0..count {
+		a.push(read_urational(le, &raw[offset..offset + 8]));
+		offset += 8;
+	}
+	return a;
+}
+
+/* Read array from a stream of bytes. Caller must be sure of count and buffer size */
+fn read_irational_array(le: bool, count: u32, raw: &[u8]) -> Vec<IRational>
+{
+	let mut a = Vec::<IRational>::new();
+	let mut offset = 0;
+	for _ in 0..count {
+		a.push(read_irational(le, &raw[offset..offset + 8]));
+		offset += 8;
+	}
+	return a;
+}
+
 fn numarray_to_string<T: Display>(numbers: &Vec<T>) -> String
 {
-	if (numbers.len() < 1) {
+	if numbers.len() < 1 {
 		return "".to_string();
-	} else if (numbers.len() == 1) {
+	} else if numbers.len() == 1 {
 		return format!("{}", &numbers[0]);
 	}
 
@@ -442,7 +628,7 @@ fn tag_value(f: &IfdEntry) -> (TagValue, String)
 			(TagValue::U16(a), b)
 		},
 		IfdFormat::I16 => {
-			let a = read_u16_array(f.le, f.count, &f.data[..]);
+			let a = read_i16_array(f.le, f.count, &f.data[..]);
 			let b = numarray_to_string(&a);
 			(TagValue::I16(a), b)
 		},
@@ -452,44 +638,46 @@ fn tag_value(f: &IfdEntry) -> (TagValue, String)
 			(TagValue::U8(a), b)
 		},
 		IfdFormat::I8 => {
-			let a = f.data.clone();
+			let a = read_i8_array(f.count, &f.data[..]);
 			let b = numarray_to_string(&a);
 			(TagValue::I8(a), b)
 		},
 		IfdFormat::U32 => {
-			let a = f.data.clone();
+			let a = read_u32_array(f.le, f.count, &f.data[..]);
 			let b = numarray_to_string(&a);
 			(TagValue::U32(a), b)
 		},
 		IfdFormat::I32 => {
-			let a = f.data.clone();
+			let a = read_i32_array(f.le, f.count, &f.data[..]);
 			let b = numarray_to_string(&a);
 			(TagValue::I32(a), b)
 		},
-/*
-		FIXME
-		IfdFormat::URational => 8,
-		IfdFormat::IRational => 8,
-		IfdFormat::F32 => 4,
-		IfdFormat::F64 => 8,
-*/
+		IfdFormat::F32 => {
+			let a = read_f32_array(f.le, f.count, &f.data[..]);
+			let b = numarray_to_string(&a);
+			(TagValue::F32(a), b)
+		},
+		IfdFormat::F64 => {
+			let a = read_f64_array(f.le, f.count, &f.data[..]);
+			let b = numarray_to_string(&a);
+			(TagValue::F64(a), b)
+		},
+		IfdFormat::URational => {
+			let a = read_urational_array(f.le, f.count, &f.data[..]);
+			let b = numarray_to_string(&a);
+			(TagValue::URational(a), b)
+		},
+		IfdFormat::IRational => {
+			let a = read_irational_array(f.le, f.count, &f.data[..]);
+			let b = numarray_to_string(&a);
+			(TagValue::IRational(a), b)
+		},
+
 		IfdFormat::Undefined => (TagValue::Undefined(f.data.clone()),
 					"<blob>".to_string()),
 
 		_ => (TagValue::Unknown(f.data.clone()),
 					"<unknown blob>".to_string()),
-	}
-}
-
-/* Read a u32 from a stream of bytes */
-fn read_u32(le: bool, raw: &[u8]) -> u32
-{
-	if le {
-		((raw[3] as u32) << 24) + ((raw[2] as u32) << 16) +
-		((raw[1] as u32) << 8) + raw[0] as u32
-	} else {
-		((raw[0] as u32) << 24) + ((raw[1] as u32) << 16) +
-		((raw[2] as u32) << 8) + raw[3] as u32
 	}
 }
 
@@ -503,7 +691,7 @@ fn defhr(_: &ExifEntry, readable: &String) -> String
 // FIXME
 fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, fn(&ExifEntry, &String) -> String)
 {
-	match (f) {
+	match f {
 
 	0x010e =>
 	(ExifTag::ImageDescription, "Image Description", "", IfdFormat::Str, 0, defhr),
