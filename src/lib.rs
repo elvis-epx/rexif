@@ -455,6 +455,8 @@ fn read_f32(le: bool, raw: &[u8]) -> f32
 	for i in 0..4 {
 		a[i] = raw[i];
 	}
+	// FIXME I am not sure that TIFF floating point can be cast this way for any given architecture
+	// The ideal thing would be to read mantissa, exponent, etc. explicitly
 	let f: f32 = unsafe { std::mem::transmute(a) }; 
 	return f;
 }
@@ -466,6 +468,8 @@ fn read_f64(le: bool, raw: &[u8]) -> f64
 	for i in 0..8 {
 		a[i] = raw[i];
 	}
+	// FIXME I am not sure that TIFF floating point can be cast this way for any given architecture
+	// The ideal thing would be to read mantissa, exponent, etc. explicitly
 	let f: f64 = unsafe { std::mem::transmute(a) };
 	return f;
 }
@@ -688,7 +692,7 @@ fn defhr(_: &ExifEntry, readable: &String) -> String
 }
 
 /* Convert a numeric tag into EXIF tag and yiels info about the tag */
-// FIXME
+// FIXME TODO 
 fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, fn(&ExifEntry, &String) -> String)
 {
 	match f {
