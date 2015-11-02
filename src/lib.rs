@@ -125,20 +125,31 @@ pub struct ExifEntry {
 	pub unit: String,
 	pub tag_readable: String,
 	pub value_readable: String,
+	pub value_more_readable: String,
 }
 
 #[derive(Copy, Clone)]
 pub struct URational {
 	pub numerator: u32,
 	pub denominator: u32,
-	pub value: f64, /* FIXME implement as method */
+}
+
+impl URational {
+	fn value(&self) -> f64 {
+		(self.numerator as f64) / (self.denominator as f64)
+	}
 }
 
 #[derive(Copy, Clone)]
 pub struct IRational {
 	pub numerator: i32,
 	pub denominator: i32,
-	pub value: f64, /* FIXME implement as method */
+}
+
+impl IRational {
+	fn value(&self) -> f64 {
+		(self.numerator as f64) / (self.denominator as f64)
+	}
 }
 
 #[derive(Clone)]
@@ -395,22 +406,23 @@ fn read_u16_array(le: bool, count: u32, raw: &[u8]) -> Vec<u16>
 	return a;
 }
 
-fn numarray_to_string<T>(numbers: Vec<T>) -> String
+fn numarray_to_string<T: Display>(numbers: &Vec<T>) -> String
 {
 	if (numbers.len() < 1) {
 		return "".to_string();
 	} else if (numbers.len() == 1) {
-		return format!("{}", numbers[0]);
+		return format!("{}", &numbers[0]);
 	}
 
 	let mut s = "".to_string();
 	let mut first = true;
-	for number in &numbers {
+	for number in numbers {
 		if !first {
-			s += ", ".to_string();
+			s = s + ", ";
 		}
 		first = false;
-		s += format!("{}", number);
+		let s2 = format!("{}", number);
+		s = s + &s2;
 	}
 
 	return s;
@@ -426,17 +438,37 @@ fn tag_value(f: &IfdEntry) -> (TagValue, String)
 		},
 		IfdFormat::U16 => {
 			let a = read_u16_array(f.le, f.count, &f.data[..]);
-			(TagValue::U16(a), numarray_to_string(a))
+			let b = numarray_to_string(&a);
+			(TagValue::U16(a), b)
 		},
-
+		IfdFormat::I16 => {
+			let a = read_u16_array(f.le, f.count, &f.data[..]);
+			let b = numarray_to_string(&a);
+			(TagValue::I16(a), b)
+		},
+		IfdFormat::U8 => {
+			let a = f.data.clone();
+			let b = numarray_to_string(&a);
+			(TagValue::U8(a), b)
+		},
+		IfdFormat::I8 => {
+			let a = f.data.clone();
+			let b = numarray_to_string(&a);
+			(TagValue::I8(a), b)
+		},
+		IfdFormat::U32 => {
+			let a = f.data.clone();
+			let b = numarray_to_string(&a);
+			(TagValue::U32(a), b)
+		},
+		IfdFormat::I32 => {
+			let a = f.data.clone();
+			let b = numarray_to_string(&a);
+			(TagValue::I32(a), b)
+		},
 /*
 		FIXME
-		IfdFormat::U8 => (f.data.clone(), ),
-		IfdFormat::U32 => 4,
 		IfdFormat::URational => 8,
-		IfdFormat::I8 => 1,
-		IfdFormat::I16 => 2,
-		IfdFormat::I32 => 4,
 		IfdFormat::IRational => 8,
 		IfdFormat::F32 => 4,
 		IfdFormat::F64 => 8,
@@ -461,28 +493,33 @@ fn read_u32(le: bool, raw: &[u8]) -> u32
 	}
 }
 
+/* Default human-readable: just use the automatically generated readable string  */
+fn defhr(_: &ExifEntry, readable: &String) -> String
+{
+	return readable.clone();
+}
+
 /* Convert a numeric tag into EXIF tag and yiels info about the tag */
 // FIXME
-// FIXME pointer to function to make enumerations readable
-fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32)
+fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, fn(&ExifEntry, &String) -> String)
 {
 	match (f) {
 
 	0x010e =>
-	(ExifTag::ImageDescription, "Image Description", "", IfdFormat::Str, 0),
+	(ExifTag::ImageDescription, "Image Description", "", IfdFormat::Str, 0, defhr),
 
 	0x010f =>
-	(ExifTag::Make, "Manufacturer", "", IfdFormat::Str, 0),
+	(ExifTag::Make, "Manufacturer", "", IfdFormat::Str, 0, defhr),
 
 	0x0110 =>
-	(ExifTag::Model, "Model", "", IfdFormat::Str, 0),
+	(ExifTag::Model, "Model", "", IfdFormat::Str, 0, defhr),
 
 	0x0112 =>
-	(ExifTag::Orientation, "Orientation", "", IfdFormat::U16, 0),
+	(ExifTag::Orientation, "Orientation", "", IfdFormat::U16, 0, defhr),
 
 	_ =>
 	(ExifTag::Unrecognized, "Unrecognized or manufacturer-specific", "Unknown unit",
-		IfdFormat::Unknown, 0)
+		IfdFormat::Unknown, 0, defhr)
 	}
 }
 
@@ -496,13 +533,14 @@ fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 			unit: "Unknown".to_string(),
 			tag_readable: "Unrecognized".to_string(),
 			value_readable: "".to_string(),
+			value_more_readable: "".to_string(),
 			};
 
 	let (value, readable_value) = tag_value(f);
 	e.value = value;
 	e.value_readable = readable_value;
 
-	let (tag, tag_readable, unit, format, count) = tag_to_exif(f.tag);
+	let (tag, tag_readable, unit, format, count, more_readable) = tag_to_exif(f.tag);
 
 	if tag == ExifTag::Unrecognized {
 		// Unknown EXIF tag type
@@ -516,6 +554,7 @@ fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 	e.tag = tag;
 	e.tag_readable = tag_readable.to_string();
 	e.unit = unit.to_string();
+	e.value_more_readable = more_readable(&e, &e.value_readable);
 
 	return e;
 }
