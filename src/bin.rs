@@ -15,7 +15,12 @@ fn main()
 		match rexif::parse_file(&arg) {
 			Ok(exif) => {
 				let exif = exif.into_inner();
-				println!("{} {} {} exif entries: {}", exif.file, exif.size, exif.mime, exif.entries.len());
+				println!("{} {} {} exif entries: {}", exif.file, exif.size,
+					exif.mime, exif.entries.len());
+				for entry in &exif.entries {
+					println!("	{} {} {}",
+					entry.tag_readable, entry.unit, entry.value_readable);
+				}
 			},
 			Err(e) => {
 				writeln!(std::io::stderr(), "Error in {}: {} {}", &arg, Error::description(&e), e.extra);
