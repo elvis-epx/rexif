@@ -1,3 +1,5 @@
+module rexif;
+
 use std::fs::File;
 use std::io::{Seek,SeekFrom,Read};
 use std::result::Result;
@@ -50,7 +52,7 @@ pub struct IfdEntry {
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum ExifTag {
-	UnknownToMe = 0x0,
+	UnknownToMe = 0xffff,
 	ImageDescription = 0x010e,
 	Make = 0x010f,
 	Model = 0x0110,
@@ -67,10 +69,14 @@ pub enum ExifTag {
 	ReferenceBlackWhite = 0x0214,
 	Copyright = 0x8298,
 	ExifOffset = 0x8769,
+	GPSOffset = 0x8825,
+
 	ExposureTime = 0x829,
 	FNumber = 0x829d,
 	ExposureProgram = 0x8822,
+	SpectralSensitivity = 0x8824,
 	ISOSpeedRatings = 0x8827,
+	OECF = 0x8828,
 	ExifVersion = 0x9000,
 	DateTimeOriginal = 0x9003,
 	DateTimeDigitized = 0x9004,
@@ -86,6 +92,7 @@ pub enum ExifTag {
 	LightSource = 0x9208,
 	Flash = 0x9209,
 	FocalLength = 0x920a,
+	SubjectArea = 0x9214,
 	MakerNote = 0x927c,
 	UserComment = 0x9286,
 	FlashPixVersion = 0xa000,
@@ -93,12 +100,61 @@ pub enum ExifTag {
 	ExifImageWidth = 0xa002,
 	ExifImageHeight = 0xa003,
 	RelatedSoundFile = 0xa004,
+	FlashEnergy = 0xa20b,
 	FocalPlaneXResolution = 0xa20e,
 	FocalPlaneYResolution = 0xa20f,
 	FocalPlaneResolutionUnit = 0xa210,
+	SubjectLocation = 0xa214,
+	ExposureIndex = 0xa215,
 	SensingMethod = 0xa217,
 	FileSource = 0xa300,
 	SceneType = 0xa301,
+	CFAPattern = 0xa302,
+	CustomRendered = 0xa401,
+	ExposureMode = 0xa402,
+	WhiteBalanceMode = 0xa403,
+	DigitalZoomRatio = 0xa404,
+	FocalLengthIn35mmFilm = 0xa405,
+	SceneCapreuType = 0xa406,
+	GainControl = 0xa407,
+	Contrast = 0xa408,
+	Saturation = 0xa409,
+	Sharpness = 0xa40a,
+	DeviceSettingDescription = 0xa40b,
+	SubjectDistanceRange = 0xa40c,
+	ImageUniqueID = 0xa420,
+		
+	GPSVersionID = 0x0,
+	GPSLatitudeRef = 0x1,
+	GPSLatitude = 0x2,
+	GPSLongitudeRef = 0x3,
+	GPSLongitude = 0x4,
+	GPSAltitudeRef = 0x5,
+	GPSAltitude = 0x6,
+	GPSTimeStamp = 0x7,
+	GPSSatellites = 0x8,
+	GPSStatus = 0x9,
+	GPSMeasureMode = 0xa,
+	GPSDOP = 0xb,
+	GPSSpeedRef = 0xc,
+	GPSSpeed = 0xd,
+	GPSTrackRef = 0xe,
+	GPSTrack = 0xf,
+	GPSImgDirectionRef = 0x10,
+	GPSImgDirection = 0x11,
+	GPSMapDatum = 0x12,
+	GPSDestLatitudeRef = 0x13,
+	GPSDestLatitude = 0x14,
+	GPSDestLongitudeRef = 0x15,
+	GPSDestLongitude = 0x16,
+	GPSDestBearingRef = 0x17,
+	GPSDestBearing = 0x18,
+	GPSDestDistanceRef = 0x19,
+	GPSDestDistance = 0x1a,
+	GPSProcessingMethod = 0x1b,
+	GPSAreaInformation = 0x1c,
+	GPSDateStamp = 0x1d,
+	GPSDifferential = 0x1e,
 }
 
 #[derive(Copy, Clone, PartialEq)]
@@ -789,7 +845,13 @@ fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, 
 	0x9004 =>
 	(ExifTag::DateTimeDigitized, "Image date digitized", "", IfdFormat::Str, 0, defhr),
 
+	0x8769 =>
+	(ExifTag::ExifOffset, "This image has an Exif SubIFD", "", IfdFormat::U32, 1, defhr),
 
+	0x8825 =>
+	(ExifTag::GPSOffset, "This image has a GPS SubIFD", "", IfdFormat::U32, 1, defhr),
+
+// EPX
 	_ =>
 	(ExifTag::UnknownToMe, "Unknown to this library, or manufacturer-specific", "Unknown unit",
 		IfdFormat::Unknown, 0, defhr)
@@ -902,10 +964,6 @@ fn parse_exif_ifd(le: bool, contents: &[u8], ioffset: usize,
 	let (mut ifd, _) = parse_ifd(true, le, count, &contents[offset..offset + ifd_length]);
 
 	for entry in &mut ifd {
-		if entry.tag == (ExifTag::ExifOffset as u16) {
-			continue;
-		}
-
 		entry.copy_data(&contents);
 		let exif_entry = parse_exif_entry(&entry);
 		exif_entries.push(exif_entry);
@@ -937,7 +995,8 @@ fn parse_ifds(le: bool, ifd0_offset: usize, contents: &[u8]) -> ExifResult
 	let (ifd, _) = parse_ifd(false, le, count, &contents[offset..offset + ifd_length]);
 
 	for entry in &ifd {
-		if entry.tag != (ExifTag::ExifOffset as u16) {
+		if entry.tag != (ExifTag::ExifOffset as u16) &&
+				entry.tag != (ExifTag::GPSOffset as u16) {
 			continue;
 		}
 
@@ -953,8 +1012,6 @@ fn parse_ifds(le: bool, ifd0_offset: usize, contents: &[u8]) -> ExifResult
 			Ok(_) => true,
 			Err(e) => return Err(e),
 		};
-
-		break;
 	}
 
 	return Ok(RefCell::new(ExifData{file: "".to_string(),
