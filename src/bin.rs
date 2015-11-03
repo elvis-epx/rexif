@@ -20,10 +20,9 @@ fn main()
 				println!("{} {} {} exif entries: {}", exif.file, exif.size,
 					exif.mime, exif.entries.len());
 				for entry in &exif.entries {
-					if entry.tag == ExifTag::Unrecognized {
-						println!("	{} {} {}",
-							entry.tag_readable, entry.unit,
-							entry.value_readable);
+					if entry.tag == ExifTag::UnknownToMe {
+						println!("	{} {}",
+							entry.tag_readable, entry.value_readable);
 					} else {
 						println!("	{} {} {}",
 								entry.tag_readable, 

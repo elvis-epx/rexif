@@ -3,6 +3,7 @@ use std::io::{Seek,SeekFrom,Read};
 use std::result::Result;
 use std::error::Error;
 use std::fmt;
+use std::io::Write;
 use std::fmt::Debug;
 use std::fmt::Display;
 use std::fmt::Formatter;
@@ -49,54 +50,55 @@ pub struct IfdEntry {
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum ExifTag {
-	Unrecognized,
-	ImageDescription,
-	Make,
-	Model,
-	Orientation,
-	XResolution,
-	YResolution,
-	ResolutionUnit,
-	Software,
-	DateTime,
-	WhitePoint,
-	PrimaryChromaticities,
-	YCbCrCoefficients,
-	YCbCrPositioning,
-	ReferenceBlackWhite,
-	Copyright,
-	ExposureTime,
-	FNumber,
-	ExposureProgram,
-	ISOSpeedRatings,
-	ExifVersion,
-	DateTimeOriginal,
-	DateTimeDigitized,
-	ComponentConfiguration,
-	CompressedBitsPerPixel,
-	ShutterSpeedValue,
-	ApertureValue,
-	BrightnessValue,
-	ExposureBiasValue,
-	MaxApertureValue,
-	SubjectDistance,
-	MeteringMode,
-	LightSource,
-	Flash,
-	FocalLength,
-	MakerNote,
-	UserComment,
-	FlashPixVersion,
-	ColorSpace,
-	ExifImageWidth,
-	ExifImageHeight,
-	RelatedSoundFile,
-	FocalPlaneXResolution,
-	FocalPlaneYResolution,
-	FocalPlaneResolutionUnit,
-	SensingMethod,
-	FileSource,
-	SceneType,
+	UnknownToMe = 0x0,
+	ImageDescription = 0x010e,
+	Make = 0x010f,
+	Model = 0x0110,
+	Orientation = 0x0112,
+	XResolution = 0x011a,
+	YResolution = 0x011b,
+	ResolutionUnit = 0x0128,
+	Software = 0x0131,
+	DateTime = 0x0132,
+	WhitePoint = 0x013e,
+	PrimaryChromaticities = 0x013f,
+	YCbCrCoefficients = 0x0211,
+	YCbCrPositioning = 0x213,
+	ReferenceBlackWhite = 0x0214,
+	Copyright = 0x8298,
+	ExifOffset = 0x8769,
+	ExposureTime = 0x829,
+	FNumber = 0x829d,
+	ExposureProgram = 0x8822,
+	ISOSpeedRatings = 0x8827,
+	ExifVersion = 0x9000,
+	DateTimeOriginal = 0x9003,
+	DateTimeDigitized = 0x9004,
+	ComponentConfiguration = 0x9101,
+	CompressedBitsPerPixel = 0x9102,
+	ShutterSpeedValue = 0x9201,
+	ApertureValue = 0x9202,
+	BrightnessValue = 0x9203,
+	ExposureBiasValue = 0x9204,
+	MaxApertureValue = 0x9205,
+	SubjectDistance = 0x9206,
+	MeteringMode = 0x9207,
+	LightSource = 0x9208,
+	Flash = 0x9209,
+	FocalLength = 0x920a,
+	MakerNote = 0x927c,
+	UserComment = 0x9286,
+	FlashPixVersion = 0xa000,
+	ColorSpace = 0xa001,
+	ExifImageWidth = 0xa002,
+	ExifImageHeight = 0xa003,
+	RelatedSoundFile = 0xa004,
+	FocalPlaneXResolution = 0xa20e,
+	FocalPlaneYResolution = 0xa20f,
+	FocalPlaneResolutionUnit = 0xa210,
+	SensingMethod = 0xa217,
+	FileSource = 0xa300,
+	SceneType = 0xa301,
 }
 
 #[derive(Copy, Clone, PartialEq)]
@@ -243,7 +245,7 @@ impl IfdEntry {
 
 		let offset = self.data_as_offset();
 		if contents.len() < (offset + self.length()) {
-			println!("EXIF data block goes beyond EOF");
+			// println!("EXIF data block goes beyond EOF");
 			return false;
 		}
 
@@ -767,12 +769,29 @@ fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, 
 	(ExifTag::WhitePoint, "White Point", "CIE 1931 coordinates", IfdFormat::URational, 2, defhr),
 
 	0x013f =>
-	(ExifTag::PrimaryChromaticities, "Primary Chromaticities", "triple of CIE 1931 coordinates", IfdFormat::URational, 2, defhr),
+	(ExifTag::PrimaryChromaticities, "Primary Chromaticities", "triple of CIE 1931 coordinates", IfdFormat::URational, 6, defhr),
 
-// EPX TODO 
+	0x0211 =>
+	(ExifTag::YCbCrCoefficients, "YCbCr Coefficients", "", IfdFormat::URational, 3, defhr),
+
+	0x0213 =>
+	(ExifTag::YCbCrPositioning, "YCbCr Positioning", "", IfdFormat::U16, 1, defhr),
+
+	0x0214 =>
+	(ExifTag::ReferenceBlackWhite, "Reference Black/White", "", IfdFormat::URational, 6, defhr),
+
+	0x8298 =>
+	(ExifTag::Copyright, "Copyright", "", IfdFormat::Str, 0, defhr),
+
+	0x9003 =>
+	(ExifTag::DateTimeOriginal, "Image date original", "", IfdFormat::Str, 0, defhr),
+
+	0x9004 =>
+	(ExifTag::DateTimeDigitized, "Image date digitized", "", IfdFormat::Str, 0, defhr),
+
 
 	_ =>
-	(ExifTag::Unrecognized, "Unrecognized or manufacturer-specific", "Unknown unit",
+	(ExifTag::UnknownToMe, "Unknown to this library, or manufacturer-specific", "Unknown unit",
 		IfdFormat::Unknown, 0, defhr)
 	}
 }
@@ -780,35 +799,39 @@ fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, 
 /* Parse of raw IFD entry into EXIF data, if it is of a known type */
 fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 {
+	let (value, readable_value) = tag_value(f);
+
 	let mut e = ExifEntry {
 			ifd: f.clone(),
-			tag: ExifTag::Unrecognized,
-			value: TagValue::Unknown(f.data.clone()),
+			tag: ExifTag::UnknownToMe,
+			value: value,
 			unit: "Unknown".to_string(),
-			tag_readable: "Unrecognized".to_string(),
-			value_readable: "".to_string(),
+			tag_readable: format!("Unparsed tag {:x}", f.tag).to_string(),
+			value_readable: readable_value,
 			value_more_readable: "".to_string(),
 			};
 
-	let (value, readable_value) = tag_value(f);
-	e.value = value;
-	e.value_readable = readable_value;
-
 	let (tag, tag_readable, unit, format, count, more_readable) = tag_to_exif(f.tag);
 
-	if count == 0 && (format != IfdFormat::Str &&
-				format != IfdFormat::Undefined &&
-				format != IfdFormat::Unknown) {
-		panic!("Internal error: all Exif tags except strings have a defined count");
-	}
-
-	if tag == ExifTag::Unrecognized {
+	if tag == ExifTag::UnknownToMe {
 		// Unknown EXIF tag type
 		return e;
 	}
 
-	if format != f.format || (count != 0 && count != f.count) {
-		// EXIF tag data format does not match expected format
+	if (tag as u16) != f.tag ||
+		(count == 0 && (format != IfdFormat::Str &&
+				format != IfdFormat::Undefined &&
+				format != IfdFormat::Unknown)) {
+		panic!("Internal error {:x}", f.tag);
+	}
+
+	if format != f.format {
+		writeln!(std::io::stderr(), "EXIF tag {}, expected format {}, found {}", tag_readable, format as u8, f.format as u8);
+		return e;
+	}
+
+	if count != 0 && count != f.count {
+		writeln!(std::io::stderr(), "EXIF tag {}, format {}, expected count {} found {}", tag_readable, format as u8, count, f.count);
 		return e;
 	}
 
@@ -879,6 +902,10 @@ fn parse_exif_ifd(le: bool, contents: &[u8], ioffset: usize,
 	let (mut ifd, _) = parse_ifd(true, le, count, &contents[offset..offset + ifd_length]);
 
 	for entry in &mut ifd {
+		if entry.tag == (ExifTag::ExifOffset as u16) {
+			continue;
+		}
+
 		entry.copy_data(&contents);
 		let exif_entry = parse_exif_entry(&entry);
 		exif_entries.push(exif_entry);
@@ -910,7 +937,7 @@ fn parse_ifds(le: bool, ifd0_offset: usize, contents: &[u8]) -> ExifResult
 	let (ifd, _) = parse_ifd(false, le, count, &contents[offset..offset + ifd_length]);
 
 	for entry in &ifd {
-		if entry.tag != 0x8769 {
+		if entry.tag != (ExifTag::ExifOffset as u16) {
 			continue;
 		}
 
