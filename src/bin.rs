@@ -25,6 +25,10 @@ fn main()
 						println!("	{} {}",
 							entry.tag_readable, entry.value_readable);
 						*/
+					} else if entry.unit == "none" {
+						println!("	{}: {}",
+								entry.tag_readable, 
+								entry.value_more_readable);
 					} else {
 						println!("	{}: {} .................. unit: {}",
 								entry.tag_readable, 
