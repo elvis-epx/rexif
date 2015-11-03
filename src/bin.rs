@@ -21,12 +21,15 @@ fn main()
 					exif.mime, exif.entries.len());
 				for entry in &exif.entries {
 					if entry.tag == ExifTag::UnknownToMe {
+						/*
 						println!("	{} {}",
 							entry.tag_readable, entry.value_readable);
+						*/
 					} else {
-						println!("	{} {} {}",
+						println!("	{}: {} .................. unit: {}",
 								entry.tag_readable, 
-								entry.value_more_readable, entry.unit);
+								entry.value_more_readable,
+								entry.unit);
 					}
 				}
 			},
