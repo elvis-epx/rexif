@@ -1,5 +1,3 @@
-module rexif;
-
 use std::fs::File;
 use std::io::{Seek,SeekFrom,Read};
 use std::result::Result;
