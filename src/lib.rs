@@ -448,7 +448,7 @@ fn read_i32(le: bool, raw: &[u8]) -> i32
 }
 
 /* Read value from a stream of bytes */
-fn read_f32(le: bool, raw: &[u8]) -> f32
+fn read_f32(raw: &[u8]) -> f32
 {
 	let mut a = [0 as u8; 4];
 	// idiot, but guarantees that transmute gets a 4-byte buffer
@@ -462,7 +462,7 @@ fn read_f32(le: bool, raw: &[u8]) -> f32
 }
 
 /* Read value from a stream of bytes */
-fn read_f64(le: bool, raw: &[u8]) -> f64
+fn read_f64(raw: &[u8]) -> f64
 {
 	let mut a = [0 as u8; 8];
 	for i in 0..8 {
@@ -505,7 +505,7 @@ fn read_u16_array(le: bool, count: u32, raw: &[u8]) -> Vec<u16>
 {
 	let mut a = Vec::<u16>::new();
 	let mut offset = 0;
-	for i in 0..count {
+	for _ in 0..count {
 		a.push(read_u16(le, &raw[offset..offset + 2]));
 		offset += 2;
 	}
@@ -549,24 +549,24 @@ fn read_i32_array(le: bool, count: u32, raw: &[u8]) -> Vec<i32>
 }
 
 /* Read array from a stream of bytes. Caller must be sure of count and buffer size */
-fn read_f32_array(le: bool, count: u32, raw: &[u8]) -> Vec<f32>
+fn read_f32_array(count: u32, raw: &[u8]) -> Vec<f32>
 {
 	let mut a = Vec::<f32>::new();
 	let mut offset = 0;
 	for _ in 0..count {
-		a.push(read_f32(le, &raw[offset..offset + 4]));
+		a.push(read_f32(&raw[offset..offset + 4]));
 		offset += 4;
 	}
 	return a;
 }
 
 /* Read array from a stream of bytes. Caller must be sure of count and buffer size */
-fn read_f64_array(le: bool, count: u32, raw: &[u8]) -> Vec<f64>
+fn read_f64_array(count: u32, raw: &[u8]) -> Vec<f64>
 {
 	let mut a = Vec::<f64>::new();
 	let mut offset = 0;
 	for _ in 0..count {
-		a.push(read_f64(le, &raw[offset..offset + 8]));
+		a.push(read_f64(&raw[offset..offset + 8]));
 		offset += 8;
 	}
 	return a;
@@ -657,12 +657,12 @@ fn tag_value(f: &IfdEntry) -> (TagValue, String)
 			(TagValue::I32(a), b)
 		},
 		IfdFormat::F32 => {
-			let a = read_f32_array(f.le, f.count, &f.data[..]);
+			let a = read_f32_array(f.count, &f.data[..]);
 			let b = numarray_to_string(&a);
 			(TagValue::F32(a), b)
 		},
 		IfdFormat::F64 => {
-			let a = read_f64_array(f.le, f.count, &f.data[..]);
+			let a = read_f64_array(f.count, &f.data[..]);
 			let b = numarray_to_string(&a);
 			(TagValue::F64(a), b)
 		},
@@ -686,14 +686,51 @@ fn tag_value(f: &IfdEntry) -> (TagValue, String)
 }
 
 /* Default human-readable: just use the automatically generated readable string  */
-fn defhr(_: &ExifEntry, readable: &String) -> String
+fn defhr(_: &TagValue, readable: &String) -> String
 {
 	return readable.clone();
 }
 
+fn orientation(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+		&TagValue::U16(ref v) => {
+			let n = v[0];
+			match n {
+				1 => "Straight",
+				3 => "Upside down",
+				6 => "Rotated to left",
+				8 => "Rotated to right",
+				9 => "Undefined",
+				_ => "(Invalid)",
+			}
+		},
+		_ => "(Invalid)",
+	};
+
+	return s.to_string();
+}
+
+fn resolution_unit(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+		&TagValue::U16(ref v) => {
+			let n = v[0];
+			match n {
+				1 => "Unitless",
+				2 => "in",
+				3 => "cm",
+				_ => "(Invalid)",
+			}
+		},
+		_ => "(Invalid)",
+	};
+
+	return s.to_string();
+}
+
 /* Convert a numeric tag into EXIF tag and yiels info about the tag */
-// FIXME TODO 
-fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, fn(&ExifEntry, &String) -> String)
+fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, fn(&TagValue, &String) -> String)
 {
 	match f {
 
@@ -707,7 +744,32 @@ fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, 
 	(ExifTag::Model, "Model", "", IfdFormat::Str, 0, defhr),
 
 	0x0112 =>
-	(ExifTag::Orientation, "Orientation", "", IfdFormat::U16, 0, defhr),
+	(ExifTag::Orientation, "Orientation", "", IfdFormat::U16, 1, orientation),
+
+	// TODO update unit with tag 0x0128
+	0x011a =>
+	(ExifTag::XResolution, "X Resolution", "@Resolution Unit", IfdFormat::URational, 1, defhr),
+
+	// TODO update unit with tag 0x0128
+	0x011b =>
+	(ExifTag::YResolution, "Y Resolution", "@Resolution Unit", IfdFormat::URational, 1, defhr),
+
+	0x0128 =>
+	(ExifTag::ResolutionUnit, "Resolution Unit", "", IfdFormat::U16, 1, resolution_unit),
+
+	0x0131 =>
+	(ExifTag::Software, "Software", "", IfdFormat::Str, 0, defhr),
+
+	0x0132 =>
+	(ExifTag::DateTime, "Image date", "", IfdFormat::Str, 0, defhr),
+
+	0x013e =>
+	(ExifTag::WhitePoint, "White Point", "CIE 1931 coordinates", IfdFormat::URational, 2, defhr),
+
+	0x013f =>
+	(ExifTag::PrimaryChromaticities, "Primary Chromaticities", "triple of CIE 1931 coordinates", IfdFormat::URational, 2, defhr),
+
+// EPX TODO 
 
 	_ =>
 	(ExifTag::Unrecognized, "Unrecognized or manufacturer-specific", "Unknown unit",
@@ -734,10 +796,17 @@ fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 
 	let (tag, tag_readable, unit, format, count, more_readable) = tag_to_exif(f.tag);
 
+	if count == 0 && (format != IfdFormat::Str &&
+				format != IfdFormat::Undefined &&
+				format != IfdFormat::Unknown) {
+		panic!("Internal error: all Exif tags except strings have a defined count");
+	}
+
 	if tag == ExifTag::Unrecognized {
 		// Unknown EXIF tag type
 		return e;
 	}
+
 	if format != f.format || (count != 0 && count != f.count) {
 		// EXIF tag data format does not match expected format
 		return e;
@@ -746,7 +815,7 @@ fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 	e.tag = tag;
 	e.tag_readable = tag_readable.to_string();
 	e.unit = unit.to_string();
-	e.value_more_readable = more_readable(&e, &e.value_readable);
+	e.value_more_readable = more_readable(&e.value, &e.value_readable);
 
 	return e;
 }
