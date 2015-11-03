@@ -1,8 +1,9 @@
 # rexif
 
-RExif is a native Rust library to extract EXIF data from JPEG and TIFF images.
+RExif is a native Rust create, written to extract EXIF data from JPEG and TIFF images.
 
-It is in very early stages of development. Documentation and examples are still scarce.
+It is in very early stages of development. Documentation and examples are still scarce,
+sorry about that. It is also my pet project to learn a bit of Rust.
 
 The crate also contains a
 sample binary called 'rexiftoolt' that accepts files as arguments and prints the EXIF data. It gives
