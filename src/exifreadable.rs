@@ -457,12 +457,7 @@ pub fn apex_tv(e: &TagValue, _: &String) -> String
 {
 	match e {
 		&TagValue::IRational(ref v) => {
-			// numerator 0xffffffff = unknown
-			if v[0].numerator == -1 {
-				"Unknown".to_string()
-			} else {
-				format!("{:.1} Tv APEX", v[0].value())
-			}
+			format!("{:.1} Tv APEX", v[0].value())
 		},
 		_ => panic!(INV),
 	}
@@ -472,11 +467,36 @@ pub fn apex_av(e: &TagValue, _: &String) -> String
 {
 	match e {
 		&TagValue::URational(ref v) => {
+			format!("{:.1} Av APEX", v[0].value())
+		},
+		_ => panic!(INV),
+	}
+}
+
+pub fn apex_brightness(e: &TagValue, _: &String) -> String
+{
+	match e {
+		&TagValue::IRational(ref v) => {
 			// numerator 0xffffffff = unknown
-			if v[0].numerator == 0xffffffff {
+			if v[0].numerator == -1 {
 				"Unknown".to_string()
 			} else {
-				format!("{:.1} Av APEX", v[0].value())
+				format!("{:.1} APEX", v[0].value())
+			}
+		},
+		_ => panic!(INV),
+	}
+}
+
+pub fn apex_ev(e: &TagValue, _: &String) -> String
+{
+	match e {
+		&TagValue::IRational(ref v) => {
+			// express as fraction, except when zero
+			if v[0].numerator == 0 {
+				"0 EV APEX".to_string()
+			} else {
+				format!("{} EV APEX", v[0])
 			}
 		},
 		_ => panic!(INV),

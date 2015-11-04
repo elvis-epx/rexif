@@ -113,16 +113,16 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	(ExifTag::ApertureValue, "Aperture value", "APEX",
 	IfdFormat::URational, 1, 1, apex_av),
 
-	// FIXME numerator FFFF.. = Unknown
 	0x9203 =>
 	(ExifTag::BrightnessValue, "Brightness value", "APEX",
-	IfdFormat::IRational, 1, 1, nop),
+	IfdFormat::IRational, 1, 1, apex_brightness),
 
 	0x9204 =>
 	(ExifTag::ExposureBiasValue, "Exposure bias value", "APEX",
-	IfdFormat::IRational, 1, 1, nop),
+	IfdFormat::IRational, 1, 1, apex_ev),
 
-	0x9205 => (ExifTag::MaxApertureValue, "Maximum aperture value",
+	0x9205 =>
+	(ExifTag::MaxApertureValue, "Maximum aperture value",
 	"APEX", IfdFormat::URational, 1, 1, apex_av),
 
 	0x9206 =>
