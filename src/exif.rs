@@ -184,36 +184,38 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	(ExifTag::SubjectLocation, "Subject location", "X,Y",
 	IfdFormat::U16, 2, 2, subject_location),
 
+	// TODO check if rational as decimal value is the best for this one
 	0xa215 =>
-	(ExifTag::ExposureIndex, "Exposure index", "FIXME", IfdFormat::URational, 1, 1, nop),
+	(ExifTag::ExposureIndex, "Exposure index", "EI",
+	IfdFormat::URational, 1, 1, rational_value),
 
-	// FIXME
 	0xa217 =>
-	(ExifTag::SensingMethod, "Sensing method", "none", IfdFormat::U16, 1, 1, nop),
+	(ExifTag::SensingMethod, "Sensing method", "none",
+	IfdFormat::U16, 1, 1, sensing_method),
 
 	0xa300 =>
 	(ExifTag::FileSource, "File source", "none",
 	IfdFormat::Undefined, 1, 1, file_source),
 
-	// FIXME
 	0xa301 =>
-	(ExifTag::SceneType, "Scene type", "none", IfdFormat::Undefined, 1, 1, nop),
+	(ExifTag::SceneType, "Scene type", "none",
+	IfdFormat::Undefined, 1, 1, scene_type),
 
-	// FIXME
 	0xa302 =>
-	(ExifTag::CFAPattern, "CFA Pattern", "none", IfdFormat::Undefined, -1i32, -1i32, nop),
+	(ExifTag::CFAPattern, "CFA Pattern", "none",
+	IfdFormat::Undefined, -1i32, -1i32, undefined_as_u8),
 
-	// FIXME
 	0xa401 =>
-	(ExifTag::CustomRendered, "Custom rendered", "none", IfdFormat::U16, 1, 1, nop),
+	(ExifTag::CustomRendered, "Custom rendered", "none",
+	IfdFormat::U16, 1, 1, custom_rendered),
 
 	0xa402 =>
-	(ExifTag::ExposureMode,
-		 "Exposure mode", "none", IfdFormat::U16, 1, 1, nop),
+	(ExifTag::ExposureMode, "Exposure mode", "none",
+	IfdFormat::U16, 1, 1, exposure_mode),
 
 	0xa403 =>
-	(ExifTag::WhiteBalanceMode,
-		 "White balance mode", "none", IfdFormat::U16, 1, 1, nop),
+	(ExifTag::WhiteBalanceMode, "White balance mode", "none",
+	IfdFormat::U16, 1, 1, white_balance_mode),
 
 	0xa404 =>
 	(ExifTag::DigitalZoomRatio, "Digital zoom ratio", "none",
@@ -224,34 +226,33 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	IfdFormat::U16, 1, 1, focal_length_35),
 
 	0xa406 =>
-	(ExifTag::SceneCaptureType,
-		 "Scene capture type", "none", IfdFormat::U16, 1, 1, nop),
+	(ExifTag::SceneCaptureType, "Scene capture type", "none",
+	IfdFormat::U16, 1, 1, scene_capture_type),
 
 	0xa407 =>
-	(ExifTag::GainControl,
-		 "Gain control", "none", IfdFormat::U16, 1, 1, nop),
+	(ExifTag::GainControl, "Gain control", "none",
+	IfdFormat::U16, 1, 1, gain_control),
 
 	0xa408 =>
-	(ExifTag::Contrast,
-		 "Contrast", "none", IfdFormat::U16, 1, 1, nop),
+	(ExifTag::Contrast, "Contrast", "none",
+	IfdFormat::U16, 1, 1, contrast),
 
 	0xa409 =>
-	(ExifTag::Saturation,
-		 "Saturation", "none", IfdFormat::U16, 1, 1, nop),
+	(ExifTag::Saturation, "Saturation", "none",
+	IfdFormat::U16, 1, 1, saturation),
 
 	0xa40a =>
-	(ExifTag::Sharpness,
-		 "Sharpness", "none", IfdFormat::U16, 1, 1, nop),
+	(ExifTag::Sharpness, "Sharpness", "none",
+	IfdFormat::U16, 1, 1, sharpness),
 
 	// collaborate if you have any idea how to interpret this
 	0xa40b =>
 	(ExifTag::DeviceSettingDescription, "Device setting description", "none",
 	IfdFormat::Undefined, -1i32, -1i32, undefined_as_blob),
 
-	// FIXME
 	0xa40c =>
-	(ExifTag::SubjectDistanceRange,
-		 "Subject distance range", "none", IfdFormat::U16, 1, 1, nop),
+	(ExifTag::SubjectDistanceRange, "Subject distance range", "none",
+	IfdFormat::U16, 1, 1, subject_distance_range),
 
 	0xa420 =>
 	(ExifTag::ImageUniqueID, "Image unique ID", "none",

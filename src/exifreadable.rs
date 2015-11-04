@@ -677,3 +677,204 @@ pub fn subject_location(e: &TagValue, _: &String) -> String
 	}
 }
 
+pub fn sharpness(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+		&TagValue::U16(ref v) => {
+			let n = v[0];
+			match n {
+				0 => "Normal",
+				1 => "Soft",
+				2 => "Hard",
+				_ => return format!("Unknown ({})", n),
+			}
+		},
+		_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
+pub fn saturation(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+		&TagValue::U16(ref v) => {
+			let n = v[0];
+			match n {
+				0 => "Normal",
+				1 => "Low",
+				2 => "High",
+				_ => return format!("Unknown ({})", n),
+			}
+		},
+		_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
+pub fn contrast(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+		&TagValue::U16(ref v) => {
+			let n = v[0];
+			match n {
+				0 => "Normal",
+				1 => "Soft",
+				2 => "Hard",
+				_ => return format!("Unknown ({})", n),
+			}
+		},
+		_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
+pub fn gain_control(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+		&TagValue::U16(ref v) => {
+			let n = v[0];
+			match n {
+				0 => "None",
+				1 => "Low gain up",
+				2 => "High gain up",
+				3 => "Low gain down",
+				4 => "High gain down",
+				_ => return format!("Unknown ({})", n),
+			}
+		},
+		_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
+pub fn exposure_mode(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+		&TagValue::U16(ref v) => {
+			let n = v[0];
+			match n {
+				0 => "Auto exposure",
+				1 => "Manual exposure",
+				2 => "Auto bracket",
+				_ => return format!("Unknown ({})", n),
+			}
+		},
+		_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
+pub fn scene_capture_type(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+		&TagValue::U16(ref v) => {
+			let n = v[0];
+			match n {
+				0 => "Standard",
+				1 => "Landscape",
+				2 => "Portrait",
+				3 => "Night scene",
+				_ => return format!("Unknown ({})", n),
+			}
+		},
+		_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
+pub fn scene_type(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+		&TagValue::Undefined(ref v, _) => {
+			let n = v[0];
+			match n {
+				1 => "Directly photographed image",
+				_ => return format!("Unknown ({})", n),
+			}
+		},
+		_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
+pub fn white_balance_mode(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+		&TagValue::U16(ref v) => {
+			let n = v[0];
+			match n {
+				0 => "Auto",
+				1 => "Manual",
+				_ => return format!("Unknown ({})", n),
+			}
+		},
+		_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
+pub fn sensing_method(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+		&TagValue::U16(ref v) => {
+			let n = v[0];
+			match n {
+				1 => "Not defined",
+				2 => "One-chip color area sensor",
+				3 => "Two-chip color area sensor",
+				4 => "Three-chip color area sensor",
+				5 => "Color sequential area sensor",
+				7 => "Trilinear sensor",
+				8 => "Color sequential linear sensor",
+				_ => return format!("Unknown ({})", n),
+			}
+		},
+		_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
+pub fn custom_rendered(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+		&TagValue::U16(ref v) => {
+			let n = v[0];
+			match n {
+				0 => "Normal",
+				1 => "Custom",
+				_ => return format!("Unknown ({})", n),
+			}
+		},
+		_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
+pub fn subject_distance_range(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+		&TagValue::U16(ref v) => {
+			let n = v[0];
+			match n {
+				0 => "Unknown",
+				1 => "Macro",
+				2 => "Close view",
+				3 => "Distant view",
+				_ => return format!("Unknown ({})", n),
+			}
+		},
+		_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
