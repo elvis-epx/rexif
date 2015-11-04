@@ -1,7 +1,6 @@
 use std::fs::File;
 use std::io::{Seek,SeekFrom,Read};
 use std::fmt::Display;
-use std::io::Write;
 use std::cell::RefCell;
 
 mod lowlevel;
@@ -12,6 +11,8 @@ mod types;
 pub use self::types::*;
 mod types_impl;
 pub use self::types_impl::*;
+mod debug;
+use self::debug::*;
 
 /* Detect the type of an image contained in a byte buffer */
 pub fn detect_type(contents: &Vec<u8>) -> &str
@@ -696,16 +697,17 @@ fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 	}
 
 	if format != f.format {
-		writeln!(std::io::stderr(), "EXIF tag {:x} {}, expected format {}, found {}",
-			f.tag, tag_readable, format as u8, f.format as u8);
+		warning(&format!("EXIF tag {:x} {}, expected format {}, found {}",
+			f.tag, tag_readable, format as u8, f.format as u8));
 		return e;
 	}
 
 	if min_count != -1 &&
 			((f.count as i32) < min_count ||
 			(f.count as i32) > max_count) {
-		writeln!(std::io::stderr(), "EXIF tag {:x} {}, format {}, expected count {}..{} found {}",
-			f.tag, tag_readable, format as u8, min_count, max_count, f.count);
+		warning(&format!("EXIF tag {:x} {}, format {}, expected count {}..{} found {}",
+			f.tag, tag_readable, format as u8, min_count,
+			max_count, f.count));
 		return e;
 	}
 
