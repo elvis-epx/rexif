@@ -69,6 +69,33 @@ pub fn exif_postprocessing(entry: &mut ExifEntry, entries: &Vec<ExifEntry>)
 		None => (),
 	},
 
+	ExifTag::GPSDestLatitude =>
+	match other_tag(ExifTag::GPSDestLatitudeRef, entries) {
+		Some(f) => {
+			entry.value_more_readable.push_str(" ");
+			entry.value_more_readable.push_str(&f.value_more_readable);
+		},
+		None => (),
+	},
+
+	ExifTag::GPSDestLongitude =>
+	match other_tag(ExifTag::GPSDestLongitudeRef, entries) {
+		Some(f) => {
+			entry.value_more_readable.push_str(" ");
+			entry.value_more_readable.push_str(&f.value_more_readable);
+		},
+		None => (),
+	},
+
+	ExifTag::GPSDestDistance =>
+	match other_tag(ExifTag::GPSDestDistanceRef, entries) {
+		Some(f) => {
+			entry.value_more_readable.push_str(" ");
+			entry.value_more_readable.push_str(&f.value_more_readable);
+		},
+		None => (),
+	},
+
 	_ => (),
 	}
 }

@@ -223,3 +223,35 @@ pub fn gps_alt_ref(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
+pub fn gpsdestdistanceref(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+	&TagValue::Str(ref v) => {
+		if v == "N" {
+			"kn"
+		} else if v == "K" {
+			"km"
+		} else if v == "M" {
+			"mi"
+		} else {
+			return format!("Unknown ({})", v)
+		}
+	},
+	_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
+pub fn gpsdestdistance(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+		&TagValue::URational(ref v) => {
+			format!("{:.3}", v[0].value())
+		},
+		_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+

@@ -347,25 +347,21 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	(ExifTag::GPSMapDatum, "GPS map datum", "",
 	IfdFormat::Str, -1i32, -1i32, nop),
 
-	// FIXME interpret
 	0x13 =>
-	(ExifTag::GPSDestLatitudeRef,
-	 "GPS destination latitude ref", "", IfdFormat::Str, -1i32, -1i32, nop),
+	(ExifTag::GPSDestLatitudeRef, "GPS destination latitude ref", "none",
+	IfdFormat::Str, -1i32, -1i32, strpass),
 
-	// FIXME
 	0x14 =>
-	(ExifTag::GPSDestLatitude,
-	 "GPS destination latitude", "", IfdFormat::URational, 3, 3, nop),
+	(ExifTag::GPSDestLatitude, "GPS destination latitude", "D/M/S",
+	IfdFormat::URational, 3, 3, dms),
 
-	// FIXME interpret
 	0x15 =>
-	(ExifTag::GPSDestLongitudeRef,
-	 "GPS destination longitude ref", "", IfdFormat::Str, -1i32, -1i32, nop),
+	(ExifTag::GPSDestLongitudeRef, "GPS destination longitude ref", "none",
+	IfdFormat::Str, -1i32, -1i32, strpass),
 
-	// FIXME
 	0x16 =>
-	(ExifTag::GPSDestLongitude,
-	 "GPS destination longitude", "", IfdFormat::URational, 3, 3, nop),
+	(ExifTag::GPSDestLongitude, "GPS destination longitude", "D/M/S",
+	IfdFormat::URational, 3, 3, dms),
 
 	// FIXME interpret
 	0x17 =>
@@ -377,15 +373,13 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	 (ExifTag::GPSDestBearing,
 	 "GPS destination bearing", "", IfdFormat::URational, 1, 1, nop),
 
-	// FIXME interpret
 	0x19 =>
-	(ExifTag::GPSDestDistanceRef,
-	 "GPS destination distance ref", "", IfdFormat::Str, -1i32, -1i32, nop),
+	(ExifTag::GPSDestDistanceRef, "GPS destination distance ref", "",
+	IfdFormat::Str, -1i32, -1i32, gpsdestdistanceref),
 
-	// FIXME
 	0x1a =>
-	(ExifTag::GPSDestDistance,
-	 "GPS destination distance", "", IfdFormat::URational, 1, 1, nop),
+	(ExifTag::GPSDestDistance, "GPS destination distance", "@GPSDestDistanceRef",
+	IfdFormat::URational, 1, 1, gpsdestdistance),
 
 	// FIXME
 	0x1b =>
