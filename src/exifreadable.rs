@@ -1,5 +1,6 @@
 use super::types::*;
 use super::ifdformat::*;
+use super::lowlevel::read_u16_array;
 
 static INV: &'static str = "Invalid data for this tag";
 
@@ -384,3 +385,60 @@ pub fn gpsmeasuremode(e: &TagValue, _: &String) -> String
 
 	return s.to_string();
 }
+
+pub fn undefined_as_ascii(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+	&TagValue::Undefined(ref v) => {
+		String::from_utf8_lossy(&v[..])
+	},
+	_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
+pub fn undefined_as_u8(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+	&TagValue::Undefined(ref v) => {
+		numarray_to_string(v)
+	},
+	_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
+pub fn undefined_as_encoded_string(e: &TagValue, _: &String) -> String
+{
+	static ASC: [u8; 8] = [0x41, 0x53, 0x43, 0x49, 0x49, 0, 0, 0];
+	static JIS: [u8; 8] = [0x4a, 0x49, 0x53, 0, 0, 0, 0, 0];
+	static UNICODE: [u8; 8] = [0x55, 0x4e, 0x49, 0x43, 0x4f, 0x44, 0x45, 0x00];
+
+	match e {
+	&TagValue::Undefined(ref v) => {
+		if v.len() < 8 {
+			format!("String w/ truncated preamble {}", numarray_to_string(v))
+		} else if v[0..8] == ASC[..] {
+			let v8 = &v[8..];
+			let s = String::from_utf8_lossy(v8);
+			s.into_owned()
+		} else if v[0..8] == JIS[..] {
+			let v8: Vec<u8> = v[8..].iter().map(|&x| x).collect();
+			format!("JIS string {}", numarray_to_string(&v8))
+		} else if v[0..8] == UNICODE[..] {
+			let v8 = &v[8..];
+			// reinterpret as vector of u16
+			// FIXME we need to know the endianess of TIFF at this point!!!
+			let v16_size = (v8.len() / 2) as u32;
+			let v16 = read_u16_array(true, v16_size, v8);
+			String::from_utf16_lossy(&v16)
+		} else {
+			format!("String w/ undefined encoding {}", numarray_to_string(v))
+		}
+	},
+	_ => panic!(INV),
+	}
+}
+

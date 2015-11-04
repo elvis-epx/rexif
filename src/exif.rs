@@ -95,7 +95,7 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 
 	0x9000 =>
 	(ExifTag::ExifVersion, "Exif version", "none",
-	IfdFormat::Undefined, -1i32, -1i32, nop),
+	IfdFormat::Undefined, -1i32, -1i32, undefined_as_ascii),
 
 	0x9003 =>
 	(ExifTag::DateTimeOriginal, "Date of original image", "none",
@@ -160,10 +160,13 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	(ExifTag::SubjectArea, "Subject area", "", IfdFormat::U16, 2, 4, nop),
 
 	0x927c =>
-	(ExifTag::MakerNote, "Maker note", "none", IfdFormat::Undefined, -1i32, -1i32, nop),
+	(ExifTag::MakerNote, "Maker note", "none",
+	IfdFormat::Undefined, -1i32, -1i32, undefined_as_u8),
 
+	// http://www.awaresystems.be/imaging/tiff/tifftags/privateifd/exif/usercomment.html
 	0x9286 =>
-	(ExifTag::UserComment, "User comment", "none", IfdFormat::Undefined, -1i32, -1i32, nop),
+	(ExifTag::UserComment, "User comment", "none",
+	IfdFormat::Undefined, -1i32, -1i32, undefined_as_encoded_string),
 
 	0xa000 =>
 	(ExifTag::FlashPixVersion, "Flashpix version", "", IfdFormat::Undefined, -1i32, -1i32, nop),
