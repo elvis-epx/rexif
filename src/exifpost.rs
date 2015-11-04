@@ -90,12 +90,22 @@ pub fn exif_postprocessing(entry: &mut ExifEntry, entries: &Vec<ExifEntry>)
 	ExifTag::GPSDestDistance =>
 	match other_tag(ExifTag::GPSDestDistanceRef, entries) {
 		Some(f) => {
+			entry.unit = f.value_more_readable.clone();
 			entry.value_more_readable.push_str(" ");
 			entry.value_more_readable.push_str(&f.value_more_readable);
 		},
 		None => (),
 	},
 
+	ExifTag::GPSSpeed =>
+	match other_tag(ExifTag::GPSSpeedRef, entries) {
+		Some(f) => {
+			entry.unit = f.value_more_readable.clone();
+			entry.value_more_readable.push_str(" ");
+			entry.value_more_readable.push_str(&f.value_more_readable);
+		},
+		None => (),
+	},
 	_ => (),
 	}
 }

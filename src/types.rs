@@ -173,7 +173,7 @@ pub enum ExifTag {
 pub enum IfdFormat {
 	Unknown = 0,
 	U8 = 1,
-	Str = 2,
+	Ascii = 2,
 	U16 = 3,
 	U32 = 4,
 	URational = 5,
@@ -220,7 +220,7 @@ pub struct ExifEntry {
 #[derive(Clone)]
 pub enum TagValue {
 	U8(Vec<u8>),
-	Str(String),
+	Ascii(String),
 	U16(Vec<u16>),
 	U32(Vec<u32>),
 	URational(Vec<URational>),

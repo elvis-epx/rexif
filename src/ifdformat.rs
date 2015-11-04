@@ -29,10 +29,15 @@ pub fn numarray_to_string<T: Display>(numbers: &Vec<T>) -> String
 pub fn tag_value_new(f: &IfdEntry) -> (TagValue, String)
 {
 	match f.format {
-		IfdFormat::Str => {
-			let s = String::from_utf8_lossy(&f.data[..]);
+		IfdFormat::Ascii => {
+			// Remove \0, there may be more than one
+			let mut tot = f.data.len();
+			while tot > 0 && f.data[tot - 1] == 0 {
+				tot -= 1;
+			}
+			let s = String::from_utf8_lossy(&f.data[0..tot]);
 			let s = s.into_owned();
-			(TagValue::Str(s.to_string()), s.to_string())
+			(TagValue::Ascii(s.to_string()), s.to_string())
 		},
 		IfdFormat::U16 => {
 			let a = read_u16_array(f.le, f.count, &f.data[..]);

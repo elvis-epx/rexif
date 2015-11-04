@@ -226,7 +226,7 @@ pub fn gps_alt_ref(e: &TagValue, _: &String) -> String
 pub fn gpsdestdistanceref(e: &TagValue, _: &String) -> String
 {
 	let s = match e {
-	&TagValue::Str(ref v) => {
+	&TagValue::Ascii(ref v) => {
 		if v == "N" {
 			"kn"
 		} else if v == "K" {
@@ -248,6 +248,38 @@ pub fn gpsdestdistance(e: &TagValue, _: &String) -> String
 	let s = match e {
 		&TagValue::URational(ref v) => {
 			format!("{:.3}", v[0].value())
+		},
+		_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
+pub fn gpsspeedref(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+	&TagValue::Ascii(ref v) => {
+		if v == "N" {
+			"kn"
+		} else if v == "K" {
+			"km/h"
+		} else if v == "M" {
+			"mi/h"
+		} else {
+			return format!("Unknown ({})", v)
+		}
+	},
+	_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
+pub fn gpsspeed(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+		&TagValue::URational(ref v) => {
+			format!("{:.1}", v[0].value())
 		},
 		_ => panic!(INV),
 	};

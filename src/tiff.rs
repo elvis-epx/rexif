@@ -33,13 +33,13 @@ pub fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 
 	// Internal assert:
 	// 1) tag must match enum
-	// 2) all types except Str, Undefined, Unknown must have definite length
+	// 2) all types except Ascii, Undefined, Unknown must have definite length
 	// 3) Str type must not have a definite length
 	if (tag as u16) != f.tag ||
-		(min_count == -1 && (format != IfdFormat::Str &&
+		(min_count == -1 && (format != IfdFormat::Ascii &&
 				format != IfdFormat::Undefined &&
 				format != IfdFormat::Unknown)) ||
-		(min_count != -1 && format == IfdFormat::Str) {
+		(min_count != -1 && format == IfdFormat::Ascii) {
 		panic!("Internal error {:x}", f.tag);
 	}
 

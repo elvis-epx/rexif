@@ -11,7 +11,7 @@ pub fn ifdformat_new(n: u16) -> IfdFormat
 {
 	match n {
 		1 => IfdFormat::U8,
-		2 => IfdFormat::Str,
+		2 => IfdFormat::Ascii,
 		3 => IfdFormat::U16,
 		4 => IfdFormat::U32,
 		5 => IfdFormat::URational,
@@ -35,7 +35,7 @@ impl IfdEntry {
 	{
 		match self.format {
 			IfdFormat::U8 => 1,
-			IfdFormat::Str => 1,
+			IfdFormat::Ascii => 1,
 			IfdFormat::U16 => 2,
 			IfdFormat::U32 => 4,
 			IfdFormat::URational => 8,

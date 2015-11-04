@@ -12,14 +12,14 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	match f {
 
 	0x010e =>
-	(ExifTag::ImageDescription, "Image Description", "none", IfdFormat::Str,
+	(ExifTag::ImageDescription, "Image Description", "none", IfdFormat::Ascii,
 	-1i32, -1i32, strpass),
 
 	0x010f =>
-	(ExifTag::Make, "Manufacturer", "none", IfdFormat::Str, -1i32, -1i32, strpass),
+	(ExifTag::Make, "Manufacturer", "none", IfdFormat::Ascii, -1i32, -1i32, strpass),
 
 	0x0110 =>
-	(ExifTag::Model, "Model", "none", IfdFormat::Str, -1i32, -1i32, strpass),
+	(ExifTag::Model, "Model", "none", IfdFormat::Ascii, -1i32, -1i32, strpass),
 
 	0x0112 =>
 	(ExifTag::Orientation, "Orientation", "none", IfdFormat::U16, 1, 1, orientation),
@@ -36,10 +36,10 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	(ExifTag::ResolutionUnit, "Resolution Unit", "none", IfdFormat::U16, 1, 1, resolution_unit),
 
 	0x0131 =>
-	(ExifTag::Software, "Software", "none", IfdFormat::Str, -1i32, -1i32, strpass),
+	(ExifTag::Software, "Software", "none", IfdFormat::Ascii, -1i32, -1i32, strpass),
 
 	0x0132 =>
-	(ExifTag::DateTime, "Image date", "none", IfdFormat::Str, -1i32, -1i32, strpass),
+	(ExifTag::DateTime, "Image date", "none", IfdFormat::Ascii, -1i32, -1i32, strpass),
 
 	0x013e =>
 	(ExifTag::WhitePoint, "White Point", "CIE 1931 coordinates",
@@ -58,7 +58,7 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	IfdFormat::URational, 6, 6, rational_values),
 
 	0x8298 =>
-	(ExifTag::Copyright, "Copyright", "none", IfdFormat::Str, -1i32, -1i32, strpass),
+	(ExifTag::Copyright, "Copyright", "none", IfdFormat::Ascii, -1i32, -1i32, strpass),
 
 	0x8769 =>
 	(ExifTag::ExifOffset, "This image has an Exif SubIFD", "byte offset",
@@ -82,7 +82,7 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 
 	0x8824 =>
 	(ExifTag::SpectralSensitivity, "Spectral sensitivity", "",
-	IfdFormat::Str, -1i32, -1i32, strpass),
+	IfdFormat::Ascii, -1i32, -1i32, strpass),
 
 	0x8827 =>
 	(ExifTag::ISOSpeedRatings, "ISO speed ratings", "ISO",
@@ -99,11 +99,11 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 
 	0x9003 =>
 	(ExifTag::DateTimeOriginal, "Date of original image", "none",
-	IfdFormat::Str, -1i32, -1i32, strpass),
+	IfdFormat::Ascii, -1i32, -1i32, strpass),
 
 	0x9004 =>
 	(ExifTag::DateTimeDigitized, "Date of image digitalization", "none",
-	IfdFormat::Str, -1i32, -1i32, strpass),
+	IfdFormat::Ascii, -1i32, -1i32, strpass),
 
 	0x9101 =>
 	 (ExifTag::ComponentsConfiguration, "Components configuration", "",
@@ -173,7 +173,7 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	(ExifTag::ColorSpace, "Color space", "", IfdFormat::U16, 1, 1, nop),
 
 	0xa004 =>
-	(ExifTag::RelatedSoundFile, "Related sound file", "none", IfdFormat::Str, -1i32, -1i32, strpass),
+	(ExifTag::RelatedSoundFile, "Related sound file", "none", IfdFormat::Ascii, -1i32, -1i32, strpass),
 
 	0xa20b =>
 	(ExifTag::FlashEnergy, "Flash energy", "beam candle power seconds", IfdFormat::URational, 1, 1, nop),
@@ -263,7 +263,7 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 		 "Subject distance range", "", IfdFormat::U16, 1, 1, nop),
 
 	0xa420 =>
-	(ExifTag::ImageUniqueID, "Image unique ID", "", IfdFormat::Str, -1i32, -1i32, strpass),
+	(ExifTag::ImageUniqueID, "Image unique ID", "", IfdFormat::Ascii, -1i32, -1i32, strpass),
 		
 	0x0 =>
 	(ExifTag::GPSVersionID,
@@ -271,7 +271,7 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 
 	0x1 =>
 	(ExifTag::GPSLatitudeRef, "GPS latitude ref", "none",
-	IfdFormat::Str, -1i32, -1i32, strpass),
+	IfdFormat::Ascii, -1i32, -1i32, strpass),
 
 	0x2 =>
 	(ExifTag::GPSLatitude, "GPS latitude", "D/M/S",
@@ -279,7 +279,7 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 
 	0x3 =>
 	(ExifTag::GPSLongitudeRef, "GPS longitude ref", "none",
-	IfdFormat::Str, -1i32, -1i32, strpass),
+	IfdFormat::Ascii, -1i32, -1i32, strpass),
 
 	0x4 =>
 	(ExifTag::GPSLongitude, "GPS longitude", "D/M/S",
@@ -299,36 +299,34 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 		 "GPS timestamp", "UTC", IfdFormat::URational, 3, 3, nop),
 
 	0x8 =>
-	(ExifTag::GPSSatellites, "GPS satellites", "", IfdFormat::Str, -1i32, -1i32, strpass),
+	(ExifTag::GPSSatellites, "GPS satellites", "", IfdFormat::Ascii, -1i32, -1i32, strpass),
 
 	// FIXME interpret
 	0x9 =>
 	(ExifTag::GPSStatus,
-		 "GPS status", "", IfdFormat::Str, -1i32, -1i32, nop),
+		 "GPS status", "", IfdFormat::Ascii, -1i32, -1i32, nop),
 
 	// FIXME interpret
 	0xa =>
 	(ExifTag::GPSMeasureMode,
-		 "GPS measure mode", "", IfdFormat::Str, -1i32, -1i32, nop),
+		 "GPS measure mode", "", IfdFormat::Ascii, -1i32, -1i32, nop),
 
 	0xb =>
 	(ExifTag::GPSDOP,
 		 "GPS Data Degree of Precision (DOP)", "deg.", IfdFormat::URational, 1, 1, nop),
 
-	// FIXME interpret
 	0xc =>
-	(ExifTag::GPSSpeedRef,
-		 "GPS speed ref", "", IfdFormat::Str, -1i32, -1i32, nop),
+	(ExifTag::GPSSpeedRef, "GPS speed ref", "none",
+	IfdFormat::Ascii, -1i32, -1i32, gpsspeedref),
 
-	// FIXME join with 0xc, show value
 	0xd =>
-	(ExifTag::GPSSpeed,
-		 "GPS speed", "", IfdFormat::URational, 1, 1, nop),
+	(ExifTag::GPSSpeed, "GPS speed", "@GPSSpeedRef",
+	IfdFormat::URational, 1, 1, gpsspeed),
 
 	// FIXME interpret
 	0xe =>
 	(ExifTag::GPSTrackRef,
-		 "GPS track ref", "", IfdFormat::Str, -1i32, -1i32, nop),
+		 "GPS track ref", "", IfdFormat::Ascii, -1i32, -1i32, nop),
 
 	0xf =>
 	(ExifTag::GPSTrack,
@@ -337,7 +335,7 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	// FIXME interpret
 	0x10 =>
 	(ExifTag::GPSImgDirectionRef, "GPS image direction ref", "",
-	IfdFormat::Str, -1i32, -1i32, nop),
+	IfdFormat::Ascii, -1i32, -1i32, nop),
 
 	0x11 =>
 	(ExifTag::GPSImgDirection, "GPS image direction", "",
@@ -345,11 +343,11 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 
 	0x12 =>
 	(ExifTag::GPSMapDatum, "GPS map datum", "",
-	IfdFormat::Str, -1i32, -1i32, nop),
+	IfdFormat::Ascii, -1i32, -1i32, nop),
 
 	0x13 =>
 	(ExifTag::GPSDestLatitudeRef, "GPS destination latitude ref", "none",
-	IfdFormat::Str, -1i32, -1i32, strpass),
+	IfdFormat::Ascii, -1i32, -1i32, strpass),
 
 	0x14 =>
 	(ExifTag::GPSDestLatitude, "GPS destination latitude", "D/M/S",
@@ -357,7 +355,7 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 
 	0x15 =>
 	(ExifTag::GPSDestLongitudeRef, "GPS destination longitude ref", "none",
-	IfdFormat::Str, -1i32, -1i32, strpass),
+	IfdFormat::Ascii, -1i32, -1i32, strpass),
 
 	0x16 =>
 	(ExifTag::GPSDestLongitude, "GPS destination longitude", "D/M/S",
@@ -366,7 +364,7 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	// FIXME interpret
 	0x17 =>
 	(ExifTag::GPSDestBearingRef,
-	 "GPS destination bearing ref", "", IfdFormat::Str, -1i32, -1i32, nop),
+	 "GPS destination bearing ref", "", IfdFormat::Ascii, -1i32, -1i32, nop),
 
 	// FIXME
 	0x18 =>
@@ -375,7 +373,7 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 
 	0x19 =>
 	(ExifTag::GPSDestDistanceRef, "GPS destination distance ref", "",
-	IfdFormat::Str, -1i32, -1i32, gpsdestdistanceref),
+	IfdFormat::Ascii, -1i32, -1i32, gpsdestdistanceref),
 
 	0x1a =>
 	(ExifTag::GPSDestDistance, "GPS destination distance", "@GPSDestDistanceRef",
@@ -393,7 +391,7 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 
 	0x1d =>
 	(ExifTag::GPSDateStamp, "GPS date stamp", "none",
-	IfdFormat::Str, -1i32, -1i32, strpass),
+	IfdFormat::Ascii, -1i32, -1i32, strpass),
 
 	// FIXME
 	0x1e =>
