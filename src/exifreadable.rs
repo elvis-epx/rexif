@@ -287,7 +287,7 @@ pub fn gpsspeed(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn gpsdestbearingref(e: &TagValue, _: &String) -> String
+pub fn gpsbearingref(e: &TagValue, _: &String) -> String
 {
 	let s = match e {
 	&TagValue::Ascii(ref v) => {
@@ -305,7 +305,7 @@ pub fn gpsdestbearingref(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn gpsdestbearing(e: &TagValue, _: &String) -> String
+pub fn gpsbearing(e: &TagValue, _: &String) -> String
 {
 	let s = match e {
 		&TagValue::URational(ref v) => {
@@ -349,3 +349,38 @@ pub fn gpsdiff(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
+pub fn gpsstatus(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+	&TagValue::Ascii(ref v) => {
+		if v == "A" {
+			"Measurement in progress"
+		} else if v == "V" {
+			"Measurement is interoperability"
+		} else {
+			return format!("Unknown ({})", v)
+		}
+	},
+	_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
+pub fn gpsmeasuremode(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+	&TagValue::Ascii(ref v) => {
+		if v == "2" {
+			"2-dimension"
+		} else if v == "3" {
+			"3-dimension"
+		} else {
+			return format!("Unknown ({})", v)
+		}
+	},
+	_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
