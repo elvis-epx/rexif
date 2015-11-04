@@ -168,12 +168,10 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	0xa20b => (ExifTag::FlashEnergy, "Flash energy", "BCPS",
 	IfdFormat::URational, 1, 1, flash_energy),
 
-	// FIXME relate to focal place resolution unit
 	0xa20e =>
 	(ExifTag::FocalPlaneXResolution, "Focal plane X resolution", "@FocalPlaneResolutionUnit",
 	IfdFormat::URational, 1, 1, rational_value),
 
-	// FIXME relate to focal place resolution unit
 	0xa20f =>
 	(ExifTag::FocalPlaneYResolution, "Focal plane Y resolution", "@FocalPlaneResolutionUnit",
 	IfdFormat::URational, 1, 1, rational_value),
@@ -191,7 +189,7 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 
 	// FIXME
 	0xa217 =>
-	(ExifTag::SensingMethod, "Sensing method", "", IfdFormat::U16, 1, 1, nop),
+	(ExifTag::SensingMethod, "Sensing method", "none", IfdFormat::U16, 1, 1, nop),
 
 	0xa300 =>
 	(ExifTag::FileSource, "File source", "none",
@@ -199,23 +197,23 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 
 	// FIXME
 	0xa301 =>
-	(ExifTag::SceneType, "Scene type", "", IfdFormat::Undefined, 1, 1, nop),
+	(ExifTag::SceneType, "Scene type", "none", IfdFormat::Undefined, 1, 1, nop),
 
 	// FIXME
 	0xa302 =>
-	(ExifTag::CFAPattern, "CFA Pattern", "", IfdFormat::Undefined, -1i32, -1i32, nop),
+	(ExifTag::CFAPattern, "CFA Pattern", "none", IfdFormat::Undefined, -1i32, -1i32, nop),
 
 	// FIXME
 	0xa401 =>
-	(ExifTag::CustomRendered, "Custom rendered", "", IfdFormat::U16, 1, 1, nop),
+	(ExifTag::CustomRendered, "Custom rendered", "none", IfdFormat::U16, 1, 1, nop),
 
 	0xa402 =>
 	(ExifTag::ExposureMode,
-		 "Exposure mode", "", IfdFormat::U16, 1, 1, nop),
+		 "Exposure mode", "none", IfdFormat::U16, 1, 1, nop),
 
 	0xa403 =>
 	(ExifTag::WhiteBalanceMode,
-		 "White balance mode", "", IfdFormat::U16, 1, 1, nop),
+		 "White balance mode", "none", IfdFormat::U16, 1, 1, nop),
 
 	0xa404 =>
 	(ExifTag::DigitalZoomRatio, "Digital zoom ratio", "none",
@@ -227,23 +225,23 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 
 	0xa406 =>
 	(ExifTag::SceneCaptureType,
-		 "Scene capture type", "", IfdFormat::U16, 1, 1, nop),
+		 "Scene capture type", "none", IfdFormat::U16, 1, 1, nop),
 
 	0xa407 =>
 	(ExifTag::GainControl,
-		 "Gain control", "", IfdFormat::U16, 1, 1, nop),
+		 "Gain control", "none", IfdFormat::U16, 1, 1, nop),
 
 	0xa408 =>
 	(ExifTag::Contrast,
-		 "Contrast", "", IfdFormat::U16, 1, 1, nop),
+		 "Contrast", "none", IfdFormat::U16, 1, 1, nop),
 
 	0xa409 =>
 	(ExifTag::Saturation,
-		 "Saturation", "", IfdFormat::U16, 1, 1, nop),
+		 "Saturation", "none", IfdFormat::U16, 1, 1, nop),
 
 	0xa40a =>
 	(ExifTag::Sharpness,
-		 "Sharpness", "", IfdFormat::U16, 1, 1, nop),
+		 "Sharpness", "none", IfdFormat::U16, 1, 1, nop),
 
 	// collaborate if you have any idea how to interpret this
 	0xa40b =>
@@ -253,7 +251,7 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	// FIXME
 	0xa40c =>
 	(ExifTag::SubjectDistanceRange,
-		 "Subject distance range", "", IfdFormat::U16, 1, 1, nop),
+		 "Subject distance range", "none", IfdFormat::U16, 1, 1, nop),
 
 	0xa420 =>
 	(ExifTag::ImageUniqueID, "Image unique ID", "none",
