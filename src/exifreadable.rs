@@ -1,6 +1,8 @@
 use super::types::*;
 use super::ifdformat::*;
 
+static INV: &'static str = "Invalid data for this tag";
+
 /// No-op for readable value tag function. Should not be used by any EXIF tag descriptor,
 /// except for the catch-all match that handles unknown tags
 pub fn nop(_: &TagValue, s: &String) -> String
@@ -29,7 +31,7 @@ pub fn orientation(e: &TagValue, _: &String) -> String
 				_ => return format!("Unknown ({})", n),
 			}
 		},
-		_ => panic!("Invalid"),
+		_ => panic!(INV),
 	};
 
 	return s.to_string();
@@ -44,7 +46,7 @@ pub fn rational_value(e: &TagValue, _: &String) -> String
 		&TagValue::IRational(ref v) => {
 			format!("{}", v[0].value())
 		},
-		_ => panic!("Invalid"),
+		_ => panic!(INV),
 	};
 
 	return s.to_string();
@@ -57,7 +59,7 @@ pub fn rational_values(e: &TagValue, _: &String) -> String
 			let ve: Vec<f64> = v.iter().map(|&x| x.value()).collect();
 			numarray_to_string(&ve)
 		},
-		_ => panic!("Invalid"),
+		_ => panic!(INV),
 	};
 
 	return s.to_string();
@@ -75,7 +77,7 @@ pub fn resolution_unit(e: &TagValue, _: &String) -> String
 				_ => return format!("Unknown ({})", n),
 			}
 		},
-		_ => panic!("Invalid"),
+		_ => panic!(INV),
 	};
 
 	return s.to_string();
@@ -87,7 +89,7 @@ pub fn exposure_time(e: &TagValue, _: &String) -> String
 		&TagValue::URational(ref v) => {
 			format!("{} s", v[0])
 		},
-		_ => panic!("Invalid"),
+		_ => panic!(INV),
 	};
 
 	return s.to_string();
@@ -99,7 +101,7 @@ pub fn f_number(e: &TagValue, _: &String) -> String
 		&TagValue::URational(ref v) => {
 			format!("f/{:.1}", v[0].value())
 		},
-		_ => panic!("Invalid"),
+		_ => panic!(INV),
 	};
 
 	return s.to_string();
@@ -122,7 +124,7 @@ pub fn exposure_program(e: &TagValue, _: &String) -> String
 				_ => return format!("Unknown ({})", n),
 			}
 		},
-		_ => panic!("Invalid"),
+		_ => panic!(INV),
 	};
 
 	return s.to_string();
@@ -134,7 +136,7 @@ pub fn focal_length(e: &TagValue, _: &String) -> String
 		&TagValue::URational(ref v) => {
 			format!("{} mm", v[0].value())
 		},
-		_ => panic!("Invalid"),
+		_ => panic!(INV),
 	};
 
 	return s.to_string();
@@ -146,7 +148,7 @@ pub fn focal_length_35(e: &TagValue, _: &String) -> String
 		&TagValue::U16(ref v) => {
 			format!("{} mm", v[0])
 		},
-		_ => panic!("Invalid"),
+		_ => panic!(INV),
 	};
 
 	return s.to_string();
@@ -158,7 +160,25 @@ pub fn meters(e: &TagValue, _: &String) -> String
 		&TagValue::URational(ref v) => {
 			format!("{:.1} m", v[0].value())
 		},
-		_ => panic!("Invalid"),
+		_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
+pub fn iso_speeds(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+	&TagValue::U16(ref v) => {
+		if v.len() == 1 {
+			format!("ISO {}", v[0])
+		} else if v.len() == 2 {
+			format!("ISO {} latitude {}", v[0], v[1])
+		} else {
+			format!("Unknown ({})", numarray_to_string(&v))
+		}
+	},
+	_ => panic!(INV),
 	};
 
 	return s.to_string();

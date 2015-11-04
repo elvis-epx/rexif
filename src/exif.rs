@@ -82,12 +82,11 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	(ExifTag::SpectralSensitivity, "Spectral sensitivity", "",
 	IfdFormat::Str, -1i32, -1i32, strpass),
 
-	// FIXME 
-	// EPX
 	0x8827 =>
 	(ExifTag::ISOSpeedRatings, "ISO speed ratings", "ISO",
-	IfdFormat::U16, 1, 2, nop),
+	IfdFormat::U16, 1, 2, iso_speeds),
 
+	// EPX
 	0x8828 =>
 	(ExifTag::OECF, "OECF", "none",
 	IfdFormat::Undefined, -1i32, -1i32, nop),
