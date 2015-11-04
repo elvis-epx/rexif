@@ -1,6 +1,8 @@
 use super::types::*;
 use super::exifreadable::*;
 
+// FIXME undefined -> try to interpret as string
+
 /// Convert a numeric tag into EXIF tag and yields info about the tag. This info
 /// is used by the main body of the parser to sanity-check the tags found in image
 /// and make sure that EXIF tags have the right data types
@@ -267,25 +269,21 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	(ExifTag::GPSVersionID,
 		 "GPS version ID", "", IfdFormat::U8, 4, 4, nop),
 
-	// FIXME interpret
 	0x1 =>
-	(ExifTag::GPSLatitudeRef,
-		 "GPS latitude ref", "", IfdFormat::Str, -1i32, -1i32, nop),
+	(ExifTag::GPSLatitudeRef, "GPS latitude ref", "none",
+	IfdFormat::Str, -1i32, -1i32, strpass),
 
-	// FIXME and join with 0x1
 	0x2 =>
-	(ExifTag::GPSLatitude,
-		 "GPS latitude", "latitude deg.", IfdFormat::URational, 3, 3, nop),
+	(ExifTag::GPSLatitude, "GPS latitude", "D/M/S",
+	IfdFormat::URational, 3, 3, dms),
 
-	// FIXME interpret
 	0x3 =>
-	(ExifTag::GPSLongitudeRef,
-		 "GPS longitude ref", "longitude deg.", IfdFormat::Str, -1i32, -1i32, nop),
+	(ExifTag::GPSLongitudeRef, "GPS longitude ref", "none",
+	IfdFormat::Str, -1i32, -1i32, strpass),
 
-	// FIXME and join with 0x3
 	0x4 =>
-	(ExifTag::GPSLongitude,
-		 "GPS longitude", "degrees", IfdFormat::URational, 3, 3, nop),
+	(ExifTag::GPSLongitude, "GPS longitude", "D/M/S",
+	IfdFormat::URational, 3, 3, dms),
 
 	// FIXME
 	0x5 =>

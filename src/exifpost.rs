@@ -36,8 +36,24 @@ pub fn exif_postprocessing(entry: &mut ExifEntry, entries: &Vec<ExifEntry>)
 		None => (),
 	},
 
+	ExifTag::GPSLatitude =>
+	match other_tag(ExifTag::GPSLatitudeRef, entries) {
+		Some(f) => {
+			entry.value_more_readable.push_str(" ");
+			entry.value_more_readable.push_str(&f.value_more_readable);
+		},
+		None => (),
+	},
+
+	ExifTag::GPSLongitude =>
+	match other_tag(ExifTag::GPSLongitudeRef, entries) {
+		Some(f) => {
+			entry.value_more_readable.push_str(" ");
+			entry.value_more_readable.push_str(&f.value_more_readable);
+		},
+		None => (),
+	},
+
 	_ => (),
 	}
 }
-
-// FIXME check how Undefined could be converted safely to string in some cases
