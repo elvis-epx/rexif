@@ -192,12 +192,12 @@ pub fn dms(e: &TagValue, _: &String) -> String
 		let min = v[1];
 		let sec = v[2];
 		if deg.denominator == 1 && min.denominator == 1 {
-			format!("{}º{}'{:.2}\"", deg.value(), min.value(), sec.value())
+			format!("{}°{}'{:.2}\"", deg.value(), min.value(), sec.value())
 		} else if deg.denominator == 1 {
-			format!("{}º{:.4}'", deg.value(), min.value() + sec.value() / 60.0)
+			format!("{}°{:.4}'", deg.value(), min.value() + sec.value() / 60.0)
 		} else {
 			// untypical format
-			format!("{:.7}º", deg.value() + min.value() / 60.0 + sec.value() / 3600.0)
+			format!("{:.7}°", deg.value() + min.value() / 60.0 + sec.value() / 3600.0)
 		}
 	},
 	_ => panic!(INV),
