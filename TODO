@@ -1,0 +1,2 @@
+Scan library and find unrecognized & common tags
+Add description, license, license_file, documentation, homepage and repository to Cargo.toml
