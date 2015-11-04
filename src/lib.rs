@@ -1,320 +1,17 @@
 use std::fs::File;
 use std::io::{Seek,SeekFrom,Read};
-use std::result::Result;
-use std::error::Error;
-use std::fmt;
-use std::io::Write;
-use std::fmt::Debug;
 use std::fmt::Display;
-use std::fmt::Formatter;
+use std::io::Write;
 use std::cell::RefCell;
 
 mod lowlevel;
 use self::lowlevel::*;
 mod rational;
 pub use self::rational::*;
-
-#[derive(Clone)]
-pub struct ExifData {
-	pub file: String,
-	pub size: usize,
-	pub mime: String,
-	pub entries: Vec<ExifEntry>,
-}
-
-#[derive(Copy, Clone)]
-pub enum ExifErrorKind {
-	FileOpenError,
-	FileSeekError,
-	FileReadError,
-	FileTypeUnknown,
-	JpegWithoutExif,
-	TiffTruncated,
-	TiffBadPreamble,
-	IfdTruncated,
-	ExifIfdTruncated,
-	ExifIfdEntryNotFound,
-}
-
-#[derive(Clone)]
-pub struct ExifError {
-	pub kind: ExifErrorKind,
-	pub extra: String
-}
-
-#[derive(Clone)]
-pub struct IfdEntry {
-	pub tag: u16,
-	pub format: IfdFormat,
-	pub count: u32,
-	pub data: Vec<u8>,
-	pub ifd_data: Vec<u8>,
-	pub ext_data: Vec<u8>,
-	pub le: bool,
-}
-
-#[derive(Copy, Clone, PartialEq)]
-pub enum ExifTag {
-	UnknownToMe = 0xffff,
-	ImageDescription = 0x010e,
-	Make = 0x010f,
-	Model = 0x0110,
-	Orientation = 0x0112,
-	XResolution = 0x011a,
-	YResolution = 0x011b,
-	ResolutionUnit = 0x0128,
-	Software = 0x0131,
-	DateTime = 0x0132,
-	WhitePoint = 0x013e,
-	PrimaryChromaticities = 0x013f,
-	YCbCrCoefficients = 0x0211,
-	ReferenceBlackWhite = 0x0214,
-	Copyright = 0x8298,
-	ExifOffset = 0x8769,
-	GPSOffset = 0x8825,
-
-	ExposureTime = 0x829a,
-	FNumber = 0x829d,
-	ExposureProgram = 0x8822,
-	SpectralSensitivity = 0x8824,
-	ISOSpeedRatings = 0x8827,
-	OECF = 0x8828,
-	ExifVersion = 0x9000,
-	DateTimeOriginal = 0x9003,
-	DateTimeDigitized = 0x9004,
-	ComponentsConfiguration = 0x9101,
-	CompressedBitsPerPixel = 0x9102,
-	ShutterSpeedValue = 0x9201,
-	ApertureValue = 0x9202,
-	BrightnessValue = 0x9203,
-	ExposureBiasValue = 0x9204,
-	MaxApertureValue = 0x9205,
-	SubjectDistance = 0x9206,
-	MeteringMode = 0x9207,
-	LightSource = 0x9208,
-	Flash = 0x9209,
-	FocalLength = 0x920a,
-	SubjectArea = 0x9214,
-	MakerNote = 0x927c,
-	UserComment = 0x9286,
-	FlashPixVersion = 0xa000,
-	ColorSpace = 0xa001,
-	RelatedSoundFile = 0xa004,
-	FlashEnergy = 0xa20b,
-	FocalPlaneXResolution = 0xa20e,
-	FocalPlaneYResolution = 0xa20f,
-	FocalPlaneResolutionUnit = 0xa210,
-	SubjectLocation = 0xa214,
-	ExposureIndex = 0xa215,
-	SensingMethod = 0xa217,
-	FileSource = 0xa300,
-	SceneType = 0xa301,
-	CFAPattern = 0xa302,
-	CustomRendered = 0xa401,
-	ExposureMode = 0xa402,
-	WhiteBalanceMode = 0xa403,
-	DigitalZoomRatio = 0xa404,
-	FocalLengthIn35mmFilm = 0xa405,
-	SceneCaptureType = 0xa406,
-	GainControl = 0xa407,
-	Contrast = 0xa408,
-	Saturation = 0xa409,
-	Sharpness = 0xa40a,
-	DeviceSettingDescription = 0xa40b,
-	SubjectDistanceRange = 0xa40c,
-	ImageUniqueID = 0xa420,
-		
-	GPSVersionID = 0x0,
-	GPSLatitudeRef = 0x1,
-	GPSLatitude = 0x2,
-	GPSLongitudeRef = 0x3,
-	GPSLongitude = 0x4,
-	GPSAltitudeRef = 0x5,
-	GPSAltitude = 0x6,
-	GPSTimeStamp = 0x7,
-	GPSSatellites = 0x8,
-	GPSStatus = 0x9,
-	GPSMeasureMode = 0xa,
-	GPSDOP = 0xb,
-	GPSSpeedRef = 0xc,
-	GPSSpeed = 0xd,
-	GPSTrackRef = 0xe,
-	GPSTrack = 0xf,
-	GPSImgDirectionRef = 0x10,
-	GPSImgDirection = 0x11,
-	GPSMapDatum = 0x12,
-	GPSDestLatitudeRef = 0x13,
-	GPSDestLatitude = 0x14,
-	GPSDestLongitudeRef = 0x15,
-	GPSDestLongitude = 0x16,
-	GPSDestBearingRef = 0x17,
-	GPSDestBearing = 0x18,
-	GPSDestDistanceRef = 0x19,
-	GPSDestDistance = 0x1a,
-	GPSProcessingMethod = 0x1b,
-	GPSAreaInformation = 0x1c,
-	GPSDateStamp = 0x1d,
-	GPSDifferential = 0x1e,
-}
-
-#[derive(Copy, Clone, PartialEq)]
-pub enum IfdFormat {
-	Unknown = 0,
-	U8 = 1,
-	Str = 2,
-	U16 = 3,
-	U32 = 4,
-	URational = 5,
-	I8 = 6,
-	Undefined = 7, // u8
-	I16 = 8,
-	I32 = 9,
-	IRational = 10,
-	F32 = 11,
-	F64 = 12,
-}
-
-#[derive(Clone)]
-pub struct ExifEntry {
-	pub ifd: IfdEntry,
-	pub tag: ExifTag,
-	pub value: TagValue,
-	pub unit: String,
-	pub tag_readable: String,
-	pub value_readable: String,
-	pub value_more_readable: String,
-}
-
-#[derive(Clone)]
-pub enum TagValue {
-	U8(Vec<u8>),
-	Str(String),
-	U16(Vec<u16>),
-	U32(Vec<u32>),
-	URational(Vec<URational>),
-	I8(Vec<i8>),
-	Undefined(Vec<u8>),
-	I16(Vec<i16>),
-	I32(Vec<i32>),
-	IRational(Vec<IRational>),
-	F32(Vec<f32>),
-	F64(Vec<f64>),
-	Unknown(Vec<u8>),
-}
-
-fn to_ifdformat(n: u16) -> IfdFormat
-{
-	match n {
-		1 => IfdFormat::U8,
-		2 => IfdFormat::Str,
-		3 => IfdFormat::U16,
-		4 => IfdFormat::U32,
-		5 => IfdFormat::URational,
-		6 => IfdFormat::I8,
-		7 => IfdFormat::Undefined,
-		8 => IfdFormat::I16,
-		9 => IfdFormat::I32,
-		10 => IfdFormat::IRational,
-		11 => IfdFormat::F32,
-		12 => IfdFormat::F64,
-		_ => IfdFormat::Unknown,
-	}
-}
-
-impl IfdEntry {
-	fn data_as_offset(&self) -> usize {
-		read_u32(self.le, &(self.ifd_data[0..4])) as usize
-	}
-
-	fn size(&self) -> u8
-	{
-		match self.format {
-			IfdFormat::U8 => 1,
-			IfdFormat::Str => 1,
-			IfdFormat::U16 => 2,
-			IfdFormat::U32 => 4,
-			IfdFormat::URational => 8,
-			IfdFormat::I8 => 1,
-			IfdFormat::Undefined => 1,
-			IfdFormat::I16 => 2,
-			IfdFormat::I32 => 4,
-			IfdFormat::IRational => 8,
-			IfdFormat::F32 => 4,
-			IfdFormat::F64 => 8,
-			IfdFormat::Unknown => 1,
-		}
-	}
-
-	fn length(&self) -> usize
-	{
-		(self.size() as usize) * (self.count as usize)
-	}
-
-	fn in_ifd(&self) -> bool
-	{
-		self.length() <= 4
-	}
-
-	fn copy_data(&mut self, contents: &[u8]) -> bool
-	{
-		if self.in_ifd() {
-			// the 4 bytes from IFD have all data
-			self.data = self.ifd_data.clone();
-			return true;
-		}
-
-		let offset = self.data_as_offset();
-		if contents.len() < (offset + self.length()) {
-			// println!("EXIF data block goes beyond EOF");
-			return false;
-		}
-
-		let ext_data = &contents[offset..(offset + self.length())];
-		self.ext_data.clear();	
-		self.ext_data.extend(ext_data);
-		self.data = self.ext_data.clone();
-		return true;
-	}
-}
-
-impl ExifError {
-	fn readable(&self) -> &str {
-		let msg = match self.kind {
-			ExifErrorKind::FileOpenError => "File could not be opened",
-			ExifErrorKind::FileSeekError => "File could not be seeked",
-			ExifErrorKind::FileReadError => "File could not be read",
-			ExifErrorKind::FileTypeUnknown => "File type unknown",
-			ExifErrorKind::JpegWithoutExif => "JPEG without EXIF section",
-			ExifErrorKind::TiffTruncated => "TIFF truncated at start",
-			ExifErrorKind::TiffBadPreamble => "TIFF with bad preamble",
-			ExifErrorKind::IfdTruncated => "TIFF IFD truncated",
-			ExifErrorKind::ExifIfdTruncated => "TIFF Exif IFD truncated",
-			ExifErrorKind::ExifIfdEntryNotFound => "TIFF Exif IFD not found",
-		};
-		return msg;
-	}
-}
-
-impl Error for ExifError {
-	fn description(&self) -> &str {
-		self.readable()
-	}
-}
-
-impl Debug for ExifError {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "{} {}", self.readable(), self.extra)
-	}
-}
-
-impl Display for ExifError {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "({}, {})", self.readable(), self.extra)
-	}
-}
-
-pub type ExifResult = Result<RefCell<ExifData>, ExifError>;
-pub type InExifResult = Result<(), ExifError>;
+mod types;
+pub use self::types::*;
+mod types_impl;
+pub use self::types_impl::*;
 
 /* Detect the type of an image contained in a byte buffer */
 pub fn detect_type(contents: &Vec<u8>) -> &str
@@ -655,18 +352,18 @@ fn exif_postprocessing(entry: &mut ExifEntry, entries: &Vec<ExifEntry>)
 // FIXME check how Undefined could be converted safely to string in some cases
 
 /* Convert a numeric tag into EXIF tag and yiels info about the tag */
-fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, u32, fn(&TagValue) -> String)
+fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i32, i32, fn(&TagValue) -> String)
 {
 	match f {
 
 	0x010e =>
-	(ExifTag::ImageDescription, "Image Description", "none", IfdFormat::Str, -1, -1, strpass),
+	(ExifTag::ImageDescription, "Image Description", "none", IfdFormat::Str, -1i32, -1i32, strpass),
 
 	0x010f =>
-	(ExifTag::Make, "Manufacturer", "none", IfdFormat::Str, -1, -1, strpass),
+	(ExifTag::Make, "Manufacturer", "none", IfdFormat::Str, -1i32, -1i32, strpass),
 
 	0x0110 =>
-	(ExifTag::Model, "Model", "none", IfdFormat::Str, -1, -1, strpass),
+	(ExifTag::Model, "Model", "none", IfdFormat::Str, -1i32, -1i32, strpass),
 
 	0x0112 =>
 	(ExifTag::Orientation, "Orientation", "none", IfdFormat::U16, 1, 1, orientation),
@@ -683,10 +380,10 @@ fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, 
 	(ExifTag::ResolutionUnit, "Resolution Unit", "none", IfdFormat::U16, 1, 1, resolution_unit),
 
 	0x0131 =>
-	(ExifTag::Software, "Software", "none", IfdFormat::Str, -1, -1, strpass),
+	(ExifTag::Software, "Software", "none", IfdFormat::Str, -1i32, -1i32, strpass),
 
 	0x0132 =>
-	(ExifTag::DateTime, "Image date", "none", IfdFormat::Str, -1, -1, strpass),
+	(ExifTag::DateTime, "Image date", "none", IfdFormat::Str, -1i32, -1i32, strpass),
 
 	0x013e =>
 	(ExifTag::WhitePoint, "White Point", "CIE 1931 coordinates",
@@ -705,7 +402,7 @@ fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, 
 	IfdFormat::URational, 6, 6, rational_values),
 
 	0x8298 =>
-	(ExifTag::Copyright, "Copyright", "none", IfdFormat::Str, -1, -1, strpass),
+	(ExifTag::Copyright, "Copyright", "none", IfdFormat::Str, -1i32, -1i32, strpass),
 
 	0x8769 =>
 	(ExifTag::ExifOffset, "This image has an Exif SubIFD", "byte offset",
@@ -726,18 +423,18 @@ fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, 
 	// FIXME '1' means manual control, '2' program normal, '3' aperture priority, '4' shutter priority, '5' program creative (slow program), '6' program action(high-speed program), '7' portrait mode, '8' landscape mode.
 	0x8822 => (ExifTag::ExposureProgram, "Exposure program", "none", IfdFormat::U16, 1, 1, nop),
 
-	0x8824 => (ExifTag::SpectralSensitivity, "Spectral sensitivity", "", IfdFormat::Str, -1, -1, nop),
+	0x8824 => (ExifTag::SpectralSensitivity, "Spectral sensitivity", "", IfdFormat::Str, -1i32, -1i32, nop),
 
 	// FIXME 
 	0x8827 => (ExifTag::ISOSpeedRatings, "ISO speed ratings", "ISO", IfdFormat::U16, 1, 2, nop),
 
-	0x8828 => (ExifTag::OECF, "OECF", "none", IfdFormat::Undefined, -1, -1, nop),
+	0x8828 => (ExifTag::OECF, "OECF", "none", IfdFormat::Undefined, -1i32, -1i32, nop),
 
-	0x9000 => (ExifTag::ExifVersion, "Exif version", "none", IfdFormat::Undefined, -1, -1, nop),
+	0x9000 => (ExifTag::ExifVersion, "Exif version", "none", IfdFormat::Undefined, -1i32, -1i32, nop),
 
-	0x9003 => (ExifTag::DateTimeOriginal, "Date of original image", "none", IfdFormat::Str, -1, -1, strpass),
+	0x9003 => (ExifTag::DateTimeOriginal, "Date of original image", "none", IfdFormat::Str, -1i32, -1i32, strpass),
 
-	0x9004 => (ExifTag::DateTimeDigitized, "Date of image digitalization", "none", IfdFormat::Str, -1, -1, strpass),
+	0x9004 => (ExifTag::DateTimeDigitized, "Date of image digitalization", "none", IfdFormat::Str, -1i32, -1i32, strpass),
 
 	0x9101 => (ExifTag::ComponentsConfiguration, "Components configuration", "", IfdFormat::Undefined, 4, 4, nop),
 
@@ -772,16 +469,16 @@ fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, 
 	// FIXME 
 	0x9214 => (ExifTag::SubjectArea, "Subject area", "", IfdFormat::U16, 2, 4, nop),
 
-	0x927c => (ExifTag::MakerNote, "Maker note", "none", IfdFormat::Undefined, -1, -1, nop),
+	0x927c => (ExifTag::MakerNote, "Maker note", "none", IfdFormat::Undefined, -1i32, -1i32, nop),
 
-	0x9286 => (ExifTag::UserComment, "User comment", "none", IfdFormat::Undefined, -1, -1, nop),
+	0x9286 => (ExifTag::UserComment, "User comment", "none", IfdFormat::Undefined, -1i32, -1i32, nop),
 
-	0xa000 => (ExifTag::FlashPixVersion, "Flashpix version", "", IfdFormat::Undefined, -1, -1, nop),
+	0xa000 => (ExifTag::FlashPixVersion, "Flashpix version", "", IfdFormat::Undefined, -1i32, -1i32, nop),
 
 	// FIXME
 	0xa001 => (ExifTag::ColorSpace, "Color space", "", IfdFormat::U16, 1, 1, nop),
 
-	0xa004 => (ExifTag::RelatedSoundFile, "Related sound file", "none", IfdFormat::Str, -1, -1, strpass),
+	0xa004 => (ExifTag::RelatedSoundFile, "Related sound file", "none", IfdFormat::Str, -1i32, -1i32, strpass),
 
 	0xa20b => (ExifTag::FlashEnergy, "Flash energy", "beam candle power seconds", IfdFormat::URational, 1, 1, nop),
 
@@ -809,7 +506,7 @@ fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, 
 	0xa301 => (ExifTag::SceneType, "Scene type", "", IfdFormat::Undefined, 1, 1, nop),
 
 	// FIXME
-	0xa302 => (ExifTag::CFAPattern, "CFA Pattern", "", IfdFormat::Undefined, -1, -1, nop),
+	0xa302 => (ExifTag::CFAPattern, "CFA Pattern", "", IfdFormat::Undefined, -1i32, -1i32, nop),
 
 	// FIXME
 	0xa401 => (ExifTag::CustomRendered, "Custom rendered", "", IfdFormat::U16, 1, 1, nop),
@@ -842,20 +539,20 @@ fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, 
 		 "Sharpness", "", IfdFormat::U16, 1, 1, nop),
 
 	0xa40b => (ExifTag::DeviceSettingDescription,
-		 "Device setting description", "", IfdFormat::Undefined, -1, -1, nop),
+		 "Device setting description", "", IfdFormat::Undefined, -1i32, -1i32, nop),
 
 	// FIXME
 	0xa40c => (ExifTag::SubjectDistanceRange,
 		 "Subject distance range", "", IfdFormat::U16, 1, 1, nop),
 
-	0xa420 => (ExifTag::ImageUniqueID, "Image unique ID", "", IfdFormat::Str, -1, -1, strpass),
+	0xa420 => (ExifTag::ImageUniqueID, "Image unique ID", "", IfdFormat::Str, -1i32, -1i32, strpass),
 		
 	0x0 => (ExifTag::GPSVersionID,
 		 "GPS version ID", "", IfdFormat::U8, 4, 4, nop),
 
 	// FIXME interpret
 	0x1 => (ExifTag::GPSLatitudeRef,
-		 "GPS latitude ref", "", IfdFormat::Str, -1, -1, nop),
+		 "GPS latitude ref", "", IfdFormat::Str, -1i32, -1i32, nop),
 
 	// FIXME and join with 0x1
 	0x2 => (ExifTag::GPSLatitude,
@@ -863,7 +560,7 @@ fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, 
 
 	// FIXME interpret
 	0x3 => (ExifTag::GPSLongitudeRef,
-		 "GPS longitude ref", "longitude deg.", IfdFormat::Str, -1, -1, nop),
+		 "GPS longitude ref", "longitude deg.", IfdFormat::Str, -1i32, -1i32, nop),
 
 	// FIXME and join with 0x3
 	0x4 => (ExifTag::GPSLongitude,
@@ -881,22 +578,22 @@ fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, 
 	0x7 => (ExifTag::GPSTimeStamp,
 		 "GPS timestamp", "UTC", IfdFormat::URational, 3, 3, nop),
 
-	0x8 => (ExifTag::GPSSatellites, "GPS satellites", "", IfdFormat::Str, -1, -1, strpass),
+	0x8 => (ExifTag::GPSSatellites, "GPS satellites", "", IfdFormat::Str, -1i32, -1i32, strpass),
 
 	// FIXME interpret
 	0x9 => (ExifTag::GPSStatus,
-		 "GPS status", "", IfdFormat::Str, -1, -1, nop),
+		 "GPS status", "", IfdFormat::Str, -1i32, -1i32, nop),
 
 	// FIXME interpret
 	0xa => (ExifTag::GPSMeasureMode,
-		 "GPS measure mode", "", IfdFormat::Str, -1, -1, nop),
+		 "GPS measure mode", "", IfdFormat::Str, -1i32, -1i32, nop),
 
 	0xb => (ExifTag::GPSDOP,
 		 "GPS Data Degree of Precision (DOP)", "deg.", IfdFormat::URational, 1, 1, nop),
 
 	// FIXME interpret
 	0xc => (ExifTag::GPSSpeedRef,
-		 "GPS speed ref", "", IfdFormat::Str, -1, -1, nop),
+		 "GPS speed ref", "", IfdFormat::Str, -1i32, -1i32, nop),
 
 	// FIXME join with 0xc, show value
 	0xd => (ExifTag::GPSSpeed,
@@ -904,23 +601,23 @@ fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, 
 
 	// FIXME interpret
 	0xe => (ExifTag::GPSTrackRef,
-		 "GPS track ref", "", IfdFormat::Str, -1, -1, nop),
+		 "GPS track ref", "", IfdFormat::Str, -1i32, -1i32, nop),
 
 	0xf => (ExifTag::GPSTrack,
 		 "GPS track", "deg.", IfdFormat::URational, 1, 1, nop),
 
 	// FIXME interpret
 	0x10 => (ExifTag::GPSImgDirectionRef,
-		 "GPS image direction ref", "", IfdFormat::Str, -1, -1, nop),
+		 "GPS image direction ref", "", IfdFormat::Str, -1i32, -1i32, nop),
 
 	0x11 => (ExifTag::GPSImgDirection,
 		 "GPS image direction", "", IfdFormat::URational, 1, 1, nop),
 
-	0x12 => (ExifTag::GPSMapDatum, "GPS map datum", "", IfdFormat::Str, -1, -1, nop),
+	0x12 => (ExifTag::GPSMapDatum, "GPS map datum", "", IfdFormat::Str, -1i32, -1i32, nop),
 
 	// FIXME interpret
 	0x13 => (ExifTag::GPSDestLatitudeRef,
-		 "GPS destination latitude ref", "", IfdFormat::Str, -1, -1, nop),
+		 "GPS destination latitude ref", "", IfdFormat::Str, -1i32, -1i32, nop),
 
 	// FIXME
 	0x14 => (ExifTag::GPSDestLatitude,
@@ -928,7 +625,7 @@ fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, 
 
 	// FIXME interpret
 	0x15 => (ExifTag::GPSDestLongitudeRef,
-		 "GPS destination longitude ref", "", IfdFormat::Str, -1, -1, nop),
+		 "GPS destination longitude ref", "", IfdFormat::Str, -1i32, -1i32, nop),
 
 	// FIXME
 	0x16 => (ExifTag::GPSDestLongitude,
@@ -936,7 +633,7 @@ fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, 
 
 	// FIXME interpret
 	0x17 => (ExifTag::GPSDestBearingRef,
-		 "GPS destination bearing ref", "", IfdFormat::Str, -1, -1, nop),
+		 "GPS destination bearing ref", "", IfdFormat::Str, -1i32, -1i32, nop),
 
 	// FIXME
 	0x18 => (ExifTag::GPSDestBearing,
@@ -944,7 +641,7 @@ fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, 
 
 	// FIXME interpret
 	0x19 => (ExifTag::GPSDestDistanceRef,
-		 "GPS destination distance ref", "", IfdFormat::Str, -1, -1, nop),
+		 "GPS destination distance ref", "", IfdFormat::Str, -1i32, -1i32, nop),
 
 	// FIXME
 	0x1a => (ExifTag::GPSDestDistance,
@@ -952,20 +649,20 @@ fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, 
 
 	// FIXME
 	0x1b => (ExifTag::GPSProcessingMethod,
-		 "GPS processing method", "", IfdFormat::Undefined, -1, -1, nop),
+		 "GPS processing method", "", IfdFormat::Undefined, -1i32, -1i32, nop),
 
 	// FIXME
 	0x1c => (ExifTag::GPSAreaInformation,
-		 "GPS area information", "", IfdFormat::Undefined, -1, -1, nop),
+		 "GPS area information", "", IfdFormat::Undefined, -1i32, -1i32, nop),
 
-	0x1d => (ExifTag::GPSDateStamp, "GPS date stamp", "none", IfdFormat::Str, -1, -1, strpass),
+	0x1d => (ExifTag::GPSDateStamp, "GPS date stamp", "none", IfdFormat::Str, -1i32, -1i32, strpass),
 
 	// FIXME
 	0x1e => (ExifTag::GPSDifferential,
 		 "GPS differential", "", IfdFormat::U16, 1, 1, nop),
 	_ =>
 	(ExifTag::UnknownToMe, "Unknown to this library, or manufacturer-specific", "Unknown unit",
-		IfdFormat::Unknown, -1, -1, nop)
+		IfdFormat::Unknown, -1i32, -1i32, nop)
 	}
 }
 
@@ -1004,7 +701,9 @@ fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 		return e;
 	}
 
-	if min_count != -1 && (f.count < min_count || f.count > max_count) {
+	if min_count != -1 &&
+			((f.count as i32) < min_count ||
+			(f.count as i32) > max_count) {
 		writeln!(std::io::stderr(), "EXIF tag {:x} {}, format {}, expected count {}..{} found {}",
 			f.tag, tag_readable, format as u8, min_count, max_count, f.count);
 		return e;
