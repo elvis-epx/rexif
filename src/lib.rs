@@ -768,7 +768,35 @@ fn orientation(e: &TagValue) -> String
 				_ => "(Invalid)",
 			}
 		},
-		_ => "(Invalid)",
+		_ => panic!("Invalid"),
+	};
+
+	return s.to_string();
+}
+
+fn rational_value(e: &TagValue) -> String
+{
+	let s = match e {
+		&TagValue::URational(ref v) => {
+			format!("{}", v[0].value())
+		},
+		&TagValue::IRational(ref v) => {
+			format!("{}", v[0].value())
+		},
+		_ => panic!("Invalid"),
+	};
+
+	return s.to_string();
+}
+
+fn rational_values(e: &TagValue) -> String
+{
+	let s = match e {
+		&TagValue::URational(ref v) => {
+			let ve: Vec<f64> = v.iter().map(|&x| x.value()).collect();
+			numarray_to_string(&ve)
+		},
+		_ => panic!("Invalid"),
 	};
 
 	return s.to_string();
@@ -786,7 +814,7 @@ fn resolution_unit(e: &TagValue) -> String
 				_ => "(Invalid)",
 			}
 		},
-		_ => "(Invalid)",
+		_ => panic!("Invalid"),
 	};
 
 	return s.to_string();
@@ -807,32 +835,32 @@ fn other_tag(tag: ExifTag, entries: &Vec<ExifEntry>) -> Option<&ExifEntry>
 fn exif_postprocessing(entry: &mut ExifEntry, entries: &Vec<ExifEntry>)
 {
 	match entry.tag {
-		ExifTag::XResolution => {
-			match other_tag(ExifTag::ResolutionUnit, entries) {
-				Some(other) => {
-					entry.unit = other.value_readable.clone();
-					entry.value_more_readable.push_str(" ");
-					entry.value_more_readable.push_str(&entry.unit);
-				}
-				None => (),
-			}
+
+	ExifTag::XResolution =>
+	match other_tag(ExifTag::ResolutionUnit, entries) {
+		Some(f) => {
+			entry.unit = f.value_more_readable.clone();
+			entry.value_more_readable.push_str(" pixels per ");
+			entry.value_more_readable.push_str(&f.value_more_readable);
+			},
+		None => (),
+	},
+
+	ExifTag::YResolution =>
+	match other_tag(ExifTag::ResolutionUnit, entries) {
+		Some(f) => {
+			entry.unit = f.value_more_readable.clone();
+			entry.value_more_readable.push_str(" pixels per ");
+			entry.value_more_readable.push_str(&f.value_more_readable);
 		},
-		ExifTag::YResolution => {
-			match other_tag(ExifTag::ResolutionUnit, entries) {
-				Some(other) => {
-					entry.unit = other.value_readable.clone();
-					entry.value_more_readable.push_str(" ");
-					entry.value_more_readable.push_str(&entry.unit);
-				}
-				None => (),
-			}
-		},
-		_ => (),
+		None => (),
+	},
+
+	_ => (),
 	}
 }
 
 // FIXME check how Undefined could be converted safely to string in some cases
-// FIXME remove nop from all non-Str tags
 
 /* Convert a numeric tag into EXIF tag and yiels info about the tag */
 fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, u32, fn(&TagValue) -> String)
@@ -851,13 +879,13 @@ fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, 
 	0x0112 =>
 	(ExifTag::Orientation, "Orientation", "none", IfdFormat::U16, 1, 1, orientation),
 
-	// TODO update unit with tag 0x0128
 	0x011a =>
-	(ExifTag::XResolution, "X Resolution", "@Resolution Unit", IfdFormat::URational, 1, 1, nop),
+	(ExifTag::XResolution, "X Resolution", "pixels per res unit",
+	IfdFormat::URational, 1, 1, rational_value),
 
-	// TODO update unit with tag 0x0128
 	0x011b =>
-	(ExifTag::YResolution, "Y Resolution", "@Resolution Unit", IfdFormat::URational, 1, 1, nop),
+	(ExifTag::YResolution, "Y Resolution", "pixels per res unit",
+	IfdFormat::URational, 1, 1, rational_value),
 
 	0x0128 =>
 	(ExifTag::ResolutionUnit, "Resolution Unit", "none", IfdFormat::U16, 1, 1, resolution_unit),
@@ -869,14 +897,18 @@ fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, 
 	(ExifTag::DateTime, "Image date", "none", IfdFormat::Str, -1, -1, strpass),
 
 	0x013e =>
-	(ExifTag::WhitePoint, "White Point", "CIE 1931 coordinates", IfdFormat::URational, 2, 2, nop),
+	(ExifTag::WhitePoint, "White Point", "CIE 1931 coordinates",
+	IfdFormat::URational, 2, 2, rational_values),
 
 	0x013f =>
-	(ExifTag::PrimaryChromaticities, "Primary Chromaticities", "CIE 1931 coordinates", IfdFormat::URational, 6, 6, nop),
+	(ExifTag::PrimaryChromaticities, "Primary Chromaticities", "CIE 1931 coordinates",
+	IfdFormat::URational, 6, 6, rational_values),
 
 	0x0211 =>
-	(ExifTag::YCbCrCoefficients, "YCbCr Coefficients", "none", IfdFormat::URational, 3, 3, nop),
+	(ExifTag::YCbCrCoefficients, "YCbCr Coefficients", "none",
+	IfdFormat::URational, 3, 3, rational_values),
 
+	// EPX
 	0x0213 =>
 	(ExifTag::YCbCrPositioning, "YCbCr Positioning", "none", IfdFormat::U16, 1, 1, nop),
 
@@ -1138,7 +1170,6 @@ fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, 
 	// FIXME
 	0x1e => (ExifTag::GPSDifferential,
 		 "GPS differential", "", IfdFormat::U16, 1, 1, nop),
-// EPX
 	_ =>
 	(ExifTag::UnknownToMe, "Unknown to this library, or manufacturer-specific", "Unknown unit",
 		IfdFormat::Unknown, -1, -1, nop)
