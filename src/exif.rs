@@ -293,10 +293,9 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	(ExifTag::GPSAltitude, "GPS altitude", "m",
 	IfdFormat::URational, 1, 1, meters),
 
-	// FIXME
 	0x7 =>
-	(ExifTag::GPSTimeStamp,
-		 "GPS timestamp", "UTC", IfdFormat::URational, 3, 3, nop),
+	(ExifTag::GPSTimeStamp, "GPS timestamp", "UTC time",
+	IfdFormat::URational, 3, 3, gpstimestamp),
 
 	0x8 =>
 	(ExifTag::GPSSatellites, "GPS satellites", "", IfdFormat::Ascii, -1i32, -1i32, strpass),
@@ -361,15 +360,13 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	(ExifTag::GPSDestLongitude, "GPS destination longitude", "D/M/S",
 	IfdFormat::URational, 3, 3, dms),
 
-	// FIXME interpret
 	0x17 =>
 	(ExifTag::GPSDestBearingRef,
-	 "GPS destination bearing ref", "", IfdFormat::Ascii, -1i32, -1i32, nop),
+	 "GPS destination bearing ref", "", IfdFormat::Ascii, -1i32, -1i32, gpsdestbearingref),
 
-	// FIXME
 	0x18 =>
 	 (ExifTag::GPSDestBearing,
-	 "GPS destination bearing", "", IfdFormat::URational, 1, 1, nop),
+	 "GPS destination bearing", "deg", IfdFormat::URational, 1, 1, gpsdestbearing),
 
 	0x19 =>
 	(ExifTag::GPSDestDistanceRef, "GPS destination distance ref", "",
@@ -393,10 +390,9 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	(ExifTag::GPSDateStamp, "GPS date stamp", "none",
 	IfdFormat::Ascii, -1i32, -1i32, strpass),
 
-	// FIXME
 	0x1e =>
-	(ExifTag::GPSDifferential,
-	"GPS differential", "", IfdFormat::U16, 1, 1, nop),
+	(ExifTag::GPSDifferential, "GPS differential", "none",
+	IfdFormat::U16, 1, 1, gpsdiff),
 
 	_ =>
 	(ExifTag::UnknownToMe, "Unknown to this library, or manufacturer-specific", "Unknown unit",

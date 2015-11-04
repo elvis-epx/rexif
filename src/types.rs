@@ -200,6 +200,12 @@ pub struct ExifEntry {
 	pub value: TagValue,
 	/// Unit of the value, if applicable. If tag is UnknownToMe, unit will be empty.
 	/// If the tag is parsed and it is unitless, it will be equal to "none".
+	///
+	/// Note that
+	/// unit refers to the contents of 'value', not the readable string. For example,
+	/// a GPS latitude is a triplet of rational values, so unit is D/M/S, even though
+	/// the value_more_readable string contains a single string with the three parts
+	/// combined.
 	pub unit: String,
 	/// Human-readable name of the tag, for debugging and simple listing purposes
 	pub tag_readable: String,

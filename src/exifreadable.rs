@@ -287,3 +287,65 @@ pub fn gpsspeed(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
+pub fn gpsdestbearingref(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+	&TagValue::Ascii(ref v) => {
+		if v == "T" {
+			"True bearing"
+		} else if v == "M" {
+			"Magnetic bearing"
+		} else {
+			return format!("Unknown ({})", v)
+		}
+	},
+	_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
+pub fn gpsdestbearing(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+		&TagValue::URational(ref v) => {
+			format!("{:.2}°", v[0].value())
+		},
+		_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
+pub fn gpstimestamp(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+	&TagValue::URational(ref v) => {
+		let hour = v[0];
+		let min = v[1];
+		let sec = v[2];
+		format!("{:02.0}:{:02.0}:{:02.1} UTC", hour.value(), min.value(), sec.value())
+	},
+	_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
+pub fn gpsdiff(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+		&TagValue::U16(ref v) => {
+			let n = v[0];
+			match n {
+				0 => "Measurement without differential correction",
+				1 => "Differential correction applied",
+				_ => return format!("Unknown ({})", n),
+			}
+		},
+		_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
