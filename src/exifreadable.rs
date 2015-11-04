@@ -1,13 +1,15 @@
 use super::types::*;
 use super::ifdformat::*;
 
-/// No-op for readable value tag function
+/// No-op for readable value tag function. Should not be used by any EXIF tag descriptor,
+/// except for the catch-all match that handles unknown tags
 pub fn nop(_: &TagValue, s: &String) -> String
 {
 	return s.clone();
 }
 
-/// No-op for readable value tag function that should be kept as simple strings
+/// No-op for readable value tag function. Used for ASCII string tags, or when the
+/// default readable representation of value is pretty enough.
 pub fn strpass(_: &TagValue, s: &String) -> String
 {
 	return s.clone();
@@ -126,3 +128,26 @@ pub fn exposure_program(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
+pub fn focal_length(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+		&TagValue::URational(ref v) => {
+			format!("{} mm", v[0].value())
+		},
+		_ => panic!("Invalid"),
+	};
+
+	return s.to_string();
+}
+
+pub fn focal_length_35(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+		&TagValue::U16(ref v) => {
+			format!("{} mm", v[0])
+		},
+		_ => panic!("Invalid"),
+	};
+
+	return s.to_string();
+}

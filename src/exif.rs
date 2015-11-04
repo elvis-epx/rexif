@@ -58,11 +58,11 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 
 	0x8769 =>
 	(ExifTag::ExifOffset, "This image has an Exif SubIFD", "byte offset",
-	IfdFormat::U32, 1, 1, nop),
+	IfdFormat::U32, 1, 1, strpass),
 
 	0x8825 =>
 	(ExifTag::GPSOffset, "This image has a GPS SubIFD", "byte offset",
-	IfdFormat::U32, 1, 1, nop),
+	IfdFormat::U32, 1, 1, strpass),
 
 	0x829a => (ExifTag::ExposureTime, "Exposure time", "s",
 	IfdFormat::URational, 1, 1, exposure_time),
@@ -73,7 +73,8 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	0x8822 => (ExifTag::ExposureProgram, "Exposure program", "none",
 	IfdFormat::U16, 1, 1, exposure_program),
 
-	0x8824 => (ExifTag::SpectralSensitivity, "Spectral sensitivity", "", IfdFormat::Str, -1i32, -1i32, nop),
+	0x8824 => (ExifTag::SpectralSensitivity, "Spectral sensitivity", "",
+	IfdFormat::Str, -1i32, -1i32, strpass),
 
 	// FIXME 
 	// EPX
@@ -115,7 +116,8 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	// FIXME
 	0x9209 => (ExifTag::Flash, "Flash", "", IfdFormat::U16, 1, 2, nop),
 
-	0x920a => (ExifTag::FocalLength, "Focal length", "mm", IfdFormat::URational, 1, 1, nop),
+	0x920a => (ExifTag::FocalLength, "Focal length", "mm",
+	IfdFormat::URational, 1, 1, focal_length),
 
 	// FIXME 
 	0x9214 => (ExifTag::SubjectArea, "Subject area", "", IfdFormat::U16, 2, 4, nop),
@@ -169,10 +171,10 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 		 "White balance mode", "", IfdFormat::U16, 1, 1, nop),
 
 	0xa404 => (ExifTag::DigitalZoomRatio,
-		 "Digital zoom ratio", "", IfdFormat::URational, 1, 1, nop),
+		 "Digital zoom ratio", "none", IfdFormat::URational, 1, 1, rational_value),
 
 	0xa405 => (ExifTag::FocalLengthIn35mmFilm,
-		 "Equivalent focal length in 35mm", "mm", IfdFormat::U16, 1, 1, nop),
+		 "Equivalent focal length in 35mm", "mm", IfdFormat::U16, 1, 1, focal_length_35),
 
 	0xa406 => (ExifTag::SceneCaptureType,
 		 "Scene capture type", "", IfdFormat::U16, 1, 1, nop),
