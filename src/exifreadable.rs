@@ -503,3 +503,167 @@ pub fn apex_ev(e: &TagValue, _: &String) -> String
 	}
 }
 
+pub fn file_source(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+	&TagValue::Undefined(ref v, _) => {
+		if v.len() > 0 && v[0] == 3 {
+			"DSC"
+		} else {
+			"Unknown"
+		}
+	},
+	_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
+pub fn flash_energy(e: &TagValue, _: &String) -> String
+{
+	match e {
+		&TagValue::URational(ref v) => {
+			format!("{} BCPS", v[0].value())
+		},
+		_ => panic!(INV),
+	}
+}
+
+pub fn metering_mode(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+		&TagValue::U16(ref v) => {
+			let n = v[0];
+			match n {
+				0 => "Unknown",
+				1 => "Average",
+				2 => "Center-weighted average",
+				3 => "Spot",
+				4 => "Multi-spot",
+				5 => "Pattern",
+				6 => "Partial",
+				255 => "Other",
+				_ => return format!("Unknown ({})", n),
+			}
+		},
+		_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
+pub fn light_source(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+		&TagValue::U16(ref v) => {
+			let n = v[0];
+			match n {
+				0 => "Unknown",
+				1 => "Daylight",
+				2 => "Fluorescent",
+				3 => "Tungsten",
+				4 => "Flash",
+				9 => "Fine weather",
+				10 => "Cloudy weather",
+				11 => "Shade",
+				12 => "Daylight fluorescent (D)",
+				13 => "Day white fluorescent (N)",
+				14 => "Cool white fluorescent (W)",
+				15 => "White fluorescent (WW)",
+				17 => "Standard light A",
+				18 => "Standard light B",
+				19 => "Standard light C",
+				20 => "D55",
+				21 => "D65",
+				22 => "D75",
+				23 => "D50",
+				24 => "ISO studio tungsten",
+				255 => "Other",
+				_ => return format!("Unknown ({})", n),
+			}
+		},
+		_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
+pub fn color_space(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+		&TagValue::U16(ref v) => {
+			let n = v[0];
+			match n {
+				1 => "sRGB",
+				65535 => "Uncalibrated",
+				_ => return format!("Unknown ({})", n),
+			}
+		},
+		_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
+pub fn flash(e: &TagValue, _: &String) -> String
+{
+	match e {
+		&TagValue::U16(ref v) => {
+			let n = v[0];
+			let mut b0 = "Did not fire. ";
+			let mut b12 = "";
+			let mut b34 = "";
+			let mut b6 = "";
+
+			if (n & (1 << 5)) > 0 {
+				return format!("Does not have a flash ({})", n);
+			}
+
+			if (n & 1) > 0 {
+				b0 = "Fired. ";
+				if (n & (1 << 6)) > 0 {
+					b6 = "Redeye reduction. "
+				} else {
+					b6 = "No redeye reduction. "
+				}
+
+				// bits 1 and 2
+				let m = (n >> 1) & 3;
+				if m == 2 {
+					b12 = "Strobe ret not detected. ";
+				} else if m == 3 {
+					b12 = "Strobe ret detected. ";
+				}
+			}
+
+			// bits 3 and 4
+			let m = (n >> 3) & 3;
+			if m == 1 {
+				b34 = "Forced fire. ";
+			} else if m == 2 {
+				b34 = "Forced suppresion. ";
+			} else if m == 3 {
+				b12 = "Auto mode. ";
+			}
+
+			format!("{}{}{}{}({})", b0, b12, b34, b6, n)
+		},
+		_ => panic!(INV),
+	}
+}
+
+pub fn subject_area(e: &TagValue, _: &String) -> String
+{
+	match e {
+		&TagValue::U16(ref v) => {
+			match v.len() {
+			2 => format!("at pixel {},{}", v[0], v[1]),
+			3 => format!("at center {},{} radius {}", v[0], v[1], v[2]),
+			4 => format!("at rectangle {},{} width {} height {}", v[0], v[1], v[2], v[3]),
+			_ => format!("Unknown ({}) ", numarray_to_string(v)),
+			}
+		},
+		_ => panic!(INV),
+	}
+}
+

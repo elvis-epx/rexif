@@ -1,8 +1,6 @@
 use super::types::*;
 use super::exifreadable::*;
 
-// FIXME undefined -> try to interpret as string
-
 /// Convert a numeric tag into EXIF tag and yields info about the tag. This info
 /// is used by the main body of the parser to sanity-check the tags found in image
 /// and make sure that EXIF tags have the right data types
@@ -81,17 +79,16 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	IfdFormat::U16, 1, 1, exposure_program),
 
 	0x8824 =>
-	(ExifTag::SpectralSensitivity, "Spectral sensitivity", "",
+	(ExifTag::SpectralSensitivity, "Spectral sensitivity", "ASTM string",
 	IfdFormat::Ascii, -1i32, -1i32, strpass),
 
 	0x8827 =>
 	(ExifTag::ISOSpeedRatings, "ISO speed ratings", "ISO",
 	IfdFormat::U16, 1, 2, iso_speeds),
 
-	// EPX
 	0x8828 =>
 	(ExifTag::OECF, "OECF", "none",
-	IfdFormat::Undefined, -1i32, -1i32, nop),
+	IfdFormat::Undefined, -1i32, -1i32, undefined_as_blob),
 
 	0x9000 =>
 	(ExifTag::ExifVersion, "Exif version", "none",
@@ -129,25 +126,24 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	(ExifTag::SubjectDistance, "Subject distance", "m",
 	IfdFormat::URational, 1, 1, meters),
 
-	// FIXME  '1' means average, '2' center weighted average, '3' spot, '4' multi-spot, '5' multi-segment. 6=partial, 255= other
 	0x9207 =>
-	(ExifTag::MeteringMode, "Meteting mode", "none", IfdFormat::U16, 1, 1, nop),
+	(ExifTag::MeteringMode, "Meteting mode", "none",
+	IfdFormat::U16, 1, 1, metering_mode),
 
-	// FIXME http://www.awaresystems.be/imaging/tiff/tifftags/privateifd/exif/lightsource.html
 	0x9208 =>
-	(ExifTag::LightSource, "Light source", "", IfdFormat::U16, 1, 1, nop),
+	(ExifTag::LightSource, "Light source", "none",
+	IfdFormat::U16, 1, 1, light_source),
 
-	// FIXME
-	0x9209 =>
-	(ExifTag::Flash, "Flash", "", IfdFormat::U16, 1, 2, nop),
+	0x9209 => (ExifTag::Flash, "Flash", "none",
+	IfdFormat::U16, 1, 2, flash),
 
 	0x920a =>
 	(ExifTag::FocalLength, "Focal length", "mm",
 	IfdFormat::URational, 1, 1, focal_length),
 
-	// FIXME 
 	0x9214 =>
-	(ExifTag::SubjectArea, "Subject area", "", IfdFormat::U16, 2, 4, nop),
+	(ExifTag::SubjectArea, "Subject area", "px",
+	IfdFormat::U16, 2, 4, subject_area),
 
 	0x927c =>
 	(ExifTag::MakerNote, "Maker note", "none",
@@ -158,17 +154,19 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	IfdFormat::Undefined, -1i32, -1i32, undefined_as_encoded_string),
 
 	0xa000 =>
-	(ExifTag::FlashPixVersion, "Flashpix version", "", IfdFormat::Undefined, -1i32, -1i32, nop),
+	(ExifTag::FlashPixVersion, "Flashpix version", "none",
+	IfdFormat::Undefined, -1i32, -1i32, undefined_as_ascii),
 
-	// FIXME
 	0xa001 =>
-	(ExifTag::ColorSpace, "Color space", "", IfdFormat::U16, 1, 1, nop),
+	(ExifTag::ColorSpace, "Color space", "none",
+	IfdFormat::U16, 1, 1, color_space),
 
 	0xa004 =>
-	(ExifTag::RelatedSoundFile, "Related sound file", "none", IfdFormat::Ascii, -1i32, -1i32, strpass),
+	(ExifTag::RelatedSoundFile, "Related sound file", "none",
+	IfdFormat::Ascii, -1i32, -1i32, strpass),
 
-	0xa20b =>
-	(ExifTag::FlashEnergy, "Flash energy", "beam candle power seconds", IfdFormat::URational, 1, 1, nop),
+	0xa20b => (ExifTag::FlashEnergy, "Flash energy", "BCPS",
+	IfdFormat::URational, 1, 1, flash_energy),
 
 	// FIXME relate to focal place resolution unit
 	0xa20e =>
@@ -193,9 +191,9 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	0xa217 =>
 	(ExifTag::SensingMethod, "Sensing method", "", IfdFormat::U16, 1, 1, nop),
 
-	// FIXME
 	0xa300 =>
-	(ExifTag::FileSource, "File source", "none", IfdFormat::Undefined, 1, 1, nop),
+	(ExifTag::FileSource, "File source", "none",
+	IfdFormat::Undefined, 1, 1, file_source),
 
 	// FIXME
 	0xa301 =>
@@ -218,12 +216,12 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 		 "White balance mode", "", IfdFormat::U16, 1, 1, nop),
 
 	0xa404 =>
-	(ExifTag::DigitalZoomRatio,
-		 "Digital zoom ratio", "none", IfdFormat::URational, 1, 1, rational_value),
+	(ExifTag::DigitalZoomRatio, "Digital zoom ratio", "none",
+	IfdFormat::URational, 1, 1, rational_value),
 
 	0xa405 =>
-	(ExifTag::FocalLengthIn35mmFilm,
-		 "Equivalent focal length in 35mm", "mm", IfdFormat::U16, 1, 1, focal_length_35),
+	(ExifTag::FocalLengthIn35mmFilm, "Equivalent focal length in 35mm", "mm",
+	IfdFormat::U16, 1, 1, focal_length_35),
 
 	0xa406 =>
 	(ExifTag::SceneCaptureType,
@@ -245,9 +243,10 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	(ExifTag::Sharpness,
 		 "Sharpness", "", IfdFormat::U16, 1, 1, nop),
 
+	// collaborate if you have any idea how to interpret this
 	0xa40b =>
-	(ExifTag::DeviceSettingDescription,
-		 "Device setting description", "", IfdFormat::Undefined, -1i32, -1i32, nop),
+	(ExifTag::DeviceSettingDescription, "Device setting description", "none",
+	IfdFormat::Undefined, -1i32, -1i32, undefined_as_blob),
 
 	// FIXME
 	0xa40c =>
