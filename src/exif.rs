@@ -105,7 +105,9 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 
 	0x9205 => (ExifTag::MaxApertureValue, "Maximum aperture value", "APEX", IfdFormat::URational, 1, 1, nop),
 
-	0x9206 => (ExifTag::SubjectDistance, "Subject distance", "m", IfdFormat::URational, 1, 1, nop),
+	0x9206 =>
+	(ExifTag::SubjectDistance, "Subject distance", "m",
+	IfdFormat::URational, 1, 1, meters),
 
 	// FIXME  '1' means average, '2' center weighted average, '3' spot, '4' multi-spot, '5' multi-segment. 6=partial, 255= other
 	0x9207 => (ExifTag::MeteringMode, "Meteting mode", "none", IfdFormat::U16, 1, 1, nop),
@@ -224,8 +226,9 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 		 "GPS altitude ref", "", IfdFormat::U8, 1, 1, nop),
 
 	// FIXME
-	0x6 => (ExifTag::GPSAltitude,
-		 "GPS altitude", "m", IfdFormat::URational, 1, 1, nop),
+	0x6 =>
+	(ExifTag::GPSAltitude,
+	"GPS altitude", "m", IfdFormat::URational, 1, 1, meters),
 
 	// FIXME
 	0x7 => (ExifTag::GPSTimeStamp,
@@ -308,7 +311,9 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	0x1c => (ExifTag::GPSAreaInformation,
 		 "GPS area information", "", IfdFormat::Undefined, -1i32, -1i32, nop),
 
-	0x1d => (ExifTag::GPSDateStamp, "GPS date stamp", "none", IfdFormat::Str, -1i32, -1i32, strpass),
+	0x1d =>
+	(ExifTag::GPSDateStamp, "GPS date stamp", "none",
+	IfdFormat::Str, -1i32, -1i32, strpass),
 
 	// FIXME
 	0x1e => (ExifTag::GPSDifferential,

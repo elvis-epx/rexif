@@ -97,7 +97,7 @@ pub fn f_number(e: &TagValue, _: &String) -> String
 {
 	let s = match e {
 		&TagValue::URational(ref v) => {
-			format!("f/{:1}", v[0].value())
+			format!("f/{:.1}", v[0].value())
 		},
 		_ => panic!("Invalid"),
 	};
@@ -145,6 +145,18 @@ pub fn focal_length_35(e: &TagValue, _: &String) -> String
 	let s = match e {
 		&TagValue::U16(ref v) => {
 			format!("{} mm", v[0])
+		},
+		_ => panic!("Invalid"),
+	};
+
+	return s.to_string();
+}
+
+pub fn meters(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+		&TagValue::URational(ref v) => {
+			format!("{:.1} m", v[0].value())
 		},
 		_ => panic!("Invalid"),
 	};
