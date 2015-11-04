@@ -13,3 +13,35 @@ I am still filling in
 the implementation of most EXIF tags. Merge requests, comments and criticisms about coding style, information
 about uncovered EXIF tags, sample images that are not parsed correctly -- in short, any sort of feedback is
 welcome!
+
+# Example
+
+```
+match rexif::parse_file(&file_name) {
+	Ok(exif) => {
+		let exif = exif.into_inner();
+
+		println!("{} {} {} exif entries: {}", exif.file, exif.size,
+			exif.mime, exif.entries.len());
+
+		for entry in &exif.entries {
+			println!("	{}: {}",
+					entry.tag_readable, 
+					entry.value_more_readable);
+		}
+	},
+	Err(e) => {
+		print!("Error in {}: {} {}", &file_name,
+			Error::description(&e), e.extra).unwrap();
+	}
+}
+```
+
+The included tool `refixtool` accepts image file names as command-line
+parameters and prints EXIF data for them. The `src/bin.rs` file is a
+good starting point to learn how to use the crate, then take a look into
+the `ExifEntry` struct.
+
+# Contact
+
+Elvis Pfützenreuter - epxx@epxx.co - https://epxx.co

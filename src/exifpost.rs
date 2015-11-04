@@ -11,7 +11,8 @@ fn other_tag(tag: ExifTag, entries: &Vec<ExifEntry>) -> Option<&ExifEntry>
 	None
 }
 
-/// Does postprocessing in tags that depend on other tags to be completed
+/// Does postprocessing in tags that depend on other tags to have a complete interpretation
+/// e.g. when the unit of a tag is annotated on another tag
 pub fn exif_postprocessing(entry: &mut ExifEntry, entries: &Vec<ExifEntry>)
 {
 	match entry.tag {

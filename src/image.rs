@@ -1,4 +1,3 @@
-
 /// Detect the type of an image contained in a byte buffer
 pub fn detect_type(contents: &Vec<u8>) -> &str
 {
@@ -27,7 +26,7 @@ pub fn detect_type(contents: &Vec<u8>) -> &str
 	return "";
 }
 
-/// Find the embedded TIFF in a JPEG image, that contains in turn the EXIF data
+/// Find the embedded TIFF in a JPEG image (that in turn contains the EXIF data)
 pub fn find_embedded_tiff_in_jpeg(contents: &Vec<u8>) -> (usize, usize, String)
 {
 	let mut err = "Scan past EOF and no EXIF found".to_string();

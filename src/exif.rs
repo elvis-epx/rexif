@@ -1,7 +1,7 @@
 use super::types::*;
 use super::exifreadable::*;
 
-/// Convert a numeric tag into EXIF tag and yields info about the tag. This info
+/// Convert a numeric tag into ExifTag enumeration, and yields information about the tag. This information
 /// is used by the main body of the parser to sanity-check the tags found in image
 /// and make sure that EXIF tags have the right data types
 pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i32, i32,

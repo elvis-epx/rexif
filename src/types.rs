@@ -49,12 +49,13 @@ pub struct IfdEntry {
 	/// Number of items, each one in the data format specified by format
 	pub count: u32,
 	/// Raw data as a vector of bytes. Length is sizeof(format) * count.
-	/// It is a copy of either ifd_data or ext_data, depending on size.
+	/// Depending on its size, it came from different parts of the image file.
 	pub data: Vec<u8>,
 	/// Raw data contained within the IFD structure. If count * sizeof(format) >= 4,
 	/// this item contains the offset where the actual data can be found
 	pub ifd_data: Vec<u8>,
-	/// Raw data contained outside of the IFD structure, if it did not fit within the IFD structure
+	/// Raw data contained outside of the IFD structure and pointed by ifd_data,
+	/// if data would not fit within the IFD structure
 	pub ext_data: Vec<u8>,
 	/// If true, integer and offset formats must be parsed from raw data as little-endian
 	/// If false, integer and offset formats must be parsed from raw data as big-endian

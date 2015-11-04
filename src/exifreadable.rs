@@ -386,6 +386,9 @@ pub fn gpsmeasuremode(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
+/// Interprets an Undefined tag as ASCII, when the contents are guaranteed
+/// by EXIF standard to be ASCII-compatible. This function accepts UTF-8
+/// strings, should they be accepted by EXIF standard in the future.
 pub fn undefined_as_ascii(e: &TagValue, _: &String) -> String
 {
 	let s = match e {
@@ -398,6 +401,8 @@ pub fn undefined_as_ascii(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
+/// Outputs an Undefined tag as an array of bytes. Appropriate for tags
+/// that are opaque and small-sized
 pub fn undefined_as_u8(e: &TagValue, _: &String) -> String
 {
 	let s = match e {
@@ -410,10 +415,16 @@ pub fn undefined_as_u8(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
+/// Tries to parse an Undefined tag as containing a string. For some tags,
+/// the string encoding /// format can be discovered by looking into the first
+/// 8 bytes.
 pub fn undefined_as_encoded_string(e: &TagValue, _: &String) -> String
 {
+	// "ASCII\0\0\0"
 	static ASC: [u8; 8] = [0x41, 0x53, 0x43, 0x49, 0x49, 0, 0, 0];
+	// "JIS\0\0\0\0\0"
 	static JIS: [u8; 8] = [0x4a, 0x49, 0x53, 0, 0, 0, 0, 0];
+	// "UNICODE\0"
 	static UNICODE: [u8; 8] = [0x55, 0x4e, 0x49, 0x43, 0x4f, 0x44, 0x45, 0x00];
 
 	match e {
@@ -441,6 +452,7 @@ pub fn undefined_as_encoded_string(e: &TagValue, _: &String) -> String
 	}
 }
 
+/// Prints an opaque and long Undefined tag simply as as "blob", noting its length
 pub fn undefined_as_blob(e: &TagValue, _: &String) -> String
 {
 	let s = match e {

@@ -6,7 +6,7 @@ use std::error::Error;
 use super::types::*;
 use super::lowlevel::*;
 
-/// Convert an IFD format code to the enum
+/// Convert an IFD format code to the IfdFormat enumeration
 pub fn ifdformat_new(n: u16) -> IfdFormat
 {
 	match n {
@@ -27,10 +27,17 @@ pub fn ifdformat_new(n: u16) -> IfdFormat
 }
 
 impl IfdEntry {
+	/// Casts IFD entry data into an offset. Not very useful for the crate client.
+	/// The call can't fail, but the caller must be sure that the IFD entry uses
+	/// the IFD data area as an offset (i.e. when the tag is a Sub-IFD tag, or when
+	/// there are more than 4 bytes of data and it would not fit within IFD).
 	pub fn data_as_offset(&self) -> usize {
 		read_u32(self.le, &(self.ifd_data[0..4])) as usize
 	}
 
+	/// Returns the size of an individual element (e.g. U8=1, U16=2...). Every
+	/// IFD entry contains an array of elements, so this is NOT the size of the
+	/// whole entry!
 	pub fn size(&self) -> u8
 	{
 		match self.format {
@@ -50,16 +57,24 @@ impl IfdEntry {
 		}
 	}
 
+	/// Total length of the whole IFD entry (element count x element size)
 	pub fn length(&self) -> usize
 	{
 		(self.size() as usize) * (self.count as usize)
 	}
 
+	/// Returns true if data is contained within the IFD structure, false when
+	/// data can be found elsewhere in the image (and IFD structure contains the
+	/// data offset, instead of data).
 	pub fn in_ifd(&self) -> bool
 	{
 		self.length() <= 4
 	}
 
+	/// Copies data from IFD entry section reserved for data (up to 4 bytes), or
+	/// from another part of the image file (when data wouldn't fit in IFD structure).
+	/// In either case, the data member will contain the data of interest after
+	/// this call.
 	pub fn copy_data(&mut self, contents: &[u8]) -> bool
 	{
 		if self.in_ifd() {
@@ -83,6 +98,7 @@ impl IfdEntry {
 }
 
 impl ExifError {
+	/// Human-readable string with the meaning of the error enumeration
 	fn readable(&self) -> &str {
 		let msg = match self.kind {
 			ExifErrorKind::FileOpenError => "File could not be opened",

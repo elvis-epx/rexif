@@ -1,6 +1,4 @@
-Verify code documentation
 Generate documentation to site
 Add metadata for crates.io
-Choose and add license
 Do not upload sample images to crates.io
 Upload to crates.io

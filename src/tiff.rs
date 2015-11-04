@@ -9,7 +9,9 @@ use std::cell::RefCell;
 
 type InExifResult = Result<(), ExifError>;
 
-/// Parse of raw IFD entry into EXIF data, if it is of a known type
+/// Parse of raw IFD entry into EXIF data, if it is of a known type, and returns
+/// an ExifEntry object. If the tag is unknown, the enumeration is set to UnknownToMe,
+/// but the raw information of tag is still available in the ifd member.
 pub fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 {
 	let (value, readable_value) = tag_value_new(f);
