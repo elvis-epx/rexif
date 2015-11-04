@@ -7,7 +7,7 @@ use super::types::*;
 use super::lowlevel::*;
 
 /// Convert an IFD format code to the enum
-pub fn to_ifdformat(n: u16) -> IfdFormat
+pub fn ifdformat_new(n: u16) -> IfdFormat
 {
 	match n {
 		1 => IfdFormat::U8,
