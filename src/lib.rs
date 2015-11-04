@@ -792,6 +792,45 @@ fn resolution_unit(e: &TagValue) -> String
 	return s.to_string();
 }
 
+/// Find a tag of given type
+fn other_tag(tag: ExifTag, entries: &Vec<ExifEntry>) -> Option<&ExifEntry>
+{
+	for entry in entries {
+		if entry.tag == tag {
+			return Some(entry);
+		}
+	}
+	None
+}
+
+/// Does postprocessing in tags that depend on other tags to be completed
+fn exif_postprocessing(entry: &mut ExifEntry, entries: &Vec<ExifEntry>)
+{
+	match entry.tag {
+		ExifTag::XResolution => {
+			match other_tag(ExifTag::ResolutionUnit, entries) {
+				Some(other) => {
+					entry.unit = other.value_readable.clone();
+					entry.value_more_readable.push_str(" ");
+					entry.value_more_readable.push_str(&entry.unit);
+				}
+				None => (),
+			}
+		},
+		ExifTag::YResolution => {
+			match other_tag(ExifTag::ResolutionUnit, entries) {
+				Some(other) => {
+					entry.unit = other.value_readable.clone();
+					entry.value_more_readable.push_str(" ");
+					entry.value_more_readable.push_str(&entry.unit);
+				}
+				None => (),
+			}
+		},
+		_ => (),
+	}
+}
+
 // FIXME check how Undefined could be converted safely to string in some cases
 // FIXME remove nop from all non-Str tags
 
@@ -1266,6 +1305,14 @@ fn parse_ifds(le: bool, ifd0_offset: usize, contents: &[u8]) -> ExifResult
 			Ok(_) => true,
 			Err(e) => return Err(e),
 		};
+	}
+
+	// I didn't want to make the copy, but how to pass a vector that is
+	// being iterated onto?
+	let exif_entries_copy = exif_entries.clone();
+
+	for entry in &mut exif_entries {
+		exif_postprocessing(entry, &exif_entries_copy);
 	}
 
 	return Ok(RefCell::new(ExifData{file: "".to_string(),
