@@ -105,23 +105,13 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	(ExifTag::DateTimeDigitized, "Date of image digitalization", "none",
 	IfdFormat::Ascii, -1i32, -1i32, strpass),
 
-	0x9101 =>
-	 (ExifTag::ComponentsConfiguration, "Components configuration", "",
-	IfdFormat::Undefined, 4, 4, nop),
-
-	0x9102 =>
-	(ExifTag::CompressedBitsPerPixel, "Compressed bits per pixel", "",
-	IfdFormat::URational, 1, 1, nop),
-
-	// FIXME APEX? Shutter speed. To convert this value to ordinary 'Shutter Speed'; calculate this value's power of 2, then reciprocal. For example, if value is '4', shutter speed is 1/(2^4)=1/16 second.
 	0x9201 =>
 	(ExifTag::ShutterSpeedValue, "Shutter speed", "APEX",
-	IfdFormat::IRational, 1, 1, nop),
+	IfdFormat::IRational, 1, 1, apex_tv),
 	
-	// FIXME Numerator FFFFFFFF = Unknown, The actual aperture value of lens when the image was taken. To convert this value to ordinary F-number(F-stop), calculate this value's power of root 2 (=1.4142). For example, if value is '5', F-number is 1.4142^5 = F5.6.
 	0x9202 =>
 	(ExifTag::ApertureValue, "Aperture value", "APEX",
-	IfdFormat::URational, 1, 1, nop),
+	IfdFormat::URational, 1, 1, apex_av),
 
 	// FIXME numerator FFFF.. = Unknown
 	0x9203 =>
@@ -132,8 +122,8 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	(ExifTag::ExposureBiasValue, "Exposure bias value", "APEX",
 	IfdFormat::IRational, 1, 1, nop),
 
-	0x9205 =>
-	(ExifTag::MaxApertureValue, "Maximum aperture value", "APEX", IfdFormat::URational, 1, 1, nop),
+	0x9205 => (ExifTag::MaxApertureValue, "Maximum aperture value",
+	"APEX", IfdFormat::URational, 1, 1, apex_av),
 
 	0x9206 =>
 	(ExifTag::SubjectDistance, "Subject distance", "m",
@@ -161,9 +151,8 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 
 	0x927c =>
 	(ExifTag::MakerNote, "Maker note", "none",
-	IfdFormat::Undefined, -1i32, -1i32, undefined_as_u8),
+	IfdFormat::Undefined, -1i32, -1i32, undefined_as_blob),
 
-	// http://www.awaresystems.be/imaging/tiff/tifftags/privateifd/exif/usercomment.html
 	0x9286 =>
 	(ExifTag::UserComment, "User comment", "none",
 	IfdFormat::Undefined, -1i32, -1i32, undefined_as_encoded_string),
@@ -266,11 +255,12 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 		 "Subject distance range", "", IfdFormat::U16, 1, 1, nop),
 
 	0xa420 =>
-	(ExifTag::ImageUniqueID, "Image unique ID", "", IfdFormat::Ascii, -1i32, -1i32, strpass),
+	(ExifTag::ImageUniqueID, "Image unique ID", "none",
+	IfdFormat::Ascii, -1i32, -1i32, strpass),
 		
 	0x0 =>
-	(ExifTag::GPSVersionID,
-		 "GPS version ID", "", IfdFormat::U8, 4, 4, nop),
+	(ExifTag::GPSVersionID, "GPS version ID", "none",
+	IfdFormat::U8, 4, 4, nop),
 
 	0x1 =>
 	(ExifTag::GPSLatitudeRef, "GPS latitude ref", "none",
@@ -358,30 +348,27 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	IfdFormat::URational, 3, 3, dms),
 
 	0x17 =>
-	(ExifTag::GPSDestBearingRef,
-	 "GPS destination bearing ref", "", IfdFormat::Ascii, -1i32, -1i32, gpsbearingref),
+	(ExifTag::GPSDestBearingRef, "GPS destination bearing ref", "none",
+	IfdFormat::Ascii, -1i32, -1i32, gpsbearingref),
 
 	0x18 =>
 	(ExifTag::GPSDestBearing, "GPS destination bearing", "deg",
 	IfdFormat::URational, 1, 1, gpsbearing),
 
 	0x19 =>
-	(ExifTag::GPSDestDistanceRef, "GPS destination distance ref", "",
+	(ExifTag::GPSDestDistanceRef, "GPS destination distance ref", "none",
 	IfdFormat::Ascii, -1i32, -1i32, gpsdestdistanceref),
 
 	0x1a =>
 	(ExifTag::GPSDestDistance, "GPS destination distance", "@GPSDestDistanceRef",
 	IfdFormat::URational, 1, 1, gpsdestdistance),
 
-	// FIXME multiple characcter codes
 	0x1b =>
-	(ExifTag::GPSProcessingMethod,
-	"GPS processing method", "", IfdFormat::Undefined, -1i32, -1i32, nop),
+	(ExifTag::GPSProcessingMethod, "GPS processing method", "none",
+	IfdFormat::Undefined, -1i32, -1i32, undefined_as_encoded_string),
 
-	// FIXME multiple characcter codes
-	0x1c =>
-	(ExifTag::GPSAreaInformation,
-	"GPS area information", "", IfdFormat::Undefined, -1i32, -1i32, nop),
+	0x1c => (ExifTag::GPSAreaInformation, "GPS area information",
+	"none", IfdFormat::Undefined, -1i32, -1i32, undefined_as_encoded_string),
 
 	0x1d =>
 	(ExifTag::GPSDateStamp, "GPS date stamp", "none",
@@ -393,6 +380,7 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 
 	_ =>
 	(ExifTag::UnknownToMe, "Unknown to this library, or manufacturer-specific", "Unknown unit",
-		IfdFormat::Unknown, -1i32, -1i32, nop)
+	IfdFormat::Unknown, -1i32, -1i32, nop)
+
 	}
 }

@@ -441,3 +441,45 @@ pub fn undefined_as_encoded_string(e: &TagValue, _: &String) -> String
 	}
 }
 
+pub fn undefined_as_blob(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+	&TagValue::Undefined(ref v, _) => {
+		format!("Blob of {} bytes", v.len())
+	},
+	_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
+pub fn apex_tv(e: &TagValue, _: &String) -> String
+{
+	match e {
+		&TagValue::IRational(ref v) => {
+			// numerator 0xffffffff = unknown
+			if v[0].numerator == -1 {
+				"Unknown".to_string()
+			} else {
+				format!("{:.1} Tv APEX", v[0].value())
+			}
+		},
+		_ => panic!(INV),
+	}
+}
+
+pub fn apex_av(e: &TagValue, _: &String) -> String
+{
+	match e {
+		&TagValue::URational(ref v) => {
+			// numerator 0xffffffff = unknown
+			if v[0].numerator == 0xffffffff {
+				"Unknown".to_string()
+			} else {
+				format!("{:.1} Av APEX", v[0].value())
+			}
+		},
+		_ => panic!(INV),
+	}
+}
+

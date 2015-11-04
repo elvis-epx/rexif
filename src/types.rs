@@ -93,8 +93,6 @@ pub enum ExifTag {
 	ExifVersion = 0x9000,
 	DateTimeOriginal = 0x9003,
 	DateTimeDigitized = 0x9004,
-	ComponentsConfiguration = 0x9101,
-	CompressedBitsPerPixel = 0x9102,
 	ShutterSpeedValue = 0x9201,
 	ApertureValue = 0x9202,
 	BrightnessValue = 0x9203,
