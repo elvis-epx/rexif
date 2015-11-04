@@ -285,15 +285,13 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	(ExifTag::GPSLongitude, "GPS longitude", "D/M/S",
 	IfdFormat::URational, 3, 3, dms),
 
-	// FIXME
 	0x5 =>
-	(ExifTag::GPSAltitudeRef,
-		 "GPS altitude ref", "", IfdFormat::U8, 1, 1, nop),
+	(ExifTag::GPSAltitudeRef, "GPS altitude ref", "none",
+	IfdFormat::U8, 1, 1, gps_alt_ref),
 
-	// FIXME
 	0x6 =>
-	(ExifTag::GPSAltitude,
-	"GPS altitude", "m", IfdFormat::URational, 1, 1, meters),
+	(ExifTag::GPSAltitude, "GPS altitude", "m",
+	IfdFormat::URational, 1, 1, meters),
 
 	// FIXME
 	0x7 =>

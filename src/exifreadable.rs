@@ -205,3 +205,21 @@ pub fn dms(e: &TagValue, _: &String) -> String
 
 	return s.to_string();
 }
+
+pub fn gps_alt_ref(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+		&TagValue::U8(ref v) => {
+			let n = v[0];
+			match n {
+				0 => "Above sea level",
+				1 => "Below sea level",
+				_ => return format!("Unknown, assumed below sea level ({})", n),
+			}
+		},
+		_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+

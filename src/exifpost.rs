@@ -54,6 +54,21 @@ pub fn exif_postprocessing(entry: &mut ExifEntry, entries: &Vec<ExifEntry>)
 		None => (),
 	},
 
+	ExifTag::GPSAltitude =>
+	match other_tag(ExifTag::GPSAltitudeRef, entries) {
+		Some(f) => {
+			let altref = match f.value {
+				TagValue::U8(ref fv) => fv[0],
+				_ => return ()
+			};
+
+			if altref != 0 {
+				entry.value_more_readable.push_str(" below sea level");
+			}
+		},
+		None => (),
+	},
+
 	_ => (),
 	}
 }
