@@ -8,7 +8,8 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	match f {
 
 	0x010e =>
-	(ExifTag::ImageDescription, "Image Description", "none", IfdFormat::Str, -1i32, -1i32, strpass),
+	(ExifTag::ImageDescription, "Image Description", "none", IfdFormat::Str,
+	-1i32, -1i32, strpass),
 
 	0x010f =>
 	(ExifTag::Make, "Manufacturer", "none", IfdFormat::Str, -1i32, -1i32, strpass),
@@ -69,14 +70,13 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	0x829d => (ExifTag::FNumber, "Aperture", "f-number",
 	IfdFormat::URational, 1, 1, f_number),
 
-	// EPX
-
-	// FIXME '1' means manual control, '2' program normal, '3' aperture priority, '4' shutter priority, '5' program creative (slow program), '6' program action(high-speed program), '7' portrait mode, '8' landscape mode.
-	0x8822 => (ExifTag::ExposureProgram, "Exposure program", "none", IfdFormat::U16, 1, 1, nop),
+	0x8822 => (ExifTag::ExposureProgram, "Exposure program", "none",
+	IfdFormat::U16, 1, 1, exposure_program),
 
 	0x8824 => (ExifTag::SpectralSensitivity, "Spectral sensitivity", "", IfdFormat::Str, -1i32, -1i32, nop),
 
 	// FIXME 
+	// EPX
 	0x8827 => (ExifTag::ISOSpeedRatings, "ISO speed ratings", "ISO", IfdFormat::U16, 1, 2, nop),
 
 	0x8828 => (ExifTag::OECF, "OECF", "none", IfdFormat::Undefined, -1i32, -1i32, nop),

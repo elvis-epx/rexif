@@ -198,8 +198,8 @@ pub struct ExifEntry {
 	pub tag: ExifTag,
 	/// EXIF tag value as an enumeration or "variant"
 	pub value: TagValue,
-	/// Unit of the value, if applicable. If tag is UnknownToMe, unit will not be
-	/// filled in.
+	/// Unit of the value, if applicable. If tag is UnknownToMe, unit will be empty.
+	/// If the tag is parsed and it is unitless, it will be equal to "none".
 	pub unit: String,
 	/// Human-readable name of the tag, for debugging and simple listing purposes
 	pub tag_readable: String,

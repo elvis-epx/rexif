@@ -24,7 +24,7 @@ pub fn orientation(e: &TagValue, _: &String) -> String
 				6 => "Rotated to left",
 				8 => "Rotated to right",
 				9 => "Undefined",
-				_ => "(Invalid)",
+				_ => return format!("Unknown ({})", n),
 			}
 		},
 		_ => panic!("Invalid"),
@@ -70,7 +70,7 @@ pub fn resolution_unit(e: &TagValue, _: &String) -> String
 				1 => "Unitless",
 				2 => "in",
 				3 => "cm",
-				_ => "(Invalid)",
+				_ => return format!("Unknown ({})", n),
 			}
 		},
 		_ => panic!("Invalid"),
@@ -96,6 +96,29 @@ pub fn f_number(e: &TagValue, _: &String) -> String
 	let s = match e {
 		&TagValue::URational(ref v) => {
 			format!("f/{:1}", v[0].value())
+		},
+		_ => panic!("Invalid"),
+	};
+
+	return s.to_string();
+}
+
+pub fn exposure_program(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+		&TagValue::U16(ref v) => {
+			let n = v[0];
+			match n {
+				1 => "Manual control",
+				2 => "Program control",
+				3 => "Aperture priority",
+				4 => "Shutter priority",
+				5 => "Program creative (slow program)",
+				6 => "Program creative (high-speed program)",
+				7 => "Portrait mode",
+				8 => "Landscape mode",
+				_ => return format!("Unknown ({})", n),
+			}
 		},
 		_ => panic!("Invalid"),
 	};
