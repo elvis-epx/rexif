@@ -94,10 +94,10 @@ pub fn tag_value_new(f: &IfdEntry) -> (TagValue, String)
 		IfdFormat::Undefined => {
 			let a = f.data.clone();
 			let b = numarray_to_string(&a);
-			(TagValue::Undefined(a), b)
+			(TagValue::Undefined(a, f.le), b)
 		},
 
-		_ => (TagValue::Unknown(f.data.clone()),
+		_ => (TagValue::Unknown(f.data.clone(), f.le),
 					"<unknown blob>".to_string()),
 	}
 }

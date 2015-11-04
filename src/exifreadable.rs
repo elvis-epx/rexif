@@ -389,7 +389,7 @@ pub fn gpsmeasuremode(e: &TagValue, _: &String) -> String
 pub fn undefined_as_ascii(e: &TagValue, _: &String) -> String
 {
 	let s = match e {
-	&TagValue::Undefined(ref v) => {
+	&TagValue::Undefined(ref v, _) => {
 		String::from_utf8_lossy(&v[..])
 	},
 	_ => panic!(INV),
@@ -401,7 +401,7 @@ pub fn undefined_as_ascii(e: &TagValue, _: &String) -> String
 pub fn undefined_as_u8(e: &TagValue, _: &String) -> String
 {
 	let s = match e {
-	&TagValue::Undefined(ref v) => {
+	&TagValue::Undefined(ref v, _) => {
 		numarray_to_string(v)
 	},
 	_ => panic!(INV),
@@ -417,7 +417,7 @@ pub fn undefined_as_encoded_string(e: &TagValue, _: &String) -> String
 	static UNICODE: [u8; 8] = [0x55, 0x4e, 0x49, 0x43, 0x4f, 0x44, 0x45, 0x00];
 
 	match e {
-	&TagValue::Undefined(ref v) => {
+	&TagValue::Undefined(ref v, le) => {
 		if v.len() < 8 {
 			format!("String w/ truncated preamble {}", numarray_to_string(v))
 		} else if v[0..8] == ASC[..] {
@@ -430,9 +430,8 @@ pub fn undefined_as_encoded_string(e: &TagValue, _: &String) -> String
 		} else if v[0..8] == UNICODE[..] {
 			let v8 = &v[8..];
 			// reinterpret as vector of u16
-			// FIXME we need to know the endianess of TIFF at this point!!!
 			let v16_size = (v8.len() / 2) as u32;
-			let v16 = read_u16_array(true, v16_size, v8);
+			let v16 = read_u16_array(le, v16_size, v8);
 			String::from_utf16_lossy(&v16)
 		} else {
 			format!("String w/ undefined encoding {}", numarray_to_string(v))

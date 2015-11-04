@@ -231,13 +231,19 @@ pub enum TagValue {
 	U32(Vec<u32>),
 	URational(Vec<URational>),
 	I8(Vec<i8>),
-	Undefined(Vec<u8>),
+	/// Undefined value has a "little endian" boolean parameter.
+	/// If true, and if buffer contents have some sort of internal structure,
+	/// they should be interpreted as LE.
+	Undefined(Vec<u8>, bool),
 	I16(Vec<i16>),
 	I32(Vec<i32>),
 	IRational(Vec<IRational>),
 	F32(Vec<f32>),
 	F64(Vec<f64>),
-	Unknown(Vec<u8>),
+	/// Unknown value has a "little endian" boolean parameter.
+	/// If true, and if buffer contents have some sort of internal structure,
+	/// they should be interpreted as LE.
+	Unknown(Vec<u8>, bool),
 }
 
 /// Type returned by image parsing
