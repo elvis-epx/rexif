@@ -57,7 +57,9 @@ pub struct IfdEntry {
 	pub le: bool,
 }
 
-/// Enumeration that represents recognized EXIF tags found in TIFF IFDs
+/// Enumeration that represents recognized EXIF tags found in TIFF IFDs.
+///
+/// Items can be cast to u16 in order to get the code for the EXIF tag.
 #[derive(Copy, Clone, PartialEq)]
 pub enum ExifTag {
 	/// Tag not recognized are partially parsed. The client may still try to interpret
@@ -162,7 +164,10 @@ pub enum ExifTag {
 	GPSDifferential = 0x1e,
 }
 
-/// Enumeration that represents the possible data formats of an IFD entry
+/// Enumeration that represents the possible data formats of an IFD entry.
+///
+/// Any enumeration item can be cast to u16 to get the low-level format code
+/// as defined by the TIFF format.
 #[derive(Copy, Clone, PartialEq)]
 pub enum IfdFormat {
 	Unknown = 0,

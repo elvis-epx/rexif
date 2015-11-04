@@ -18,9 +18,8 @@ mod exifreadable;
 mod exifpost;
 mod exif;
 
-
 /// Parse an image buffer that may be of any format. Detect format and find EXIF data
-pub fn parse_buffer(fname: &str, contents: &Vec<u8>) -> ExifResult
+pub fn parse_buffer(contents: &Vec<u8>) -> ExifResult
 {
 	let mime = detect_type(&contents);
 
@@ -68,7 +67,7 @@ pub fn read_file(fname: &str, f: &mut File) -> ExifResult
 
 	let mut contents: Vec<u8> = Vec::new();
 	match f.read_to_end(&mut contents) {
-		Ok(_) => parse_buffer(&fname, &contents),
+		Ok(_) => parse_buffer(&contents),
 		Err(_) => Err(ExifError{kind: ExifErrorKind::FileReadError,
 				extra: fname.to_string()}),
 	}
