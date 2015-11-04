@@ -12,6 +12,13 @@ pub fn detect_type(contents: &Vec<u8>) -> &str
 			contents[10] == 0 {
 		return "image/jpeg";
 	}
+	if contents[0] == 0xff && contents[1] == 0xd8 &&
+			contents[2] == 0xff && // contents[3] == 0xe0 &&
+			contents[6] == ('E' as u8) && contents[7] == ('x' as u8) &&
+			contents[8] == ('i' as u8) && contents[9] == ('f' as u8) &&
+			contents[10] == 0 {
+		return "image/jpeg";
+	}
 	if contents[0] == ('I' as u8) && contents[1] == ('I' as u8) &&
 			contents[2] == 42 && contents[3] == 0 {
 		/* TIFF little-endian */
