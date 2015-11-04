@@ -19,9 +19,7 @@ welcome!
 ```
 match rexif::parse_file(&file_name) {
 	Ok(exif) => {
-		let exif = exif.into_inner();
-
-		println!("{} {} {} exif entries: {}", exif.file, exif.size,
+		println!("{} {} exif entries: {}", file_name,
 			exif.mime, exif.entries.len());
 
 		for entry in &exif.entries {

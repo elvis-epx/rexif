@@ -1,14 +1,9 @@
 use super::rational::*;
-use std::cell::RefCell;
 use std::result::Result;
 
 /// Top-level structure that contains all data inside an image
 #[derive(Clone)]
 pub struct ExifData {
-	/// File name, if a file was submitted for parsing, otherwise empty
-	pub file: String,
-	/// Image file size, in bytes
-	pub size: usize,
 	/// MIME type of the parsed image. image/jpeg, image/tiff, or empty if unrecognized.
 	pub mime: String,
 	/// List of EXIF entries found in the image
@@ -245,5 +240,8 @@ pub enum TagValue {
 	Unknown(Vec<u8>, bool),
 }
 
-/// Type returned by image parsing
-pub type ExifResult = Result<RefCell<ExifData>, ExifError>;
+/// Type returned by image file parsing
+pub type ExifResult = Result<ExifData, ExifError>;
+
+/// Type resturned by lower-level parsing functions
+pub type ExifEntryResult = Result<Vec<ExifEntry>, ExifError>;

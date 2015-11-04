@@ -18,9 +18,8 @@ fn main()
 	for arg in &args[1..] {
 		match rexif::parse_file(&arg) {
 			Ok(exif) => {
-				let exif = exif.into_inner();
-				println!("{} {} {} exif entries: {}", exif.file, exif.size,
-					exif.mime, exif.entries.len());
+				println!("{} {} exif entries: {}",
+					arg, exif.mime, exif.entries.len());
 				for entry in &exif.entries {
 					if entry.tag == ExifTag::UnknownToMe {
 						/*

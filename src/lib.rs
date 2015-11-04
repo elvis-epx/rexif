@@ -44,16 +44,14 @@ pub fn parse_buffer(fname: &str, contents: &Vec<u8>) -> ExifResult
 		size = esize;
 		// println!("Offset {} size {}", offset, size);
 	}
+
 	match parse_tiff(&contents[offset .. offset + size]) {
 		Ok(d) => {
-				d.borrow_mut().size = contents.len();
-				d.borrow_mut().file = fname.to_string();
-				d.borrow_mut().mime = mime.to_string();
-				Ok(d)
-			},
+			let f = ExifData { mime: mime.to_string(), entries: d };
+			Ok(f)
+		},
 		Err(e) => Err(e)
 	}
-
 }
 
 /// Read and parse an open file that is supposed to contain an image

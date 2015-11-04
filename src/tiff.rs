@@ -5,7 +5,6 @@ use super::ifdformat::*;
 use super::debug::*;
 use super::exif::*;
 use super::exifpost::*;
-use std::cell::RefCell;
 
 type InExifResult = Result<(), ExifError>;
 
@@ -135,7 +134,7 @@ fn parse_exif_ifd(le: bool, contents: &[u8], ioffset: usize,
 }
 
 /// Parses IFD0 and looks for SubIFD or GPS IFD within IFD0
-pub fn parse_ifds(le: bool, ifd0_offset: usize, contents: &[u8]) -> ExifResult
+pub fn parse_ifds(le: bool, ifd0_offset: usize, contents: &[u8]) -> ExifEntryResult
 {
 	let mut offset = ifd0_offset;
 	let mut exif_entries: Vec<ExifEntry> = Vec::new();
@@ -184,14 +183,11 @@ pub fn parse_ifds(le: bool, ifd0_offset: usize, contents: &[u8]) -> ExifResult
 		exif_postprocessing(entry, &exif_entries_copy);
 	}
 
-	return Ok(RefCell::new(ExifData{file: "".to_string(),
-				size: 0,
-				mime: "".to_string(),
-				entries: exif_entries}));
+	return Ok(exif_entries);
 }
 
 /// Parse a TIFF image, or embedded TIFF in JPEG, in order to get IFDs and then the EXIF data
-pub fn parse_tiff(contents: &[u8]) -> ExifResult
+pub fn parse_tiff(contents: &[u8]) -> ExifEntryResult
 {
 	let mut le = false;
 
