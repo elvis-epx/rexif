@@ -7,6 +7,8 @@ use super::exif::*;
 use super::exifpost::*;
 use std::cell::RefCell;
 
+type InExifResult = Result<(), ExifError>;
+
 /// Parse of raw IFD entry into EXIF data, if it is of a known type
 pub fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 {
@@ -91,7 +93,7 @@ pub fn parse_ifd(subifd: bool, le: bool, count: u16, contents: &[u8]) -> (Vec<If
 }
 
 /// Deep parse of IFD that grabs EXIF data from IFD0, SubIFD and GPS IFD
-pub fn parse_exif_ifd(le: bool, contents: &[u8], ioffset: usize,
+fn parse_exif_ifd(le: bool, contents: &[u8], ioffset: usize,
 				exif_entries: &mut Vec<ExifEntry>) -> InExifResult
 {
 	let mut offset = ioffset;

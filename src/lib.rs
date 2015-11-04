@@ -19,7 +19,7 @@ mod exifpost;
 mod exif;
 
 
-/* Parse an image buffer that may be of any format. Detect format and find EXIF data */
+/// Parse an image buffer that may be of any format. Detect format and find EXIF data
 pub fn parse_buffer(fname: &str, contents: &Vec<u8>) -> ExifResult
 {
 	let mime = detect_type(&contents);
@@ -56,7 +56,7 @@ pub fn parse_buffer(fname: &str, contents: &Vec<u8>) -> ExifResult
 
 }
 
-/* Read and interpret an image file */
+/// Read and parse an open file that is supposed to contain an image
 pub fn read_file(fname: &str, f: &mut File) -> ExifResult
 {
 	match f.seek(SeekFrom::Start(0)) {
@@ -76,7 +76,7 @@ pub fn read_file(fname: &str, f: &mut File) -> ExifResult
 	}
 }
 
-/* Parse an image file */
+/// Parse an image file
 pub fn parse_file(fname: &str) -> ExifResult
 {
 	let mut f = match File::open(fname) {
