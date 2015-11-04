@@ -1,3 +1,39 @@
+//! RExif is a native Rust create, written to extract EXIF data from JPEG and TIFF images.
+//! 
+//! Note that it is in very early stages of development. Any sort of feedback is welcome!
+//!
+//! The crate contains a
+//! sample binary called 'rexiftool' that accepts files as arguments and prints the EXIF data. It gives
+//! a rough idea on how to use the crate. Get some sample images and run
+//!
+//!
+//! `cargo run [image file 1] [image file 2] ...`
+//!
+//!
+//! To learn to use this crate, start by the documentation of function `parse_file()`, 
+//! and the struct `ExifData` that is returned by the parser. The rest falls more or less into place.
+//!
+//! Code sample lightly edited from src/bin.rs: 
+//!
+//! ```
+//! match rexif::parse_file(&file_name) {
+//!	Ok(exif) => {
+//!		println!("{} {} exif entries: {}", file_name,
+//!			exif.mime, exif.entries.len());
+//!
+//!		for entry in &exif.entries {
+//!			println!("	{}: {}",
+//!					entry.tag_readable, 
+//!					entry.value_more_readable);
+//!		}
+//!	},
+//!	Err(e) => {
+//!		print!("Error in {}: {} {}", &file_name,
+//!			Error::description(&e), e.extra).unwrap();
+//!	}
+//! }
+//! ```
+
 use std::fs::File;
 use std::io::{Seek,SeekFrom,Read};
 
@@ -18,7 +54,8 @@ mod exifreadable;
 mod exifpost;
 mod exif;
 
-/// Parse an image buffer that may be of any format. Detect format and find EXIF data
+/// Parse a byte buffer that should contain a TIFF or JPEG image.
+/// Tries to detect format and parse EXIF data.
 pub fn parse_buffer(contents: &Vec<u8>) -> ExifResult
 {
 	let mime = detect_type(&contents);
@@ -53,7 +90,7 @@ pub fn parse_buffer(contents: &Vec<u8>) -> ExifResult
 	}
 }
 
-/// Read and parse an open file that is supposed to contain an image
+/// Try to read and parse an open file that is expected to contain an image
 pub fn read_file(fname: &str, f: &mut File) -> ExifResult
 {
 	match f.seek(SeekFrom::Start(0)) {
@@ -73,7 +110,7 @@ pub fn read_file(fname: &str, f: &mut File) -> ExifResult
 	}
 }
 
-/// Parse an image file
+/// Opens an image (passed as a file name), tries to read and parse it.
 pub fn parse_file(fname: &str) -> ExifResult
 {
 	let mut f = match File::open(fname) {

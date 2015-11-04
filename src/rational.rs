@@ -2,7 +2,7 @@ use std::fmt::Formatter;
 use std::fmt;
 use std::fmt::Display;
 
-/// Type used by TIFF that represents a rational number
+/// Encapsulation of the TIFF type that represents a signed rational number
 #[derive(Copy, Clone)]
 pub struct IRational {
 	pub numerator: i32,
@@ -23,7 +23,7 @@ impl Display for IRational {
 }
 
 #[derive(Copy, Clone)]
-/// Type used by TIFF that represents a rational number
+/// Encapsulation of the TIFF type that represents an unsigned rational number
 pub struct URational {
 	pub numerator: u32,
 	pub denominator: u32,

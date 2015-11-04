@@ -6,7 +6,7 @@ It is in very early stages of development. Documentation and examples are still 
 sorry about that. It is also my pet project to learn a bit of Rust.
 
 The crate also contains a
-sample binary called 'rexiftoolt' that accepts files as arguments and prints the EXIF data. It gives
+sample binary called 'rexiftool' that accepts files as arguments and prints the EXIF data. It gives
 a rough idea on how to use the crate.
 
 I am still filling in
@@ -36,7 +36,7 @@ match rexif::parse_file(&file_name) {
 ```
 
 The included tool `refixtool` accepts image file names as command-line
-parameters and prints EXIF data for them. The `src/bin.rs` file is a
+parameters and prints EXIF data for them. The `src/main.rs` file is a
 good starting point to learn how to use the crate, then take a look into
 the `ExifEntry` struct.
 

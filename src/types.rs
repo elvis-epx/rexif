@@ -1,12 +1,12 @@
 use super::rational::*;
 use std::result::Result;
 
-/// Top-level structure that contains all data inside an image
+/// Top-level structure that contains all parsed metadata inside an image
 #[derive(Clone)]
 pub struct ExifData {
-	/// MIME type of the parsed image. image/jpeg, image/tiff, or empty if unrecognized.
+	/// MIME type of the parsed image. It may be "image/jpeg", "image/tiff", or empty if unrecognized.
 	pub mime: String,
-	/// List of EXIF entries found in the image
+	/// Collection of EXIF entries found in the image
 	pub entries: Vec<ExifEntry>,
 }
 
@@ -189,33 +189,34 @@ pub enum IfdFormat {
 #[derive(Clone)]
 pub struct ExifEntry {
 	/// Low-level IFD entry that contains the EXIF tag. The client may look into this
-	/// structure if tag is UnknownToMe, or to get the tag's raw data.
+	/// structure to get tag's raw data, or to parse the tag herself if `tag` is `UnknownToMe`.
 	pub ifd: IfdEntry,
-	/// EXIF tag type as an enumeration. If UnknownToMe, the crate does not know the
-	/// tag in detail, and parsing will be incomplete. The client may read into the
-	/// ifd member to discover more about the unparsed tag.
+	/// EXIF tag type as an enumeration. If `UnknownToMe`, the crate did not know the
+	/// tag in detail, and parsing will be incomplete. The client may read into
+	/// `ifd` to discover more about the unparsed tag.
 	pub tag: ExifTag,
-	/// EXIF tag value as an enumeration or "variant"
+	/// EXIF tag value as an enumeration. Behaves as a "variant" value
 	pub value: TagValue,
-	/// Unit of the value, if applicable. If tag is UnknownToMe, unit will be empty.
-	/// If the tag is parsed and it is unitless, it will be equal to "none".
+	/// Unit of the value, if applicable. If tag is `UnknownToMe`, unit will be empty.
+	/// If the tag has been parsed and it is indeed unitless, it will be `"none"`.
 	///
 	/// Note that
-	/// unit refers to the contents of 'value', not the readable string. For example,
+	/// unit refers to the contents of `value`, not to the readable string. For example,
 	/// a GPS latitude is a triplet of rational values, so unit is D/M/S, even though
-	/// the value_more_readable string contains a single string with the three parts
+	/// `value_more_readable` contains a single string with all three parts
 	/// combined.
 	pub unit: String,
-	/// Human-readable name of the tag, for debugging and simple listing purposes
+	/// Human-readable name of the `tag`, for debugging and listing purposes
 	pub tag_readable: String,
-	/// Human-readable, bare, version of the value. It is a bare value because e.g.
-	/// enumerations are not interpreted. Even if tag is UnknownToMe, this
-	/// member contains a representation of data found inside IFD entry.
+	/// Human-readable, but simple, version of `value`.
+	/// Enumerations or tuples are not interpreted nor combined. This member contains a
+	/// correct data representation even if tag is `UnknownToMe`.
 	pub value_readable: String,
-	/// Human-readable, interpreted and "pretty" version of the value. It is "pretty"
-	/// because e.g. enumerations are interpreted and values are accompanied by unit.
-	/// If tag is UnknownToMe,
-	/// this member contains the same string as value_readable.
+	/// Human-readable and "pretty" version of `value`.
+	/// Enumerations and tuples are interpreted and combined. If `value`
+	/// has a unit, it is also added. 
+	/// If tag is `UnknownToMe`,
+	/// this member contains the same string as `value_readable`.
 	pub value_more_readable: String,
 }
 
@@ -224,24 +225,42 @@ pub struct ExifEntry {
 /// Exif tags with single values are represented as single-item vectors.
 #[derive(Clone)]
 pub enum TagValue {
+	/// Array of unsigned byte integers
 	U8(Vec<u8>),
+	/// ASCII string. (The standard specifies 7-bit ASCII, but this parser accepts UTF-8 strings.)
 	Ascii(String),
 	U16(Vec<u16>),
 	U32(Vec<u32>),
+	/// Array of `URational` structures (tuples with integer numerator and denominator)
 	URational(Vec<URational>),
 	I8(Vec<i8>),
-	/// Undefined value has a "little endian" boolean parameter.
-	/// If true, and if buffer contents have some sort of internal structure,
-	/// they should be interpreted as LE.
+	/// Array of bytes with opaque internal structure. Used by manufacturer-specific
+	/// tags, SIG-specific tags, tags that contain Unicode (UCS-2) or Japanese (JIS)
+	/// strings (i.e. strings that are not 7-bit-clean), tags that contain 
+	/// dissimilar or variant types, etc.
+	///
+	/// This item has a "little endian"
+	/// boolean parameter that reports the whole TIFF's endianness. 
+	/// Any sort of internal structure that is sensitive to endianess
+	/// should be interpreted accordignly to this parameter (true=LE, false=BE).
 	Undefined(Vec<u8>, bool),
 	I16(Vec<i16>),
 	I32(Vec<i32>),
+	/// Array of `IRational` structures (tuples with signed integer numerator and denominator)
 	IRational(Vec<IRational>),
+	/// Array of IEEE 754 floating-points
 	F32(Vec<f32>),
+	/// Array of IEEE 754 floating-points
 	F64(Vec<f64>),
-	/// Unknown value has a "little endian" boolean parameter.
-	/// If true, and if buffer contents have some sort of internal structure,
-	/// they should be interpreted as LE.
+	/// Array of bytes with unknown internal structure.
+	/// This is different from `Undefined` because `Undefined` is actually a specified
+	/// format, while `Unknown` is an unexpected format type. A tag of `Unknown` format
+	/// is most likely a corrupted tag.
+	///
+	/// This variant has a "little endian"
+	/// boolean parameter that reports the whole TIFF's endianness. 
+	/// Any sort of internal structure that is sensitive to endianess
+	/// should be interpreted accordignly to this parameter (true=LE, false=BE).
 	Unknown(Vec<u8>, bool),
 }
 
