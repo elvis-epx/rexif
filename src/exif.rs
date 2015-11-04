@@ -170,19 +170,21 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 
 	// FIXME relate to focal place resolution unit
 	0xa20e =>
-	(ExifTag::FocalPlaneXResolution, "Focal plane X resolution", "", IfdFormat::URational, 1, 1, nop),
+	(ExifTag::FocalPlaneXResolution, "Focal plane X resolution", "@FocalPlaneResolutionUnit",
+	IfdFormat::URational, 1, 1, rational_value),
 
 	// FIXME relate to focal place resolution unit
 	0xa20f =>
-	(ExifTag::FocalPlaneYResolution, "Focal plane Y resolution", "", IfdFormat::URational, 1, 1, nop),
+	(ExifTag::FocalPlaneYResolution, "Focal plane Y resolution", "@FocalPlaneResolutionUnit",
+	IfdFormat::URational, 1, 1, rational_value),
 
-	// FIXME , default = in
 	0xa210 =>
-	(ExifTag::FocalPlaneResolutionUnit, "Focal plane resolution unit", "", IfdFormat::U16, 1, 1, nop),
+	(ExifTag::FocalPlaneResolutionUnit, "Focal plane resolution unit", "none",
+	IfdFormat::U16, 1, 1, resolution_unit),
 
-	// FIXME
 	0xa214 =>
-	(ExifTag::SubjectLocation, "Subject location", "X/Y", IfdFormat::U16, 2, 2, nop),
+	(ExifTag::SubjectLocation, "Subject location", "X,Y",
+	IfdFormat::U16, 2, 2, subject_location),
 
 	0xa215 =>
 	(ExifTag::ExposureIndex, "Exposure index", "FIXME", IfdFormat::URational, 1, 1, nop),
@@ -259,7 +261,7 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 		
 	0x0 =>
 	(ExifTag::GPSVersionID, "GPS version ID", "none",
-	IfdFormat::U8, 4, 4, nop),
+	IfdFormat::U8, 4, 4, strpass),
 
 	0x1 =>
 	(ExifTag::GPSLatitudeRef, "GPS latitude ref", "none",
@@ -315,7 +317,7 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	IfdFormat::Ascii, -1i32, -1i32, gpsbearingref),
 
 	0xf =>
-	(ExifTag::GPSTrack, "GPS track", "deg.",
+	(ExifTag::GPSTrack, "GPS track", "deg",
 	IfdFormat::URational, 1, 1, gpsbearing),
 
 	0x10 =>
@@ -327,8 +329,8 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	IfdFormat::URational, 1, 1, gpsbearing),
 
 	0x12 =>
-	(ExifTag::GPSMapDatum, "GPS map datum", "",
-	IfdFormat::Ascii, -1i32, -1i32, nop),
+	(ExifTag::GPSMapDatum, "GPS map datum", "none",
+	IfdFormat::Ascii, -1i32, -1i32, strpass),
 
 	0x13 =>
 	(ExifTag::GPSDestLatitudeRef, "GPS destination latitude ref", "none",

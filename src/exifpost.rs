@@ -36,6 +36,26 @@ pub fn exif_postprocessing(entry: &mut ExifEntry, entries: &Vec<ExifEntry>)
 		None => (),
 	},
 
+	ExifTag::FocalPlaneXResolution =>
+	match other_tag(ExifTag::FocalPlaneResolutionUnit, entries) {
+		Some(f) => {
+			entry.unit = f.value_more_readable.clone();
+			entry.value_more_readable.push_str(" pixels per ");
+			entry.value_more_readable.push_str(&f.value_more_readable);
+			},
+		None => (),
+	},
+
+	ExifTag::FocalPlaneYResolution =>
+	match other_tag(ExifTag::FocalPlaneResolutionUnit, entries) {
+		Some(f) => {
+			entry.unit = f.value_more_readable.clone();
+			entry.value_more_readable.push_str(" pixels per ");
+			entry.value_more_readable.push_str(&f.value_more_readable);
+		},
+		None => (),
+	},
+
 	ExifTag::GPSLatitude =>
 	match other_tag(ExifTag::GPSLatitudeRef, entries) {
 		Some(f) => {

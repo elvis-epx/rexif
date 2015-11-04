@@ -616,7 +616,7 @@ pub fn flash(e: &TagValue, _: &String) -> String
 			let mut b6 = "";
 
 			if (n & (1 << 5)) > 0 {
-				return format!("Does not have a flash ({})", n);
+				return format!("Does not have a flash.");
 			}
 
 			if (n & 1) > 0 {
@@ -646,7 +646,7 @@ pub fn flash(e: &TagValue, _: &String) -> String
 				b12 = "Auto mode. ";
 			}
 
-			format!("{}{}{}{}({})", b0, b12, b34, b6, n)
+			format!("{}{}{}{}", b0, b12, b34, b6)
 		},
 		_ => panic!(INV),
 	}
@@ -662,6 +662,16 @@ pub fn subject_area(e: &TagValue, _: &String) -> String
 			4 => format!("at rectangle {},{} width {} height {}", v[0], v[1], v[2], v[3]),
 			_ => format!("Unknown ({}) ", numarray_to_string(v)),
 			}
+		},
+		_ => panic!(INV),
+	}
+}
+
+pub fn subject_location(e: &TagValue, _: &String) -> String
+{
+	match e {
+		&TagValue::U16(ref v) => {
+			format!("at pixel {},{}", v[0], v[1])
 		},
 		_ => panic!(INV),
 	}
