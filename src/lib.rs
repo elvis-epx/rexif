@@ -63,7 +63,6 @@ pub enum ExifTag {
 	WhitePoint = 0x013e,
 	PrimaryChromaticities = 0x013f,
 	YCbCrCoefficients = 0x0211,
-	YCbCrPositioning = 0x213,
 	ReferenceBlackWhite = 0x0214,
 	Copyright = 0x8298,
 	ExifOffset = 0x8769,
@@ -820,6 +819,30 @@ fn resolution_unit(e: &TagValue) -> String
 	return s.to_string();
 }
 
+fn exposure_time(e: &TagValue) -> String
+{
+	let s = match e {
+		&TagValue::URational(ref v) => {
+			format!("{} s", v[0])
+		},
+		_ => panic!("Invalid"),
+	};
+
+	return s.to_string();
+}
+
+fn f_number(e: &TagValue) -> String
+{
+	let s = match e {
+		&TagValue::URational(ref v) => {
+			format!("f/{:1}", v[0].value())
+		},
+		_ => panic!("Invalid"),
+	};
+
+	return s.to_string();
+}
+
 /// Find a tag of given type
 fn other_tag(tag: ExifTag, entries: &Vec<ExifEntry>) -> Option<&ExifEntry>
 {
@@ -908,27 +931,28 @@ fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, u32, 
 	(ExifTag::YCbCrCoefficients, "YCbCr Coefficients", "none",
 	IfdFormat::URational, 3, 3, rational_values),
 
-	// EPX
-	0x0213 =>
-	(ExifTag::YCbCrPositioning, "YCbCr Positioning", "none", IfdFormat::U16, 1, 1, nop),
-
 	0x0214 =>
-	(ExifTag::ReferenceBlackWhite, "Reference Black/White", "", IfdFormat::URational, 6, 6, nop),
+	(ExifTag::ReferenceBlackWhite, "Reference Black/White", "RGB or YCbCr",
+	IfdFormat::URational, 6, 6, rational_values),
 
 	0x8298 =>
 	(ExifTag::Copyright, "Copyright", "none", IfdFormat::Str, -1, -1, strpass),
 
 	0x8769 =>
-	(ExifTag::ExifOffset, "This image has an Exif SubIFD", "offset", IfdFormat::U32, 1, 1, nop),
+	(ExifTag::ExifOffset, "This image has an Exif SubIFD", "byte offset",
+	IfdFormat::U32, 1, 1, nop),
 
 	0x8825 =>
-	(ExifTag::GPSOffset, "This image has a GPS SubIFD", "offset", IfdFormat::U32, 1, 1, nop),
+	(ExifTag::GPSOffset, "This image has a GPS SubIFD", "byte offset",
+	IfdFormat::U32, 1, 1, nop),
 
-	// FIXME check if it is reciprocal
-	0x829a => (ExifTag::ExposureTime, "Exposure time", "s", IfdFormat::URational, 1, 1, nop),
+	0x829a => (ExifTag::ExposureTime, "Exposure time", "s",
+	IfdFormat::URational, 1, 1, exposure_time),
 
-	// FIXME check value
-	0x829d => (ExifTag::FNumber, "Aperture", "f-number", IfdFormat::URational, 1, 1, nop),
+	0x829d => (ExifTag::FNumber, "Aperture", "f-number",
+	IfdFormat::URational, 1, 1, f_number),
+
+	// EPX
 
 	// FIXME '1' means manual control, '2' program normal, '3' aperture priority, '4' shutter priority, '5' program creative (slow program), '6' program action(high-speed program), '7' portrait mode, '8' landscape mode.
 	0x8822 => (ExifTag::ExposureProgram, "Exposure program", "none", IfdFormat::U16, 1, 1, nop),
