@@ -35,6 +35,7 @@ pub fn tag_value_new(f: &IfdEntry) -> (TagValue, String)
 			while tot > 0 && f.data[tot - 1] == 0 {
 				tot -= 1;
 			}
+			// In theory it should be pure ASCII but we admit UTF-8
 			let s = String::from_utf8_lossy(&f.data[0..tot]);
 			let s = s.into_owned();
 			(TagValue::Ascii(s.to_string()), s.to_string())
