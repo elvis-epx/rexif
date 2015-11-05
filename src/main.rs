@@ -22,8 +22,10 @@ fn main()
 					arg, exif.mime, exif.entries.len());
 				for entry in &exif.entries {
 					if entry.tag == ExifTag::UnknownToMe {
+						/*
 						println!("	{} {}",
 							entry.tag_readable, entry.value_readable);
+						*/
 					} else {
 						println!("	{}: {}",
 								entry.tag_readable, 
