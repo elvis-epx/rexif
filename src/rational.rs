@@ -3,7 +3,7 @@ use std::fmt;
 use std::fmt::Display;
 
 /// Encapsulation of the TIFF type that represents a signed rational number
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub struct IRational {
 	pub numerator: i32,
 	pub denominator: i32,
@@ -22,7 +22,7 @@ impl Display for IRational {
 	}
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 /// Encapsulation of the TIFF type that represents an unsigned rational number
 pub struct URational {
 	pub numerator: u32,

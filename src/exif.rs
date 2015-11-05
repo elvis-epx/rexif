@@ -16,6 +16,9 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	0x010f =>
 	(ExifTag::Make, "Manufacturer", "none", IfdFormat::Ascii, -1i32, -1i32, strpass),
 
+	0x013c =>
+	(ExifTag::HostComputer, "Host computer", "none", IfdFormat::Ascii, -1i32, -1i32, strpass),
+
 	0x0110 =>
 	(ExifTag::Model, "Model", "none", IfdFormat::Ascii, -1i32, -1i32, strpass),
 
@@ -84,7 +87,7 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 
 	0x8827 =>
 	(ExifTag::ISOSpeedRatings, "ISO speed ratings", "ISO",
-	IfdFormat::U16, 1, 2, iso_speeds),
+	IfdFormat::U16, 1, 3, iso_speeds),
 
 	0x8828 =>
 	(ExifTag::OECF, "OECF", "none",
@@ -244,6 +247,18 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	0xa40a =>
 	(ExifTag::Sharpness, "Sharpness", "none",
 	IfdFormat::U16, 1, 1, sharpness),
+
+	0xa432 =>
+	(ExifTag::LensSpecification, "Lens specification", "none",
+	IfdFormat::URational, 4, 4, lens_spec),
+
+	0xa433 =>
+	(ExifTag::LensMake, "Lens manufacturer", "none",
+	IfdFormat::Ascii, -1i32, -1i32, strpass),
+
+	0xa434 =>
+	(ExifTag::LensModel, "Lens model", "none",
+	IfdFormat::Ascii, -1i32, -1i32, strpass),
 
 	// collaborate if you have any idea how to interpret this
 	0xa40b =>

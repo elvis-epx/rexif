@@ -74,6 +74,7 @@ pub enum ExifTag {
 	ResolutionUnit = 0x0128,
 	Software = 0x0131,
 	DateTime = 0x0132,
+	HostComputer = 0x013c,
 	WhitePoint = 0x013e,
 	PrimaryChromaticities = 0x013f,
 	YCbCrCoefficients = 0x0211,
@@ -130,6 +131,9 @@ pub enum ExifTag {
 	DeviceSettingDescription = 0xa40b,
 	SubjectDistanceRange = 0xa40c,
 	ImageUniqueID = 0xa420,
+	LensSpecification = 0xa432,
+	LensMake = 0xa433,
+	LensModel = 0xa434,
 		
 	GPSVersionID = 0x0,
 	GPSLatitudeRef = 0x1,

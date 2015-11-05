@@ -88,7 +88,17 @@ pub fn exposure_time(e: &TagValue, _: &String) -> String
 {
 	let s = match e {
 		&TagValue::URational(ref v) => {
-			format!("{} s", v[0])
+			let r = v[0];
+			if r.numerator == 1 && r.denominator > 1 {
+				// traditional 1/x exposure time
+				format!("{} s", r)
+			} else if r.value() < 0.1 {
+				format!("1/{:.0} s", 1.0 / r.value())
+			} else if r.value() < 1.0 {
+				format!("1/{:.1} s", 1.0 / r.value())
+			} else {
+				format!("{:.1} s", r.value())
+			}
 		},
 		_ => panic!(INV),
 	};
@@ -173,7 +183,7 @@ pub fn iso_speeds(e: &TagValue, _: &String) -> String
 	&TagValue::U16(ref v) => {
 		if v.len() == 1 {
 			format!("ISO {}", v[0])
-		} else if v.len() == 2 {
+		} else if v.len() == 2 || v.len() == 3 {
 			format!("ISO {} latitude {}", v[0], v[1])
 		} else {
 			format!("Unknown ({})", numarray_to_string(&v))
@@ -325,7 +335,7 @@ pub fn gpstimestamp(e: &TagValue, _: &String) -> String
 		let hour = v[0];
 		let min = v[1];
 		let sec = v[2];
-		format!("{:02.0}:{:02.0}:{:02.1} UTC", hour.value(), min.value(), sec.value())
+		format!("{:02.0}:{:02.0}:{:04.1} UTC", hour.value(), min.value(), sec.value())
 	},
 	_ => panic!(INV),
 	};
@@ -504,12 +514,7 @@ pub fn apex_ev(e: &TagValue, _: &String) -> String
 {
 	match e {
 		&TagValue::IRational(ref v) => {
-			// express as fraction, except when zero
-			if v[0].numerator == 0 {
-				"0 EV APEX".to_string()
-			} else {
-				format!("{} EV APEX", v[0])
-			}
+			format!("{:.2} EV APEX", v[0].value())
 		},
 		_ => panic!(INV),
 	}
@@ -890,3 +895,33 @@ pub fn subject_distance_range(e: &TagValue, _: &String) -> String
 
 	return s.to_string();
 }
+
+pub fn lens_spec(e: &TagValue, _: &String) -> String
+{
+	match e {
+	&TagValue::URational(ref v) => {
+		let f0 = v[0].value();
+		let f1 = v[1].value();
+		let a0 = v[2].value();
+		let a1 = v[3].value();
+
+		if v[0] == v[1] {
+			if a0 == a0 {
+				format!("{} mm f/{:.1}", f0, a0)
+			} else {
+				format!("{} mm f/unknown", f0)
+			}
+		} else {
+			if a0 == a0 && a1 == a1 {
+				format!("{}-{} mm f/{:.1}-{:.1}", f0, f1, a0, a1)
+			} else {
+				format!("{}-{} mm f/unknown", f0, f1)
+			}
+		}
+	},
+
+	_ => panic!(INV),
+
+	}
+}
+
