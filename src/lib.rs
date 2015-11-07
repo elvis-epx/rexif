@@ -53,6 +53,7 @@ use self::tiff::*;
 mod exifreadable;
 mod exifpost;
 mod exif;
+mod nikon;
 
 /// Parse a byte buffer that should contain a TIFF or JPEG image.
 /// Tries to detect format and parse EXIF data.

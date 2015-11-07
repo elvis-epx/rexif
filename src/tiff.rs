@@ -5,6 +5,7 @@ use super::ifdformat::*;
 use super::debug::*;
 use super::exif::*;
 use super::exifpost::*;
+use super::nikon::nikon_makernote;
 
 type InExifResult = Result<(), ExifError>;
 
@@ -68,8 +69,26 @@ pub fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 	return e;
 }
 
+/// Detects the format of MakerNote. If the format is known, forwards it to parsing.
+/// If parsing fails, it will not cause an error.
+fn parse_makernote(raw: &Vec<u8>, le: bool, exif_entries: &mut Vec<ExifEntry>)
+{
+	if raw.len() < 8 {
+		return;
+	}
+
+	if raw[0] == ('N' as u8) &&
+			raw[1] == ('i' as u8) &&
+			raw[2] == ('k' as u8) &&
+			raw[3] == ('o' as u8) &&
+			raw[4] == ('n' as u8) &&
+			raw[5] == 0 {
+		nikon_makernote(raw, le, exif_entries);
+	}
+}
+
 /// Superficial parse of IFD that can't fail
-pub fn parse_ifd(subifd: bool, le: bool, count: u16, contents: &[u8]) -> (Vec<IfdEntry>, usize)
+pub fn parse_ifd(namespace: Namespace, subifd: bool, le: bool, count: u16, contents: &[u8]) -> (Vec<IfdEntry>, usize)
 {
 	let mut entries: Vec<IfdEntry> = Vec::new();
 
@@ -85,7 +104,7 @@ pub fn parse_ifd(subifd: bool, le: bool, count: u16, contents: &[u8]) -> (Vec<If
 		let data = &contents[offset..offset + 4];
 		let data = data.to_vec();
 
-		let entry = IfdEntry{namespace: Namespace::Standard,
+		let entry = IfdEntry{namespace: namespace,
 					tag: tag, format: ifdformat_new(format),
 					count: count, ifd_data: data, le: le,
 					ext_data: Vec::new(), data: Vec::new()};
@@ -101,8 +120,8 @@ pub fn parse_ifd(subifd: bool, le: bool, count: u16, contents: &[u8]) -> (Vec<If
 }
 
 /// Deep parse of IFD that grabs EXIF data from IFD0, SubIFD and GPS IFD
-fn parse_exif_ifd(le: bool, contents: &[u8], ioffset: usize,
-				exif_entries: &mut Vec<ExifEntry>) -> InExifResult
+pub fn parse_exif_ifd(namespace: Namespace, le: bool, contents: &[u8], ioffset: usize,
+				exif_entries: &mut Vec<ExifEntry>) -> Result<(), ExifError>
 {
 	let mut offset = ioffset;
 
@@ -124,7 +143,7 @@ fn parse_exif_ifd(le: bool, contents: &[u8], ioffset: usize,
 			extra: "Truncated at dir listing".to_string()});
 	}
 
-	let (mut ifd, _) = parse_ifd(true, le, count, &contents[offset..offset + ifd_length]);
+	let (mut ifd, _) = parse_ifd(namespace, true, le, count, &contents[offset..offset + ifd_length]);
 
 	for entry in &mut ifd {
 		if ! entry.copy_data(&contents) {
@@ -132,6 +151,15 @@ fn parse_exif_ifd(le: bool, contents: &[u8], ioffset: usize,
 			continue;
 		}
 		let exif_entry = parse_exif_entry(&entry);
+
+		if exif_entry.tag == ExifTag::MakerNote {
+			match exif_entry.value {
+				TagValue::Undefined(ref data, le) =>
+					parse_makernote(data, le, exif_entries),
+				_ => (),
+			}
+		}
+
 		exif_entries.push(exif_entry);
 	}
 
@@ -146,7 +174,7 @@ pub fn parse_ifds(le: bool, ifd0_offset: usize, contents: &[u8]) -> ExifEntryRes
 
 	// fills exif_entries with data from IFD0
 
-	match parse_exif_ifd(le, &contents, offset, &mut exif_entries) {
+	match parse_exif_ifd(Namespace::Standard, le, &contents, offset, &mut exif_entries) {
 		Ok(_) => true,
 		Err(e) => return Err(e),
 	};
@@ -158,7 +186,7 @@ pub fn parse_ifds(le: bool, ifd0_offset: usize, contents: &[u8]) -> ExifEntryRes
 	let ifd_length = (count as usize) * 12 + 4;
 	offset += 2;
 
-	let (ifd, _) = parse_ifd(false, le, count, &contents[offset..offset + ifd_length]);
+	let (ifd, _) = parse_ifd(Namespace::Standard, false, le, count, &contents[offset..offset + ifd_length]);
 
 	for entry in &ifd {
 		if entry.tag != (((ExifTag::ExifOffset as u32) & 0xffff) as u16) &&
@@ -174,7 +202,7 @@ pub fn parse_ifds(le: bool, ifd0_offset: usize, contents: &[u8]) -> ExifEntryRes
 				extra: "Exif SubIFD goes past EOF".to_string()});
 		}
 
-		match parse_exif_ifd(le, &contents, exif_offset, &mut exif_entries) {
+		match parse_exif_ifd(Namespace::Standard, le, &contents, exif_offset, &mut exif_entries) {
 			Ok(_) => true,
 			Err(e) => return Err(e),
 		};
