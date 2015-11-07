@@ -79,7 +79,7 @@ pub enum Namespace {
 /// Items can be cast to u32 in order to get the namespace (most significant word)
 /// and tag code (least significant word). The tag code matches the Exif, or the
 /// Makernote standard, depending on the namespace that the tag belongs to.
-
+///
 /// On the other hand, the namespace code is arbitrary, it only matches
 /// the `Namespace` enumeration. The namespace is 0 for standard Exif tags.
 /// The non-standard namespaces exist to accomodate future parsing of the
