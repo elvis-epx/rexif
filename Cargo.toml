@@ -1,6 +1,6 @@
 [package]
 name = "rexif"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Elvis Pfützenreuter <epxx@epxx.co>"]
 include = ["**/*.rs", "Cargo.toml"]
 description = "RExif is a native Rust crate, written to extract EXIF data from JPEG and TIFF images."

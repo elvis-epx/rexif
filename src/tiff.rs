@@ -16,6 +16,7 @@ pub fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 	let (value, readable_value) = tag_value_new(f);
 
 	let mut e = ExifEntry {
+			namespace: f.namespace,
 			ifd: f.clone(),
 			tag: ExifTag::UnknownToMe,
 			value: value,
@@ -36,7 +37,7 @@ pub fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 	// 1) tag must match enum
 	// 2) all types except Ascii, Undefined, Unknown must have definite length
 	// 3) Str type must not have a definite length
-	if (tag as u16) != f.tag ||
+	if (((tag as u32) & 0xffff) as u16) != f.tag ||
 		(min_count == -1 && (format != IfdFormat::Ascii &&
 				format != IfdFormat::Undefined &&
 				format != IfdFormat::Unknown)) ||
@@ -84,8 +85,9 @@ pub fn parse_ifd(subifd: bool, le: bool, count: u16, contents: &[u8]) -> (Vec<If
 		let data = &contents[offset..offset + 4];
 		let data = data.to_vec();
 
-		let entry = IfdEntry{tag: tag, format: ifdformat_new(format), count: count,
-					ifd_data: data, le: le,
+		let entry = IfdEntry{namespace: Namespace::Standard,
+					tag: tag, format: ifdformat_new(format),
+					count: count, ifd_data: data, le: le,
 					ext_data: Vec::new(), data: Vec::new()};
 		entries.push(entry);
 	}
@@ -156,8 +158,8 @@ pub fn parse_ifds(le: bool, ifd0_offset: usize, contents: &[u8]) -> ExifEntryRes
 	let (ifd, _) = parse_ifd(false, le, count, &contents[offset..offset + ifd_length]);
 
 	for entry in &ifd {
-		if entry.tag != (ExifTag::ExifOffset as u16) &&
-				entry.tag != (ExifTag::GPSOffset as u16) {
+		if entry.tag != (((ExifTag::ExifOffset as u32) & 0xffff) as u16) &&
+				entry.tag != (((ExifTag::GPSOffset as u32) & 0xffff) as u16) {
 			continue;
 		}
 
