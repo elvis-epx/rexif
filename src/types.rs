@@ -70,8 +70,19 @@ pub struct IfdEntry {
 #[derive(Copy, Clone, PartialEq)]
 pub enum Namespace {
 	Standard = 0x0000,
-	Nikon = 0x0001,
-	Canon = 0x0002,
+	NikonFormat1 = 0x0001,
+	NikonFormat2 = 0x0002,
+	NikonFormat3 = 0x0003,
+	NikonVR = 0x0004,
+	NikonPictControl = 0x0005,
+	NikonWorldTime = 0x0006,
+	NikonISOInfo = 0x0007,
+	NikonAF = 0x0008,
+	NikonAF2 = 0x0009,
+	NikonAFFineTune = 0x0010,
+	NikonFileInfo = 0x0011,
+	NikonMultiExp = 0x0012,
+	Canon = 0x0100,
 }
 
 /// Enumeration that represents recognized EXIF tags found in TIFF IFDs.

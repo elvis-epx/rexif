@@ -27,7 +27,10 @@ pub fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 			value_more_readable: readable_value.clone(),
 			};
 
-	let (tag, tag_readable, unit, format, min_count, max_count, more_readable) = tag_to_exif(f.tag);
+	let tag_code = (f.namespace as u32) * 0x10000u32 + (f.tag as u32);
+
+	let (tag, tag_readable, unit, format, min_count,
+		max_count, more_readable) = tag_to_exif(tag_code);
 
 	if tag == ExifTag::UnknownToMe {
 		// Unknown EXIF tag type
@@ -73,7 +76,7 @@ pub fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 /// If parsing fails, it will not cause an error.
 fn parse_makernote(raw: &Vec<u8>, le: bool, exif_entries: &mut Vec<ExifEntry>)
 {
-	if raw.len() < 8 {
+	if raw.len() < 18 {
 		return;
 	}
 
@@ -88,7 +91,8 @@ fn parse_makernote(raw: &Vec<u8>, le: bool, exif_entries: &mut Vec<ExifEntry>)
 }
 
 /// Superficial parse of IFD that can't fail
-pub fn parse_ifd(namespace: Namespace, subifd: bool, le: bool, count: u16, contents: &[u8]) -> (Vec<IfdEntry>, usize)
+pub fn parse_ifd(namespace: Namespace, subifd: bool, le: bool, count: u16,
+			contents: &[u8]) -> (Vec<IfdEntry>, usize)
 {
 	let mut entries: Vec<IfdEntry> = Vec::new();
 
