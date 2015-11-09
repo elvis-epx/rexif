@@ -294,6 +294,10 @@ pub enum TagValue {
 	/// Any sort of internal structure that is sensitive to endianess
 	/// should be interpreted accordignly to this parameter (true=LE, false=BE).
 	Unknown(Vec<u8>, bool),
+	/// Type that could not be parsed due to some sort of error (e.g. buffer too
+	/// short for the count and type size). Variant contains raw data, LE/BE,
+	/// format (as u16) and count.
+	Invalid(Vec<u8>, bool, u16, u32)
 }
 
 /// Type returned by image file parsing
