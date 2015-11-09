@@ -127,7 +127,10 @@ fn parse_exif_ifd(le: bool, contents: &[u8], ioffset: usize,
 	let (mut ifd, _) = parse_ifd(true, le, count, &contents[offset..offset + ifd_length]);
 
 	for entry in &mut ifd {
-		entry.copy_data(&contents);
+		if ! entry.copy_data(&contents) {
+			// data is probably beyond EOF
+			continue;
+		}
 		let exif_entry = parse_exif_entry(&entry);
 		exif_entries.push(exif_entry);
 	}
