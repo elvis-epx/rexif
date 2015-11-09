@@ -73,15 +73,21 @@ pub enum Namespace {
 	NikonFormat1 = 0x0001,
 	NikonFormat2 = 0x0002,
 	NikonFormat3 = 0x0003,
-	NikonVR = 0x0004,
-	NikonPictControl = 0x0005,
-	NikonWorldTime = 0x0006,
-	NikonISOInfo = 0x0007,
-	NikonAF = 0x0008,
-	NikonAF2 = 0x0009,
-	NikonAFFineTune = 0x0010,
-	NikonFileInfo = 0x0011,
-	NikonMultiExp = 0x0012,
+	NikonVr = 0x0004,
+	NikonPc = 0x0005,
+	NikonWt = 0x0006,
+	NikonIi = 0x0007,
+	NikonAf = 0x0008,
+	NikonAf2 = 0x0009,
+	NikonAFT = 0x0010,
+	NikonFI = 0x0011,
+	NikonMe = 0x0012,
+	NikonFI1 = 0x0013,
+	NikonFI2 = 0x0014,
+	NikonFI3 = 0x0015,
+	NikonLd1 = 0x0030,
+	NikonLd2 = 0x0031,
+	NikonLd3 = 0x0032,
 	Canon = 0x0100,
 }
 
@@ -201,6 +207,32 @@ pub enum ExifTag {
 	GPSAreaInformation = 0x00001c,
 	GPSDateStamp = 0x00001d,
 	GPSDifferential = 0x00001e,
+
+	// Nikon Sub IFD types within MakerNote
+	// All associated to namespace NikonVersion3 (upper word = 0003)
+
+	/// Nikon VR
+	NikonVr = 0x0003001f,
+	/// Picture control
+	NikonPc = 0x00030023,
+	/// World tim
+	NikonWt = 0x00030024,
+	/// ISO information
+	NikonIi = 0x00030025,
+	/// Autofocus part 1
+	NikonAf1 = 0x00030088,
+	/// Autofocus part 2
+	NikonAf2 = 0x000300b7,
+	/// AF tune
+	NikonAFT = 0x000300b9,
+	/// Flash subifd has its own version (1, 2, 3)
+	NikonFIx = 0x000300a8,
+	/// File info
+	NikonFi = 0x000300b8,
+	/// Lens data subifd has its own version (1, 2, 3)
+	NikonLdx = 0x00030098,
+
+	Nikon3IsoSpeed = 0x00030002,
 }
 
 /// Enumeration that represents the possible data formats of an IFD entry.

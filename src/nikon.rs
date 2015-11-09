@@ -4,6 +4,7 @@ use super::debug::*;
 use super::tiff::parse_exif_ifd;
 use super::tiff::parse_ifd;
 
+
 /// Parse the fake TIFF's IFD0 and looks for Nikon Sub IFDs
 pub fn parse_nikon_ifd(le: bool, ifd0_offset: usize, contents: &[u8],
 			exif_entries: &mut Vec<ExifEntry>)
@@ -25,35 +26,46 @@ pub fn parse_nikon_ifd(le: bool, ifd0_offset: usize, contents: &[u8],
 	}
 
 	// At this point we don't know the Nikon Format yet, so passing
-	// Namespace::NikonFormat1 is just to satisfy the API
+	// Namespace::NikonFormat2 is just to satisfy the API. Nikon Format 2
+	// is also the default if no version tag is found.
 
-	let (ifd, _) = parse_ifd(Namespace::NikonFormat1, false, le, count,
+	let mut ns = Namespace::NikonFormat2;
+
+	let (mut ifd, _) = parse_ifd(ns, false, le, count,
 				&contents[offset..offset + ifd_length]);
 
-	// TODO: detect MakerNote version
-	// TODO: scan sub ifds
-
-	for entry in &ifd {
-		warning(&format!("Nikon IFD0 tag {}", entry.tag));
-		/*
-		if entry.tag != (((ExifTag::ExifOffset as u32) & 0xffff) as u16) &&
-				entry.tag != (((ExifTag::GPSOffset as u32) & 0xffff) as u16) {
+	for entry in &mut ifd {
+		if ! entry.copy_data(&contents) {
+			warning(&format!("Could not copy data for {:x}", entry.tag));
 			continue;
 		}
-
-		let exif_offset = entry.data_as_offset();
-
-		if contents.len() < exif_offset {
-			return Err(ExifError{
-				kind: ExifErrorKind::ExifIfdTruncated,
-				extra: "Exif SubIFD goes past EOF".to_string()});
+		if entry.tag == 0x0001 &&
+				entry.format == IfdFormat::Undefined &&
+				entry.data.len() == 4 && 
+				entry.data[0] == 0x30u8 &&
+				entry.data[1] == 0x32u8 &&
+				entry.data[2] == 0x31u8 &&
+				entry.data[3] == 0x31u8 {
+			ns = Namespace::NikonFormat3;
+			warning("Nikon version 3");
 		}
+	}
 
-		match parse_exif_ifd(Namespace::Standard, le, &contents, exif_offset, &mut exif_entries) {
-			Ok(_) => true,
-			Err(e) => return Err(e),
-		};
-		*/
+	// Rescan IFD0 with right namespace/version
+
+	// Get data tags in IFD0
+	let _ = parse_exif_ifd(ns, le, contents, ifd0_offset, exif_entries);
+
+	// Find subfields
+	for entry in &ifd {
+		warning(&format!("Nikon root tag 0x{:x} len {}", entry.tag, entry.data.len()));
+
+		if entry.tag == ((ExifTag::NikonVr) as u32 & 0xffff) as u16 {
+			warning(&format!("Parsing Nikon VR subfields"));
+			// TODO parse subfields (compound format within Undefined; not IFD)
+		}
+		// TODO add other subfields
+		// TODO synthetize an IFD in order to parse_exif_ifd to process it
 	}
 }
 
@@ -108,7 +120,6 @@ pub fn nikon_makernote(raw: &Vec<u8>, main_le: bool, exif_entries: &mut Vec<Exif
 {
 	// assuming newer format (embedded TIFF)
 	warning("Nikon");
-	warning(&hex(&raw[0..16]));
 
 	// raw has at least 18 bytes at this point, so TIFF has at least 8 bytes
 

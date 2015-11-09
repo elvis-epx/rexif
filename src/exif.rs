@@ -393,6 +393,10 @@ pub fn tag_to_exif(f: u32) -> (ExifTag, &'static str, &'static str, IfdFormat, i
 	(ExifTag::GPSDifferential, "GPS differential", "none",
 	IfdFormat::U16, 1, 1, gpsdiff),
 
+	0x00030002 =>
+	(ExifTag::Nikon3IsoSpeed, "Nikon ISO speed", "none",
+	IfdFormat::U16, 2, 2, nikon_iso_speeds),
+
 	_ =>
 	(ExifTag::UnknownToMe, "Unknown to this library, or manufacturer-specific", "Unknown unit",
 	IfdFormat::Unknown, -1i32, -1i32, nop)

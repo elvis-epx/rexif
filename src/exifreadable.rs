@@ -195,6 +195,22 @@ pub fn iso_speeds(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
+pub fn nikon_iso_speeds(e: &TagValue, _: &String) -> String
+{
+	let s = match e {
+	&TagValue::U16(ref v) => {
+		if v.len() == 2 {
+			format!("ISO {}", (v[0] as u32) * 65536u32 + (v[1] as u32))
+		} else {
+			format!("Unknown ({})", numarray_to_string(&v))
+		}
+	},
+	_ => panic!(INV),
+	};
+
+	return s.to_string();
+}
+
 pub fn dms(e: &TagValue, _: &String) -> String
 {
 	let s = match e {
