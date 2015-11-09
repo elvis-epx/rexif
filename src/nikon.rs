@@ -4,6 +4,18 @@ use super::debug::*;
 use super::tiff::parse_exif_ifd;
 use super::tiff::parse_ifd;
 
+/// Parse Nikon Lens Data subfield of MakerNote
+fn parse_nikon_lensdata(le: bool, data: &[u8], exif_entries: &mut Vec<ExifEntry>)
+{
+	warning("Parsing Nikon LD subfields");
+
+	if data.len() < 6 {
+		warning("Short lensdata");
+		return;
+	}
+
+	warning(&format!("length {} ver {}", data.len(), hex(&data[0..6])));
+}
 
 /// Parse the fake TIFF's IFD0 and looks for Nikon Sub IFDs
 pub fn parse_nikon_ifd(le: bool, ifd0_offset: usize, contents: &[u8],
@@ -12,7 +24,6 @@ pub fn parse_nikon_ifd(le: bool, ifd0_offset: usize, contents: &[u8],
 	let mut offset = ifd0_offset;
 
 	if contents.len() < offset + 2 {
-		warning("Nikon: no IFD0 count in tiff");
 		return;
 	}
 
@@ -21,7 +32,6 @@ pub fn parse_nikon_ifd(le: bool, ifd0_offset: usize, contents: &[u8],
 	offset += 2;
 
 	if contents.len() < (offset + ifd_length) {
-		warning("Nikon: IFD0: buffer too short for IFD0 count!");
 		return;
 	}
 
@@ -36,7 +46,6 @@ pub fn parse_nikon_ifd(le: bool, ifd0_offset: usize, contents: &[u8],
 
 	for entry in &mut ifd {
 		if ! entry.copy_data(&contents) {
-			warning(&format!("Could not copy data for {:x}", entry.tag));
 			continue;
 		}
 		if entry.tag == 0x0001 &&
@@ -47,7 +56,6 @@ pub fn parse_nikon_ifd(le: bool, ifd0_offset: usize, contents: &[u8],
 				entry.data[2] == 0x31u8 &&
 				entry.data[3] == 0x31u8 {
 			ns = Namespace::NikonFormat3;
-			warning("Nikon version 3");
 		}
 	}
 
@@ -58,14 +66,14 @@ pub fn parse_nikon_ifd(le: bool, ifd0_offset: usize, contents: &[u8],
 
 	// Find subfields
 	for entry in &ifd {
-		warning(&format!("Nikon root tag 0x{:x} len {}", entry.tag, entry.data.len()));
+		// warning(&format!("Nikon root tag 0x{:x} len {}", entry.tag, entry.data.len()));
 
 		if entry.tag == ((ExifTag::NikonVr) as u32 & 0xffff) as u16 {
-			warning(&format!("Parsing Nikon VR subfields"));
 			// TODO parse subfields (compound format within Undefined; not IFD)
+		} else if entry.tag == ((ExifTag::NikonLdx) as u32 & 0xffff) as u16 {
+			parse_nikon_lensdata(le, &entry.data[..], exif_entries);
 		}
 		// TODO add other subfields
-		// TODO synthetize an IFD in order to parse_exif_ifd to process it
 	}
 }
 
@@ -77,7 +85,6 @@ fn parse_nikon_tiff(contents: &[u8], exif_entries: &mut Vec<ExifEntry>) -> bool
 	let mut le = false;
 
 	if contents.len() < 8 {
-		warning("Nikon: too short for a tiff");
 		return false;
 	} else if contents[0] == ('I' as u8) &&
 			contents[1] == ('I' as u8) &&
@@ -88,7 +95,6 @@ fn parse_nikon_tiff(contents: &[u8], exif_entries: &mut Vec<ExifEntry>) -> bool
 			contents[2] == 0 && contents[3] == 42 {
 		/* TIFF big-endian */
 	} else {
-		warning("Nikon makernote: preamble not tiff");
 		return false;
 	}
 
@@ -119,7 +125,6 @@ fn hex(numbers: &[u8]) -> String
 pub fn nikon_makernote(raw: &Vec<u8>, main_le: bool, exif_entries: &mut Vec<ExifEntry>)
 {
 	// assuming newer format (embedded TIFF)
-	warning("Nikon");
 
 	// raw has at least 18 bytes at this point, so TIFF has at least 8 bytes
 
