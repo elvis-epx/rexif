@@ -26,7 +26,6 @@ pub enum ExifErrorKind {
 }
 
 /// EXIF parsing error type
-#[derive(Clone)]
 pub struct ExifError {
 	/// The general kind of the error that aborted the parsing
 	pub kind: ExifErrorKind,
