@@ -2,7 +2,6 @@ use super::rational::*;
 use std::result::Result;
 
 /// Top-level structure that contains all parsed metadata inside an image
-#[derive(Clone)]
 pub struct ExifData {
 	/// MIME type of the parsed image. It may be "image/jpeg", "image/tiff", or empty if unrecognized.
 	pub mime: String,
