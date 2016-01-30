@@ -2,6 +2,7 @@ use super::rational::*;
 use std::result::Result;
 
 /// Top-level structure that contains all parsed metadata inside an image
+#[derive(Debug)]
 pub struct ExifData {
 	/// MIME type of the parsed image. It may be "image/jpeg", "image/tiff", or empty if unrecognized.
 	pub mime: String,
@@ -33,7 +34,7 @@ pub struct ExifError {
 }
 
 /// Structure that represents a parsed IFD entry of a TIFF image
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct IfdEntry {
 	/// Namespace of the entry. Standard is a tag found in normal TIFF IFD structure,
 	/// other namespaces are entries found e.g. within MarkerNote blobs that are
@@ -65,7 +66,7 @@ pub struct IfdEntry {
 /// Enumeration that represent EXIF tag namespaces. Namespaces exist to
 /// accomodate future parsing of the manufacturer-specific tags embedded within
 /// the MarkerNote tag.
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Namespace {
 	Standard = 0x0000,
 	Nikon = 0x0001,
@@ -82,7 +83,7 @@ pub enum Namespace {
 /// the `Namespace` enumeration. The namespace is 0 for standard Exif tags.
 /// The non-standard namespaces exist to accomodate future parsing of the
 /// MarkerNote tag, that contains embedded manufacturer-specific tags.
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum ExifTag {
 	/// Tag not recognized are partially parsed. The client may still try to interpret
 	/// the tag by reading into the IfdFormat structure.
@@ -194,7 +195,7 @@ pub enum ExifTag {
 ///
 /// Any enumeration item can be cast to u16 to get the low-level format code
 /// as defined by the TIFF format.
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum IfdFormat {
 	Unknown = 0,
 	U8 = 1,
@@ -212,7 +213,7 @@ pub enum IfdFormat {
 }
 
 /// Structure that represents a parsed EXIF tag.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ExifEntry {
 	/// Namespace of the tag. If Standard (0x0000), it is an EXIF tag defined in the
 	/// official standard. Other namespaces accomodate manufacturer-specific tags that
@@ -253,7 +254,7 @@ pub struct ExifEntry {
 /// Tag value enumeration. It works as a variant type. Each value is
 /// actually a vector because many EXIF tags are collections of values.
 /// Exif tags with single values are represented as single-item vectors.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum TagValue {
 	/// Array of unsigned byte integers
 	U8(Vec<u8>),
