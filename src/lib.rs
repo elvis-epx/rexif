@@ -16,6 +16,8 @@
 //! Code sample lightly edited from src/bin.rs: 
 //!
 //! ```
+//! use std::error::Error;
+//! let file_name = "foo.jpg";
 //! match rexif::parse_file(&file_name) {
 //!	Ok(exif) => {
 //!		println!("{} {} exif entries: {}", file_name,
@@ -29,7 +31,7 @@
 //!	},
 //!	Err(e) => {
 //!		print!("Error in {}: {} {}", &file_name,
-//!			Error::description(&e), e.extra).unwrap();
+//!			Error::description(&e), e.extra)
 //!	}
 //! }
 //! ```
