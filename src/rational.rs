@@ -1,4 +1,3 @@
-use std::fmt::Formatter;
 use std::fmt;
 use std::fmt::Display;
 
