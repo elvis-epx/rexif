@@ -25,7 +25,7 @@
 //!
 //!		for entry in &exif.entries {
 //!			println!("	{}: {}",
-//!					entry.tag_readable, 
+//!					entry.tag,
 //!					entry.value_more_readable);
 //!		}
 //!	},

@@ -21,12 +21,11 @@ pub fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 			tag: ExifTag::UnknownToMe,
 			value: value,
 			unit: "Unknown".to_string(),
-			tag_readable: format!("Unparsed tag {:x}", f.tag).to_string(),
 			value_readable: readable_value.clone(),
 			value_more_readable: readable_value.clone(),
 			};
 
-	let (tag, tag_readable, unit, format, min_count, max_count, more_readable) = tag_to_exif(f.tag);
+	let (tag, unit, format, min_count, max_count, more_readable) = tag_to_exif(f.tag);
 
 	if tag == ExifTag::UnknownToMe {
 		// Unknown EXIF tag type
@@ -47,7 +46,7 @@ pub fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 
 	if format != f.format {
 		warning(&format!("EXIF tag {:x} {}, expected format {}, found {}",
-			f.tag, tag_readable, format as u8, f.format as u8));
+			f.tag, f.tag, format as u8, f.format as u8));
 		return e;
 	}
 
@@ -55,13 +54,12 @@ pub fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 			((f.count as i32) < min_count ||
 			(f.count as i32) > max_count) {
 		warning(&format!("EXIF tag {:x} {}, format {}, expected count {}..{} found {}",
-			f.tag, tag_readable, format as u8, min_count,
+			f.tag, f.tag, format as u8, min_count,
 			max_count, f.count));
 		return e;
 	}
 
 	e.tag = tag;
-	e.tag_readable = tag_readable.to_string();
 	e.unit = unit.to_string();
 	e.value_more_readable = more_readable(&e.value, &readable_value);
 

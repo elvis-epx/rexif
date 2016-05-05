@@ -28,7 +28,7 @@ fn main()
 						*/
 					} else {
 						println!("	{}: {}",
-								entry.tag_readable, 
+								entry.tag,
 								entry.value_more_readable);
 					}
 				}
