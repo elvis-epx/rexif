@@ -57,31 +57,26 @@ mod exif;
 
 /// Parse a byte buffer that should contain a TIFF or JPEG image.
 /// Tries to detect format and parse EXIF data.
-pub fn parse_buffer(contents: &Vec<u8>) -> ExifResult
+pub fn parse_buffer(contents: &[u8]) -> ExifResult
 {
-	let mime = detect_type(&contents);
+	let mime = detect_type(contents);
 
-	if mime == "" {
-		return Err(ExifError::FileTypeUnknown);
-	}
-
-	let mut offset = 0 as usize;
-	let mut size = contents.len() as usize;
-
-	if mime == "image/jpeg" {
-		let (eoffset, esize) = try!(find_embedded_tiff_in_jpeg(&contents));
-		offset = eoffset;
-		size = esize;
-		// println!("Offset {} size {}", offset, size);
-	}
-
-	match parse_tiff(&contents[offset .. offset + size]) {
-		Ok(d) => {
-			let f = ExifData { mime: mime.to_string(), entries: d };
-			Ok(f)
+	let d = match mime {
+		"" => return Err(ExifError::FileTypeUnknown),
+		"image/jpeg" => {
+			let (offset, size) = try!(find_embedded_tiff_in_jpeg(contents));
+			// println!("Offset {} size {}", offset, size);
+			try!(parse_tiff(&contents[offset .. offset + size]))
 		},
-		Err(e) => Err(e)
-	}
+		_ => {
+			try!(parse_tiff(&contents))
+		}
+	};
+
+	Ok(ExifData {
+		mime: mime.to_string(),
+		entries: d,
+	})
 }
 
 /// Try to read and parse an open file that is expected to contain an image
