@@ -1,6 +1,7 @@
 use super::rational::*;
 use std::fmt;
 use std::result::Result;
+use std::io;
 
 /// Top-level structure that contains all parsed metadata inside an image
 #[derive(Debug)]
@@ -12,26 +13,16 @@ pub struct ExifData {
 }
 
 /// Possible fatal errors that may happen when an image is parsed.
-#[derive(Copy, Clone)]
-pub enum ExifErrorKind {
-	FileOpenError,
-	FileSeekError,
-	FileReadError,
+#[derive(Debug)]
+pub enum ExifError {
+	IoError(io::Error),
 	FileTypeUnknown,
-	JpegWithoutExif,
+	JpegWithoutExif(String),
 	TiffTruncated,
-	TiffBadPreamble,
+	TiffBadPreamble(String),
 	IfdTruncated,
-	ExifIfdTruncated,
+	ExifIfdTruncated(String),
 	ExifIfdEntryNotFound,
-}
-
-/// EXIF parsing error type
-pub struct ExifError {
-	/// The general kind of the error that aborted the parsing
-	pub kind: ExifErrorKind,
-	/// Extra context info about the error, when available
-	pub extra: String
 }
 
 /// Structure that represents a parsed IFD entry of a TIFF image

@@ -106,9 +106,7 @@ fn parse_exif_ifd(le: bool, contents: &[u8], ioffset: usize,
 
 	// println!("Offset is {}", offset);
 	if contents.len() < (offset + 2) {
-		return Err(ExifError{
-			kind: ExifErrorKind::ExifIfdTruncated,
-			extra: "Truncated at dir entry count".to_string()});
+		return Err(ExifError::ExifIfdTruncated("Truncated at dir entry count".to_string()))
 	}
 
 	let count = read_u16(le, &contents[offset..offset + 2]);
@@ -117,9 +115,7 @@ fn parse_exif_ifd(le: bool, contents: &[u8], ioffset: usize,
 	offset += 2;
 
 	if contents.len() < (offset + ifd_length) {
-		return Err(ExifError{
-			kind: ExifErrorKind::ExifIfdTruncated,
-			extra: "Truncated at dir listing".to_string()});
+		return Err(ExifError::ExifIfdTruncated("Truncated at dir listing".to_string()));
 	}
 
 	let (mut ifd, _) = parse_ifd(true, le, count, &contents[offset..offset + ifd_length]);
@@ -167,9 +163,7 @@ pub fn parse_ifds(le: bool, ifd0_offset: usize, contents: &[u8]) -> ExifEntryRes
 		let exif_offset = entry.data_as_offset();
 
 		if contents.len() < exif_offset {
-			return Err(ExifError{
-				kind: ExifErrorKind::ExifIfdTruncated,
-				extra: "Exif SubIFD goes past EOF".to_string()});
+			return Err(ExifError::ExifIfdTruncated("Exif SubIFD goes past EOF".to_string()));
 		}
 
 		match parse_exif_ifd(le, &contents, exif_offset, &mut exif_entries) {
@@ -195,9 +189,7 @@ pub fn parse_tiff(contents: &[u8]) -> ExifEntryResult
 	let mut le = false;
 
 	if contents.len() < 8 {
-		return Err(ExifError{
-			kind: ExifErrorKind::TiffTruncated,
-			extra: "".to_string()});
+		return Err(ExifError::TiffTruncated);
 	} else if contents[0] == ('I' as u8) &&
 			contents[1] == ('I' as u8) &&
 			contents[2] == 42 && contents[3] == 0 {
@@ -210,9 +202,7 @@ pub fn parse_tiff(contents: &[u8]) -> ExifEntryResult
 		let err = format!("Preamble is {:x} {:x} {:x} {:x}",
 			contents[0], contents[1],
 			contents[2], contents[3]);
-		return Err(ExifError{
-			kind: ExifErrorKind::TiffBadPreamble,
-			extra: err.to_string()});
+		return Err(ExifError::TiffBadPreamble(err.to_string()));
 	}
 
 	let offset = read_u32(le, &contents[4..8]) as usize;

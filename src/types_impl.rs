@@ -1,7 +1,7 @@
-use std::fmt::Debug;
 use std::fmt::Display;
 use std::fmt;
 use std::error::Error;
+use std::io;
 use super::types::*;
 use super::lowlevel::*;
 
@@ -96,39 +96,38 @@ impl IfdEntry {
 	}
 }
 
-impl ExifError {
-	/// Human-readable string with the meaning of the error enumeration
-	fn readable(&self) -> &str {
-		let msg = match self.kind {
-			ExifErrorKind::FileOpenError => "File could not be opened",
-			ExifErrorKind::FileSeekError => "File could not be seeked",
-			ExifErrorKind::FileReadError => "File could not be read",
-			ExifErrorKind::FileTypeUnknown => "File type unknown",
-			ExifErrorKind::JpegWithoutExif => "JPEG without EXIF section",
-			ExifErrorKind::TiffTruncated => "TIFF truncated at start",
-			ExifErrorKind::TiffBadPreamble => "TIFF with bad preamble",
-			ExifErrorKind::IfdTruncated => "TIFF IFD truncated",
-			ExifErrorKind::ExifIfdTruncated => "TIFF Exif IFD truncated",
-			ExifErrorKind::ExifIfdEntryNotFound => "TIFF Exif IFD not found",
-		};
-		return msg;
-	}
-}
-
 impl Error for ExifError {
 	fn description(&self) -> &str {
-		self.readable()
-	}
-}
-
-impl Debug for ExifError {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "{} {}", self.readable(), self.extra)
+		match *self {
+			ExifError::IoError(ref e) => e.description(),
+			ExifError::FileTypeUnknown => "File type unknown",
+			ExifError::JpegWithoutExif(_) => "JPEG without EXIF section",
+			ExifError::TiffTruncated => "TIFF truncated at start",
+			ExifError::TiffBadPreamble(_) => "TIFF with bad preamble",
+			ExifError::IfdTruncated => "TIFF IFD truncated",
+			ExifError::ExifIfdTruncated(_) => "TIFF Exif IFD truncated",
+			ExifError::ExifIfdEntryNotFound => "TIFF Exif IFD not found",
+		}
 	}
 }
 
 impl Display for ExifError {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "({}, {})", self.readable(), self.extra)
+		match *self {
+			ExifError::IoError(ref e) => e.fmt(f),
+			ExifError::FileTypeUnknown => write!(f, "File type unknown"),
+			ExifError::JpegWithoutExif(ref s) => write!(f, "JPEG without EXIF section: {}", s),
+			ExifError::TiffTruncated => write!(f, "TIFF truncated at start"),
+			ExifError::TiffBadPreamble(ref s) => write!(f, "TIFF with bad preamble: {}", s),
+			ExifError::IfdTruncated => write!(f, "TIFF IFD truncated"),
+			ExifError::ExifIfdTruncated(ref s) => write!(f, "TIFF Exif IFD truncated: {}", s),
+			ExifError::ExifIfdEntryNotFound => write!(f, "TIFF Exif IFD not found"),
+		}
 	}
+}
+
+impl From<io::Error> for ExifError {
+    fn from(err: io::Error) -> ExifError {
+        ExifError::IoError(err)
+    }
 }
