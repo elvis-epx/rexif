@@ -25,13 +25,12 @@
 //!
 //!		for entry in &exif.entries {
 //!			println!("	{}: {}",
-//!					entry.tag_readable, 
+//!					entry.tag,
 //!					entry.value_more_readable);
 //!		}
 //!	},
 //!	Err(e) => {
-//!		print!("Error in {}: {} {}", &file_name,
-//!			Error::description(&e), e.extra)
+//!		print!("Error in {}: {}", &file_name, e)
 //!	}
 //! }
 //! ```
@@ -58,67 +57,43 @@ mod exif;
 
 /// Parse a byte buffer that should contain a TIFF or JPEG image.
 /// Tries to detect format and parse EXIF data.
-pub fn parse_buffer(contents: &Vec<u8>) -> ExifResult
+pub fn parse_buffer(contents: &[u8]) -> ExifResult
 {
-	let mime = detect_type(&contents);
+	let mime = detect_type(contents);
 
-	if mime == "" {
-		return Err(ExifError{
-				kind: ExifErrorKind::FileTypeUnknown,
-				extra: "".to_string()});
-	}
-
-	let mut offset = 0 as usize;
-	let mut size = contents.len() as usize;
-
-	if mime == "image/jpeg" {
-		let (eoffset, esize, err) = find_embedded_tiff_in_jpeg(&contents);
-		if eoffset == 0 {
-			return Err(ExifError{
-				kind: ExifErrorKind::JpegWithoutExif,
-				extra: err.to_string()});
-		}
-		offset = eoffset;
-		size = esize;
-		// println!("Offset {} size {}", offset, size);
-	}
-
-	match parse_tiff(&contents[offset .. offset + size]) {
-		Ok(d) => {
-			let f = ExifData { mime: mime.to_string(), entries: d };
-			Ok(f)
+	let d = match mime {
+		"" => return Err(ExifError::FileTypeUnknown),
+		"image/jpeg" => {
+			let (offset, size) = try!(find_embedded_tiff_in_jpeg(contents));
+			// println!("Offset {} size {}", offset, size);
+			try!(parse_tiff(&contents[offset .. offset + size]))
 		},
-		Err(e) => Err(e)
-	}
+		_ => {
+			try!(parse_tiff(&contents))
+		}
+	};
+
+	Ok(ExifData {
+		mime: mime.to_string(),
+		entries: d,
+	})
 }
 
 /// Try to read and parse an open file that is expected to contain an image
-pub fn read_file(fname: &str, f: &mut File) -> ExifResult
+pub fn read_file(f: &mut File) -> ExifResult
 {
-	match f.seek(SeekFrom::Start(0)) {
-		Ok(_) => (),
-		Err(_) => return Err(ExifError{kind: ExifErrorKind::FileSeekError,
-				extra: fname.to_string()}),
-	}
+	try!(f.seek(SeekFrom::Start(0)));
 
 	// TODO: should read only the relevant parts of a file,
 	// and pass a StringIO-like object instead of a Vec buffer
 
 	let mut contents: Vec<u8> = Vec::new();
-	match f.read_to_end(&mut contents) {
-		Ok(_) => parse_buffer(&contents),
-		Err(_) => Err(ExifError{kind: ExifErrorKind::FileReadError,
-				extra: fname.to_string()}),
-	}
+	try!(f.read_to_end(&mut contents));
+	parse_buffer(&contents)
 }
 
 /// Opens an image (passed as a file name), tries to read and parse it.
 pub fn parse_file(fname: &str) -> ExifResult
 {
-	let mut f = match File::open(fname) {
-		Ok(f) => f,
-		Err(_) => return Err(ExifError{kind: ExifErrorKind::FileOpenError,
-				extra: fname.to_string()}),
-	};
-	return read_file(fname, &mut f);
+	read_file(&mut try!(File::open(fname)))
 }

@@ -1,5 +1,7 @@
 use super::rational::*;
+use std::fmt;
 use std::result::Result;
+use std::io;
 
 /// Top-level structure that contains all parsed metadata inside an image
 #[derive(Debug)]
@@ -11,26 +13,16 @@ pub struct ExifData {
 }
 
 /// Possible fatal errors that may happen when an image is parsed.
-#[derive(Copy, Clone)]
-pub enum ExifErrorKind {
-	FileOpenError,
-	FileSeekError,
-	FileReadError,
+#[derive(Debug)]
+pub enum ExifError {
+	IoError(io::Error),
 	FileTypeUnknown,
-	JpegWithoutExif,
+	JpegWithoutExif(String),
 	TiffTruncated,
-	TiffBadPreamble,
+	TiffBadPreamble(String),
 	IfdTruncated,
-	ExifIfdTruncated,
+	ExifIfdTruncated(String),
 	ExifIfdEntryNotFound,
-}
-
-/// EXIF parsing error type
-pub struct ExifError {
-	/// The general kind of the error that aborted the parsing
-	pub kind: ExifErrorKind,
-	/// Extra context info about the error, when available
-	pub extra: String
 }
 
 /// Structure that represents a parsed IFD entry of a TIFF image
@@ -191,6 +183,113 @@ pub enum ExifTag {
 	GPSDifferential = 0x00001e,
 }
 
+impl fmt::Display for ExifTag {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		write!(f, "{}", match *self {
+			ExifTag::ImageDescription => "Image Description",
+			ExifTag::Make => "Manufacturer",
+			ExifTag::HostComputer => "Host computer",
+			ExifTag::Model => "Model",
+			ExifTag::Orientation => "Orientation",
+			ExifTag::XResolution => "X Resolution",
+			ExifTag::YResolution => "Y Resolution",
+			ExifTag::ResolutionUnit => "Resolution Unit",
+			ExifTag::Software => "Software",
+			ExifTag::DateTime => "Image date",
+			ExifTag::WhitePoint => "White Point",
+			ExifTag::PrimaryChromaticities => "Primary Chromaticities",
+			ExifTag::YCbCrCoefficients => "YCbCr Coefficients",
+			ExifTag::ReferenceBlackWhite => "Reference Black/White",
+			ExifTag::Copyright => "Copyright",
+			ExifTag::ExifOffset => "This image has an Exif SubIFD",
+			ExifTag::GPSOffset => "This image has a GPS SubIFD",
+			ExifTag::ExposureTime => "Exposure time",
+			ExifTag::FNumber => "Aperture",
+			ExifTag::ExposureProgram => "Exposure program",
+			ExifTag::SpectralSensitivity => "Spectral sensitivity",
+			ExifTag::ISOSpeedRatings => "ISO speed ratings",
+			ExifTag::OECF => "OECF",
+			ExifTag::ExifVersion => "Exif version",
+			ExifTag::DateTimeOriginal => "Date of original image",
+			ExifTag::DateTimeDigitized => "Date of image digitalization",
+			ExifTag::ShutterSpeedValue => "Shutter speed",
+			ExifTag::ApertureValue => "Aperture value",
+			ExifTag::BrightnessValue => "Brightness value",
+			ExifTag::ExposureBiasValue => "Exposure bias value",
+			ExifTag::MaxApertureValue => "Maximum aperture value",
+			ExifTag::SubjectDistance => "Subject distance",
+			ExifTag::MeteringMode => "Meteting mode",
+			ExifTag::LightSource => "Light source",
+			ExifTag::Flash => "Flash",
+			ExifTag::FocalLength => "Focal length",
+			ExifTag::SubjectArea => "Subject area",
+			ExifTag::MakerNote => "Maker note",
+			ExifTag::UserComment => "User comment",
+			ExifTag::FlashPixVersion => "Flashpix version",
+			ExifTag::ColorSpace => "Color space",
+			ExifTag::FlashEnergy => "Flash energy",
+			ExifTag::RelatedSoundFile => "Related sound file",
+			ExifTag::FocalPlaneXResolution => "Focal plane X resolution",
+			ExifTag::FocalPlaneYResolution => "Focal plane Y resolution",
+			ExifTag::FocalPlaneResolutionUnit => "Focal plane resolution unit",
+			ExifTag::SubjectLocation => "Subject location",
+			ExifTag::ExposureIndex => "Exposure index",
+			ExifTag::SensingMethod => "Sensing method",
+			ExifTag::FileSource => "File source",
+			ExifTag::SceneType => "Scene type",
+			ExifTag::CFAPattern => "CFA Pattern",
+			ExifTag::CustomRendered => "Custom rendered",
+			ExifTag::ExposureMode => "Exposure mode",
+			ExifTag::WhiteBalanceMode => "White balance mode",
+			ExifTag::DigitalZoomRatio => "Digital zoom ratio",
+			ExifTag::FocalLengthIn35mmFilm => "Equivalent focal length in 35mm",
+			ExifTag::SceneCaptureType => "Scene capture type",
+			ExifTag::GainControl => "Gain control",
+			ExifTag::Contrast => "Contrast",
+			ExifTag::Saturation => "Saturation",
+			ExifTag::Sharpness => "Sharpness",
+			ExifTag::LensSpecification => "Lens specification",
+			ExifTag::LensMake => "Lens manufacturer",
+			ExifTag::LensModel => "Lens model",
+			ExifTag::DeviceSettingDescription => "Device setting description",
+			ExifTag::SubjectDistanceRange => "Subject distance range",
+			ExifTag::ImageUniqueID => "Image unique ID",
+			ExifTag::GPSVersionID => "GPS version ID",
+			ExifTag::GPSLatitudeRef => "GPS latitude ref",
+			ExifTag::GPSLatitude => "GPS latitude",
+			ExifTag::GPSLongitudeRef => "GPS longitude ref",
+			ExifTag::GPSLongitude => "GPS longitude",
+			ExifTag::GPSAltitudeRef => "GPS altitude ref",
+			ExifTag::GPSAltitude => "GPS altitude",
+			ExifTag::GPSTimeStamp => "GPS timestamp",
+			ExifTag::GPSSatellites => "GPS satellites",
+			ExifTag::GPSStatus => "GPS status",
+			ExifTag::GPSMeasureMode => "GPS measure mode",
+			ExifTag::GPSDOP => "GPS Data Degree of Precision (DOP)",
+			ExifTag::GPSSpeedRef => "GPS speed ref",
+			ExifTag::GPSSpeed => "GPS speed",
+			ExifTag::GPSTrackRef => "GPS track ref",
+			ExifTag::GPSTrack => "GPS track",
+			ExifTag::GPSImgDirectionRef => "GPS image direction ref",
+			ExifTag::GPSImgDirection => "GPS image direction",
+			ExifTag::GPSMapDatum => "GPS map datum",
+			ExifTag::GPSDestLatitudeRef => "GPS destination latitude ref",
+			ExifTag::GPSDestLatitude => "GPS destination latitude",
+			ExifTag::GPSDestLongitudeRef => "GPS destination longitude ref",
+			ExifTag::GPSDestLongitude => "GPS destination longitude",
+			ExifTag::GPSDestBearingRef => "GPS destination bearing ref",
+			ExifTag::GPSDestBearing => "GPS destination bearing",
+			ExifTag::GPSDestDistanceRef => "GPS destination distance ref",
+			ExifTag::GPSDestDistance => "GPS destination distance",
+			ExifTag::GPSProcessingMethod => "GPS processing method",
+			ExifTag::GPSAreaInformation => "GPS area information",
+			ExifTag::GPSDateStamp => "GPS date stamp",
+			ExifTag::GPSDifferential => "GPS differential",
+			ExifTag::UnknownToMe => "Unknown to this library, or manufacturer-specific",
+		})
+	}
+}
+
 /// Enumeration that represents the possible data formats of an IFD entry.
 ///
 /// Any enumeration item can be cast to u16 to get the low-level format code
@@ -237,12 +336,6 @@ pub struct ExifEntry {
 	/// `value_more_readable` contains a single string with all three parts
 	/// combined.
 	pub unit: String,
-	/// Human-readable name of the `tag`, for debugging and listing purposes
-	pub tag_readable: String,
-	/// Human-readable, but simple, version of `value`.
-	/// Enumerations or tuples are not interpreted nor combined. This member contains a
-	/// correct data representation even if tag is `UnknownToMe`.
-	pub value_readable: String,
 	/// Human-readable and "pretty" version of `value`.
 	/// Enumerations and tuples are interpreted and combined. If `value`
 	/// has a unit, it is also added. 

@@ -25,8 +25,8 @@ pub fn numarray_to_string<T: Display>(numbers: &Vec<T>) -> String
 	return s;
 }
 
-/// Convert a IfdEntry into a tuple of TagValue and a crude string representation of tag value
-pub fn tag_value_new(f: &IfdEntry) -> (TagValue, String)
+/// Convert a IfdEntry into a tuple of TagValue
+pub fn tag_value_new(f: &IfdEntry) -> TagValue
 {
 	match f.format {
 		IfdFormat::Ascii => {
@@ -38,117 +38,95 @@ pub fn tag_value_new(f: &IfdEntry) -> (TagValue, String)
 			// In theory it should be pure ASCII but we admit UTF-8
 			let s = String::from_utf8_lossy(&f.data[0..tot]);
 			let s = s.into_owned();
-			(TagValue::Ascii(s.to_string()), s.to_string())
+			TagValue::Ascii(s.to_string())
 		},
 		IfdFormat::U16 => {
 			if f.data.len() < (f.count as usize * 2) {
-				return (TagValue::Invalid(f.data.clone(), f.le,
-							f.format as u16, f.count),
-					"Invalid".to_string());
+				return TagValue::Invalid(f.data.clone(), f.le,
+							             f.format as u16, f.count);
 			}
 			let a = read_u16_array(f.le, f.count, &f.data[..]);
-			let b = numarray_to_string(&a);
-			(TagValue::U16(a), b)
+			TagValue::U16(a)
 		},
 		IfdFormat::I16 => {
 			if f.data.len() < (f.count as usize * 2) {
-				return (TagValue::Invalid(f.data.clone(), f.le,
-							f.format as u16, f.count),
-					"Invalid".to_string());
+				return TagValue::Invalid(f.data.clone(), f.le,
+							             f.format as u16, f.count);
 			}
 			let a = read_i16_array(f.le, f.count, &f.data[..]);
-			let b = numarray_to_string(&a);
-			(TagValue::I16(a), b)
+			TagValue::I16(a)
 		},
 		IfdFormat::U8 => {
 			if f.data.len() < (f.count as usize * 1) {
-				return (TagValue::Invalid(f.data.clone(), f.le,
-							f.format as u16, f.count),
-					"Invalid".to_string());
+				return TagValue::Invalid(f.data.clone(), f.le,
+							             f.format as u16, f.count);
 			}
 			let a = f.data.clone();
-			let b = numarray_to_string(&a);
-			(TagValue::U8(a), b)
+			TagValue::U8(a)
 		},
 		IfdFormat::I8 => {
 			if f.data.len() < (f.count as usize * 1) {
-				return (TagValue::Invalid(f.data.clone(), f.le,
-							f.format as u16, f.count),
-					"Invalid".to_string());
+				return TagValue::Invalid(f.data.clone(), f.le,
+							             f.format as u16, f.count);
 			}
 			let a = read_i8_array(f.count, &f.data[..]);
-			let b = numarray_to_string(&a);
-			(TagValue::I8(a), b)
+			TagValue::I8(a)
 		},
 		IfdFormat::U32 => {
 			if f.data.len() < (f.count as usize * 4) {
-				return (TagValue::Invalid(f.data.clone(), f.le,
-							f.format as u16, f.count),
-					"Invalid".to_string());
+				return TagValue::Invalid(f.data.clone(), f.le,
+							             f.format as u16, f.count);
 			}
 			let a = read_u32_array(f.le, f.count, &f.data[..]);
-			let b = numarray_to_string(&a);
-			(TagValue::U32(a), b)
+			TagValue::U32(a)
 		},
 		IfdFormat::I32 => {
 			if f.data.len() < (f.count as usize * 4) {
-				return (TagValue::Invalid(f.data.clone(), f.le,
-							f.format as u16, f.count),
-					"Invalid".to_string());
+				return TagValue::Invalid(f.data.clone(), f.le,
+							             f.format as u16, f.count);
 			}
 			let a = read_i32_array(f.le, f.count, &f.data[..]);
-			let b = numarray_to_string(&a);
-			(TagValue::I32(a), b)
+			TagValue::I32(a)
 		},
 		IfdFormat::F32 => {
 			if f.data.len() < (f.count as usize * 4) {
-				return (TagValue::Invalid(f.data.clone(), f.le,
-							f.format as u16, f.count),
-					"Invalid".to_string());
+				return TagValue::Invalid(f.data.clone(), f.le,
+							             f.format as u16, f.count);
 			}
 			let a = read_f32_array(f.count, &f.data[..]);
-			let b = numarray_to_string(&a);
-			(TagValue::F32(a), b)
+			TagValue::F32(a)
 		},
 		IfdFormat::F64 => {
 			if f.data.len() < (f.count as usize * 8) {
-				return (TagValue::Invalid(f.data.clone(), f.le,
-							f.format as u16, f.count),
-					"Invalid".to_string());
+				return TagValue::Invalid(f.data.clone(), f.le,
+							             f.format as u16, f.count);
 			}
 			let a = read_f64_array(f.count, &f.data[..]);
-			let b = numarray_to_string(&a);
-			(TagValue::F64(a), b)
+			TagValue::F64(a)
 		},
 		IfdFormat::URational => {
 			if f.data.len() < (f.count as usize * 8) {
-				return (TagValue::Invalid(f.data.clone(), f.le,
-							f.format as u16, f.count),
-					"Invalid".to_string());
+				return TagValue::Invalid(f.data.clone(), f.le,
+							             f.format as u16, f.count);
 			}
 			let a = read_urational_array(f.le, f.count, &f.data[..]);
-			let b = numarray_to_string(&a);
-			(TagValue::URational(a), b)
+			TagValue::URational(a)
 		},
 		IfdFormat::IRational => {
 			if f.data.len() < (f.count as usize * 8) {
-				return (TagValue::Invalid(f.data.clone(), f.le,
-							f.format as u16, f.count),
-					"Invalid".to_string());
+				return TagValue::Invalid(f.data.clone(), f.le,
+							             f.format as u16, f.count);
 			}
 			let a = read_irational_array(f.le, f.count, &f.data[..]);
-			let b = numarray_to_string(&a);
-			(TagValue::IRational(a), b)
+			TagValue::IRational(a)
 		},
 
 		IfdFormat::Undefined => {
 			let a = f.data.clone();
-			let b = numarray_to_string(&a);
-			(TagValue::Undefined(a, f.le), b)
+			TagValue::Undefined(a, f.le)
 		},
 
-		_ => (TagValue::Unknown(f.data.clone(), f.le),
-					"<unknown blob>".to_string()),
+		_ => TagValue::Unknown(f.data.clone(), f.le)
 	}
 }
 

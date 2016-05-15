@@ -13,20 +13,18 @@ type InExifResult = Result<(), ExifError>;
 /// but the raw information of tag is still available in the ifd member.
 pub fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 {
-	let (value, readable_value) = tag_value_new(f);
+	let value = tag_value_new(f);
 
 	let mut e = ExifEntry {
 			namespace: f.namespace,
 			ifd: f.clone(),
 			tag: ExifTag::UnknownToMe,
-			value: value,
+			value: value.clone(),
 			unit: "Unknown".to_string(),
-			tag_readable: format!("Unparsed tag {:x}", f.tag).to_string(),
-			value_readable: readable_value.clone(),
-			value_more_readable: readable_value.clone(),
+			value_more_readable: format!("{}", value),
 			};
 
-	let (tag, tag_readable, unit, format, min_count, max_count, more_readable) = tag_to_exif(f.tag);
+	let (tag, unit, format, min_count, max_count, more_readable) = tag_to_exif(f.tag);
 
 	if tag == ExifTag::UnknownToMe {
 		// Unknown EXIF tag type
@@ -46,24 +44,23 @@ pub fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 	}
 
 	if format != f.format {
-		warning(&format!("EXIF tag {:x} {}, expected format {}, found {}",
-			f.tag, tag_readable, format as u8, f.format as u8));
+		warning(&format!("EXIF tag {:x} {} ({}), expected format {} ({:?}), found {} ({:?})",
+			f.tag, f.tag, tag, format as u8, format, f.format as u8, f.format));
 		return e;
 	}
 
 	if min_count != -1 &&
 			((f.count as i32) < min_count ||
 			(f.count as i32) > max_count) {
-		warning(&format!("EXIF tag {:x} {}, format {}, expected count {}..{} found {}",
-			f.tag, tag_readable, format as u8, min_count,
+		warning(&format!("EXIF tag {:x} {} ({:?}), format {}, expected count {}..{} found {}",
+			f.tag, f.tag, tag, format as u8, min_count,
 			max_count, f.count));
 		return e;
 	}
 
 	e.tag = tag;
-	e.tag_readable = tag_readable.to_string();
 	e.unit = unit.to_string();
-	e.value_more_readable = more_readable(&e.value, &readable_value);
+	e.value_more_readable = more_readable(&e.value);
 
 	return e;
 }
@@ -108,9 +105,7 @@ fn parse_exif_ifd(le: bool, contents: &[u8], ioffset: usize,
 
 	// println!("Offset is {}", offset);
 	if contents.len() < (offset + 2) {
-		return Err(ExifError{
-			kind: ExifErrorKind::ExifIfdTruncated,
-			extra: "Truncated at dir entry count".to_string()});
+		return Err(ExifError::ExifIfdTruncated("Truncated at dir entry count".to_string()))
 	}
 
 	let count = read_u16(le, &contents[offset..offset + 2]);
@@ -119,9 +114,7 @@ fn parse_exif_ifd(le: bool, contents: &[u8], ioffset: usize,
 	offset += 2;
 
 	if contents.len() < (offset + ifd_length) {
-		return Err(ExifError{
-			kind: ExifErrorKind::ExifIfdTruncated,
-			extra: "Truncated at dir listing".to_string()});
+		return Err(ExifError::ExifIfdTruncated("Truncated at dir listing".to_string()));
 	}
 
 	let (mut ifd, _) = parse_ifd(true, le, count, &contents[offset..offset + ifd_length]);
@@ -169,9 +162,7 @@ pub fn parse_ifds(le: bool, ifd0_offset: usize, contents: &[u8]) -> ExifEntryRes
 		let exif_offset = entry.data_as_offset();
 
 		if contents.len() < exif_offset {
-			return Err(ExifError{
-				kind: ExifErrorKind::ExifIfdTruncated,
-				extra: "Exif SubIFD goes past EOF".to_string()});
+			return Err(ExifError::ExifIfdTruncated("Exif SubIFD goes past EOF".to_string()));
 		}
 
 		match parse_exif_ifd(le, &contents, exif_offset, &mut exif_entries) {
@@ -197,9 +188,7 @@ pub fn parse_tiff(contents: &[u8]) -> ExifEntryResult
 	let mut le = false;
 
 	if contents.len() < 8 {
-		return Err(ExifError{
-			kind: ExifErrorKind::TiffTruncated,
-			extra: "".to_string()});
+		return Err(ExifError::TiffTruncated);
 	} else if contents[0] == ('I' as u8) &&
 			contents[1] == ('I' as u8) &&
 			contents[2] == 42 && contents[3] == 0 {
@@ -212,9 +201,7 @@ pub fn parse_tiff(contents: &[u8]) -> ExifEntryResult
 		let err = format!("Preamble is {:x} {:x} {:x} {:x}",
 			contents[0], contents[1],
 			contents[2], contents[3]);
-		return Err(ExifError{
-			kind: ExifErrorKind::TiffBadPreamble,
-			extra: err.to_string()});
+		return Err(ExifError::TiffBadPreamble(err.to_string()));
 	}
 
 	let offset = read_u32(le, &contents[4..8]) as usize;

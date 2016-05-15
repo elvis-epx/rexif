@@ -1,7 +1,6 @@
 use std::env;
 use std::process;
 use std::io::Write;
-use std::error::Error;
 extern crate rexif;
 
 use rexif::ExifTag;
@@ -28,14 +27,13 @@ fn main()
 						*/
 					} else {
 						println!("	{}: {}",
-								entry.tag_readable, 
+								entry.tag,
 								entry.value_more_readable);
 					}
 				}
 			},
 			Err(e) => {
-				writeln!(std::io::stderr(), "Error in {}: {} {}", &arg,
-					Error::description(&e), e.extra).unwrap();
+				writeln!(std::io::stderr(), "Error in {}: {}", &arg, e).unwrap();
 			}
 	 	}
 	}
