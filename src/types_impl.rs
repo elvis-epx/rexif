@@ -4,6 +4,7 @@ use std::error::Error;
 use std::io;
 use super::types::*;
 use super::lowlevel::*;
+use super::ifdformat::numarray_to_string;
 
 /// Convert an IFD format code to the IfdFormat enumeration
 pub fn ifdformat_new(n: u16) -> IfdFormat
@@ -130,4 +131,25 @@ impl From<io::Error> for ExifError {
     fn from(err: io::Error) -> ExifError {
         ExifError::IoError(err)
     }
+}
+
+impl fmt::Display for TagValue {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		match *self {
+			TagValue::Ascii(ref s) => write!(f, "{}", s),
+			TagValue::U16(ref a) => write!(f, "{}", numarray_to_string(a)),
+			TagValue::I16(ref a) => write!(f, "{}", numarray_to_string(a)),
+			TagValue::U8(ref a) => write!(f, "{}", numarray_to_string(a)),
+			TagValue::I8(ref a) => write!(f, "{}", numarray_to_string(a)),
+			TagValue::U32(ref a) => write!(f, "{}", numarray_to_string(a)),
+			TagValue::I32(ref a) => write!(f, "{}", numarray_to_string(a)),
+			TagValue::F32(ref a) => write!(f, "{}", numarray_to_string(a)),
+			TagValue::F64(ref a) => write!(f, "{}", numarray_to_string(a)),
+			TagValue::URational(ref a) => write!(f, "{}", numarray_to_string(a)),
+			TagValue::IRational(ref a) => write!(f, "{}", numarray_to_string(a)),
+			TagValue::Undefined(ref a, _) => write!(f, "{}", numarray_to_string(a)),
+			TagValue::Unknown(ref _a, _) => write!(f, "<unknown blob>"),
+			TagValue::Invalid(ref _data, _le, _fmt, _cnt) => write!(f, "Invalid"),
+		}
+	}
 }

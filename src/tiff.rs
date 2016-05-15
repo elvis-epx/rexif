@@ -13,16 +13,15 @@ type InExifResult = Result<(), ExifError>;
 /// but the raw information of tag is still available in the ifd member.
 pub fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 {
-	let (value, readable_value) = tag_value_new(f);
+	let value = tag_value_new(f);
 
 	let mut e = ExifEntry {
 			namespace: f.namespace,
 			ifd: f.clone(),
 			tag: ExifTag::UnknownToMe,
-			value: value,
+			value: value.clone(),
 			unit: "Unknown".to_string(),
-			value_readable: readable_value.clone(),
-			value_more_readable: readable_value.clone(),
+			value_more_readable: format!("{}", value),
 			};
 
 	let (tag, unit, format, min_count, max_count, more_readable) = tag_to_exif(f.tag);
@@ -45,23 +44,23 @@ pub fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 	}
 
 	if format != f.format {
-		warning(&format!("EXIF tag {:x} {}, expected format {}, found {}",
-			f.tag, f.tag, format as u8, f.format as u8));
+		warning(&format!("EXIF tag {:x} {} ({}), expected format {} ({:?}), found {} ({:?})",
+			f.tag, f.tag, tag, format as u8, format, f.format as u8, f.format));
 		return e;
 	}
 
 	if min_count != -1 &&
 			((f.count as i32) < min_count ||
 			(f.count as i32) > max_count) {
-		warning(&format!("EXIF tag {:x} {}, format {}, expected count {}..{} found {}",
-			f.tag, f.tag, format as u8, min_count,
+		warning(&format!("EXIF tag {:x} {} ({:?}), format {}, expected count {}..{} found {}",
+			f.tag, f.tag, tag, format as u8, min_count,
 			max_count, f.count));
 		return e;
 	}
 
 	e.tag = tag;
 	e.unit = unit.to_string();
-	e.value_more_readable = more_readable(&e.value, &readable_value);
+	e.value_more_readable = more_readable(&e.value);
 
 	return e;
 }

@@ -336,10 +336,6 @@ pub struct ExifEntry {
 	/// `value_more_readable` contains a single string with all three parts
 	/// combined.
 	pub unit: String,
-	/// Human-readable, but simple, version of `value`.
-	/// Enumerations or tuples are not interpreted nor combined. This member contains a
-	/// correct data representation even if tag is `UnknownToMe`.
-	pub value_readable: String,
 	/// Human-readable and "pretty" version of `value`.
 	/// Enumerations and tuples are interpreted and combined. If `value`
 	/// has a unit, it is also added. 

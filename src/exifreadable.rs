@@ -6,19 +6,19 @@ static INV: &'static str = "Invalid data for this tag";
 
 /// No-op for readable value tag function. Should not be used by any EXIF tag descriptor,
 /// except for the catch-all match that handles unknown tags
-pub fn nop(_: &TagValue, s: &String) -> String
+pub fn nop(e: &TagValue) -> String
 {
-	return s.clone();
+	format!("{}", e)
 }
 
 /// No-op for readable value tag function. Used for ASCII string tags, or when the
 /// default readable representation of value is pretty enough.
-pub fn strpass(_: &TagValue, s: &String) -> String
+pub fn strpass(e: &TagValue) -> String
 {
-	return s.clone();
+	format!("{}", e)
 }
 
-pub fn orientation(e: &TagValue, _: &String) -> String
+pub fn orientation(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::U16(ref v) => {
@@ -38,7 +38,7 @@ pub fn orientation(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn rational_value(e: &TagValue, _: &String) -> String
+pub fn rational_value(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::URational(ref v) => {
@@ -53,7 +53,7 @@ pub fn rational_value(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn rational_values(e: &TagValue, _: &String) -> String
+pub fn rational_values(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::URational(ref v) => {
@@ -66,7 +66,7 @@ pub fn rational_values(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn resolution_unit(e: &TagValue, _: &String) -> String
+pub fn resolution_unit(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::U16(ref v) => {
@@ -84,7 +84,7 @@ pub fn resolution_unit(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn exposure_time(e: &TagValue, _: &String) -> String
+pub fn exposure_time(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::URational(ref v) => {
@@ -106,7 +106,7 @@ pub fn exposure_time(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn f_number(e: &TagValue, _: &String) -> String
+pub fn f_number(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::URational(ref v) => {
@@ -118,7 +118,7 @@ pub fn f_number(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn exposure_program(e: &TagValue, _: &String) -> String
+pub fn exposure_program(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::U16(ref v) => {
@@ -141,7 +141,7 @@ pub fn exposure_program(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn focal_length(e: &TagValue, _: &String) -> String
+pub fn focal_length(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::URational(ref v) => {
@@ -153,7 +153,7 @@ pub fn focal_length(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn focal_length_35(e: &TagValue, _: &String) -> String
+pub fn focal_length_35(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::U16(ref v) => {
@@ -165,7 +165,7 @@ pub fn focal_length_35(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn meters(e: &TagValue, _: &String) -> String
+pub fn meters(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::URational(ref v) => {
@@ -177,7 +177,7 @@ pub fn meters(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn iso_speeds(e: &TagValue, _: &String) -> String
+pub fn iso_speeds(e: &TagValue) -> String
 {
 	let s = match e {
 	&TagValue::U16(ref v) => {
@@ -195,7 +195,7 @@ pub fn iso_speeds(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn dms(e: &TagValue, _: &String) -> String
+pub fn dms(e: &TagValue) -> String
 {
 	let s = match e {
 	&TagValue::URational(ref v) => {
@@ -217,7 +217,7 @@ pub fn dms(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn gps_alt_ref(e: &TagValue, _: &String) -> String
+pub fn gps_alt_ref(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::U8(ref v) => {
@@ -234,7 +234,7 @@ pub fn gps_alt_ref(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn gpsdestdistanceref(e: &TagValue, _: &String) -> String
+pub fn gpsdestdistanceref(e: &TagValue) -> String
 {
 	let s = match e {
 	&TagValue::Ascii(ref v) => {
@@ -254,7 +254,7 @@ pub fn gpsdestdistanceref(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn gpsdestdistance(e: &TagValue, _: &String) -> String
+pub fn gpsdestdistance(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::URational(ref v) => {
@@ -266,7 +266,7 @@ pub fn gpsdestdistance(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn gpsspeedref(e: &TagValue, _: &String) -> String
+pub fn gpsspeedref(e: &TagValue) -> String
 {
 	let s = match e {
 	&TagValue::Ascii(ref v) => {
@@ -286,7 +286,7 @@ pub fn gpsspeedref(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn gpsspeed(e: &TagValue, _: &String) -> String
+pub fn gpsspeed(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::URational(ref v) => {
@@ -298,7 +298,7 @@ pub fn gpsspeed(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn gpsbearingref(e: &TagValue, _: &String) -> String
+pub fn gpsbearingref(e: &TagValue) -> String
 {
 	let s = match e {
 	&TagValue::Ascii(ref v) => {
@@ -316,7 +316,7 @@ pub fn gpsbearingref(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn gpsbearing(e: &TagValue, _: &String) -> String
+pub fn gpsbearing(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::URational(ref v) => {
@@ -328,7 +328,7 @@ pub fn gpsbearing(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn gpstimestamp(e: &TagValue, _: &String) -> String
+pub fn gpstimestamp(e: &TagValue) -> String
 {
 	let s = match e {
 	&TagValue::URational(ref v) => {
@@ -343,7 +343,7 @@ pub fn gpstimestamp(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn gpsdiff(e: &TagValue, _: &String) -> String
+pub fn gpsdiff(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::U16(ref v) => {
@@ -360,7 +360,7 @@ pub fn gpsdiff(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn gpsstatus(e: &TagValue, _: &String) -> String
+pub fn gpsstatus(e: &TagValue) -> String
 {
 	let s = match e {
 	&TagValue::Ascii(ref v) => {
@@ -378,7 +378,7 @@ pub fn gpsstatus(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn gpsmeasuremode(e: &TagValue, _: &String) -> String
+pub fn gpsmeasuremode(e: &TagValue) -> String
 {
 	let s = match e {
 	&TagValue::Ascii(ref v) => {
@@ -399,7 +399,7 @@ pub fn gpsmeasuremode(e: &TagValue, _: &String) -> String
 /// Interprets an Undefined tag as ASCII, when the contents are guaranteed
 /// by EXIF standard to be ASCII-compatible. This function accepts UTF-8
 /// strings, should they be accepted by EXIF standard in the future.
-pub fn undefined_as_ascii(e: &TagValue, _: &String) -> String
+pub fn undefined_as_ascii(e: &TagValue) -> String
 {
 	let s = match e {
 	&TagValue::Undefined(ref v, _) => {
@@ -413,7 +413,7 @@ pub fn undefined_as_ascii(e: &TagValue, _: &String) -> String
 
 /// Outputs an Undefined tag as an array of bytes. Appropriate for tags
 /// that are opaque and small-sized
-pub fn undefined_as_u8(e: &TagValue, _: &String) -> String
+pub fn undefined_as_u8(e: &TagValue) -> String
 {
 	let s = match e {
 	&TagValue::Undefined(ref v, _) => {
@@ -428,7 +428,7 @@ pub fn undefined_as_u8(e: &TagValue, _: &String) -> String
 /// Tries to parse an Undefined tag as containing a string. For some tags,
 /// the string encoding /// format can be discovered by looking into the first
 /// 8 bytes.
-pub fn undefined_as_encoded_string(e: &TagValue, _: &String) -> String
+pub fn undefined_as_encoded_string(e: &TagValue) -> String
 {
 	// "ASCII\0\0\0"
 	static ASC: [u8; 8] = [0x41, 0x53, 0x43, 0x49, 0x49, 0, 0, 0];
@@ -463,7 +463,7 @@ pub fn undefined_as_encoded_string(e: &TagValue, _: &String) -> String
 }
 
 /// Prints an opaque and long Undefined tag simply as as "blob", noting its length
-pub fn undefined_as_blob(e: &TagValue, _: &String) -> String
+pub fn undefined_as_blob(e: &TagValue) -> String
 {
 	let s = match e {
 	&TagValue::Undefined(ref v, _) => {
@@ -475,7 +475,7 @@ pub fn undefined_as_blob(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn apex_tv(e: &TagValue, _: &String) -> String
+pub fn apex_tv(e: &TagValue) -> String
 {
 	match e {
 		&TagValue::IRational(ref v) => {
@@ -485,7 +485,7 @@ pub fn apex_tv(e: &TagValue, _: &String) -> String
 	}
 }
 
-pub fn apex_av(e: &TagValue, _: &String) -> String
+pub fn apex_av(e: &TagValue) -> String
 {
 	match e {
 		&TagValue::URational(ref v) => {
@@ -495,7 +495,7 @@ pub fn apex_av(e: &TagValue, _: &String) -> String
 	}
 }
 
-pub fn apex_brightness(e: &TagValue, _: &String) -> String
+pub fn apex_brightness(e: &TagValue) -> String
 {
 	match e {
 		&TagValue::IRational(ref v) => {
@@ -510,7 +510,7 @@ pub fn apex_brightness(e: &TagValue, _: &String) -> String
 	}
 }
 
-pub fn apex_ev(e: &TagValue, _: &String) -> String
+pub fn apex_ev(e: &TagValue) -> String
 {
 	match e {
 		&TagValue::IRational(ref v) => {
@@ -520,7 +520,7 @@ pub fn apex_ev(e: &TagValue, _: &String) -> String
 	}
 }
 
-pub fn file_source(e: &TagValue, _: &String) -> String
+pub fn file_source(e: &TagValue) -> String
 {
 	let s = match e {
 	&TagValue::Undefined(ref v, _) => {
@@ -536,7 +536,7 @@ pub fn file_source(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn flash_energy(e: &TagValue, _: &String) -> String
+pub fn flash_energy(e: &TagValue) -> String
 {
 	match e {
 		&TagValue::URational(ref v) => {
@@ -546,7 +546,7 @@ pub fn flash_energy(e: &TagValue, _: &String) -> String
 	}
 }
 
-pub fn metering_mode(e: &TagValue, _: &String) -> String
+pub fn metering_mode(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::U16(ref v) => {
@@ -569,7 +569,7 @@ pub fn metering_mode(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn light_source(e: &TagValue, _: &String) -> String
+pub fn light_source(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::U16(ref v) => {
@@ -605,7 +605,7 @@ pub fn light_source(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn color_space(e: &TagValue, _: &String) -> String
+pub fn color_space(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::U16(ref v) => {
@@ -622,7 +622,7 @@ pub fn color_space(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn flash(e: &TagValue, _: &String) -> String
+pub fn flash(e: &TagValue) -> String
 {
 	match e {
 		&TagValue::U16(ref v) => {
@@ -669,7 +669,7 @@ pub fn flash(e: &TagValue, _: &String) -> String
 	}
 }
 
-pub fn subject_area(e: &TagValue, _: &String) -> String
+pub fn subject_area(e: &TagValue) -> String
 {
 	match e {
 		&TagValue::U16(ref v) => {
@@ -684,7 +684,7 @@ pub fn subject_area(e: &TagValue, _: &String) -> String
 	}
 }
 
-pub fn subject_location(e: &TagValue, _: &String) -> String
+pub fn subject_location(e: &TagValue) -> String
 {
 	match e {
 		&TagValue::U16(ref v) => {
@@ -694,7 +694,7 @@ pub fn subject_location(e: &TagValue, _: &String) -> String
 	}
 }
 
-pub fn sharpness(e: &TagValue, _: &String) -> String
+pub fn sharpness(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::U16(ref v) => {
@@ -712,7 +712,7 @@ pub fn sharpness(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn saturation(e: &TagValue, _: &String) -> String
+pub fn saturation(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::U16(ref v) => {
@@ -730,7 +730,7 @@ pub fn saturation(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn contrast(e: &TagValue, _: &String) -> String
+pub fn contrast(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::U16(ref v) => {
@@ -748,7 +748,7 @@ pub fn contrast(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn gain_control(e: &TagValue, _: &String) -> String
+pub fn gain_control(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::U16(ref v) => {
@@ -768,7 +768,7 @@ pub fn gain_control(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn exposure_mode(e: &TagValue, _: &String) -> String
+pub fn exposure_mode(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::U16(ref v) => {
@@ -786,7 +786,7 @@ pub fn exposure_mode(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn scene_capture_type(e: &TagValue, _: &String) -> String
+pub fn scene_capture_type(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::U16(ref v) => {
@@ -805,7 +805,7 @@ pub fn scene_capture_type(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn scene_type(e: &TagValue, _: &String) -> String
+pub fn scene_type(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::Undefined(ref v, _) => {
@@ -821,7 +821,7 @@ pub fn scene_type(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn white_balance_mode(e: &TagValue, _: &String) -> String
+pub fn white_balance_mode(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::U16(ref v) => {
@@ -838,7 +838,7 @@ pub fn white_balance_mode(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn sensing_method(e: &TagValue, _: &String) -> String
+pub fn sensing_method(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::U16(ref v) => {
@@ -860,7 +860,7 @@ pub fn sensing_method(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn custom_rendered(e: &TagValue, _: &String) -> String
+pub fn custom_rendered(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::U16(ref v) => {
@@ -877,7 +877,7 @@ pub fn custom_rendered(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn subject_distance_range(e: &TagValue, _: &String) -> String
+pub fn subject_distance_range(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::U16(ref v) => {
@@ -896,7 +896,7 @@ pub fn subject_distance_range(e: &TagValue, _: &String) -> String
 	return s.to_string();
 }
 
-pub fn lens_spec(e: &TagValue, _: &String) -> String
+pub fn lens_spec(e: &TagValue) -> String
 {
 	match e {
 	&TagValue::URational(ref v) => {
