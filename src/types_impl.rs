@@ -32,7 +32,7 @@ impl IfdEntry {
 	/// the IFD data area as an offset (i.e. when the tag is a Sub-IFD tag, or when
 	/// there are more than 4 bytes of data and it would not fit within IFD).
 	pub fn data_as_offset(&self) -> usize {
-		read_u32(self.le, &(self.ifd_data[0..4])) as usize
+		read_u32(self.le, &(self.data[0..4])) as usize
 	}
 
 	/// Returns the size of an individual element (e.g. U8=1, U16=2...). Every
@@ -79,7 +79,6 @@ impl IfdEntry {
 	{
 		if self.in_ifd() {
 			// the 4 bytes from IFD have all data
-			self.data = self.ifd_data.clone();
 			return true;
 		}
 
