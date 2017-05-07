@@ -66,7 +66,7 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, IfdFormat, i32, i32,
 	IfdFormat::U32, 1, 1, strpass),
 
 	0x8825 =>
-	(ExifTag::GPSOffset,
+	(ExifTag::GPSInfo,
 	IfdFormat::U32, 1, 1, strpass),
 
 	0x829a =>
@@ -86,7 +86,7 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, IfdFormat, i32, i32,
 	IfdFormat::Ascii, -1i32, -1i32, strpass),
 
 	0x8827 =>
-	(ExifTag::ISOSpeedRatings,
+	(ExifTag::PhotographicSensitivity,
 	IfdFormat::U16, 1, 3, iso_speeds),
 
 	0x8828 =>
@@ -156,7 +156,7 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, IfdFormat, i32, i32,
 	IfdFormat::Undefined, -1i32, -1i32, undefined_as_encoded_string),
 
 	0xa000 =>
-	(ExifTag::FlashPixVersion,
+	(ExifTag::FlashpixVersion,
 	IfdFormat::Undefined, -1i32, -1i32, undefined_as_ascii),
 
 	0xa001 =>
@@ -216,7 +216,7 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, IfdFormat, i32, i32,
 	IfdFormat::U16, 1, 1, exposure_mode),
 
 	0xa403 =>
-	(ExifTag::WhiteBalanceMode,
+	(ExifTag::WhiteBalance,
 	IfdFormat::U16, 1, 1, white_balance_mode),
 
 	0xa404 =>

@@ -110,11 +110,11 @@ impl ExifEntry {
 			XResolution | YResolution => "pixels per res unit",
 			WhitePoint | PrimaryChromaticities => "CIE 1931 coordinates",
 			ReferenceBlackWhite => "RGB or YCbCr",
-			ExifOffset | GPSOffset => "byte offset",
+			ExifOffset | GPSInfo => "byte offset",
 			ExposureTime => "s",
 			FNumber => "f-number",
 			SpectralSensitivity => "ASTM string",
-			ISOSpeedRatings => "ISO",
+			PhotographicSensitivity => "ISO",
 			ShutterSpeedValue | ApertureValue | BrightnessValue | ExposureBiasValue
 			| MaxApertureValue => "APEX",
 			SubjectDistance | GPSAltitude => "m",
@@ -132,9 +132,9 @@ impl ExifEntry {
 			ImageDescription | Make | HostComputer | Model | Orientation | ResolutionUnit
 			| Software | DateTime | YCbCrCoefficients | Copyright | ExposureProgram | OECF
 			| ExifVersion | DateTimeOriginal | DateTimeDigitized | MeteringMode | LightSource
-			| Flash | MakerNote | UserComment | FlashPixVersion | ColorSpace | RelatedSoundFile
+			| Flash | MakerNote | UserComment | FlashpixVersion | ColorSpace | RelatedSoundFile
 			| FocalPlaneResolutionUnit | SensingMethod | FileSource | SceneType | CFAPattern
-			| CustomRendered | ExposureMode | WhiteBalanceMode | DigitalZoomRatio
+			| CustomRendered | ExposureMode | WhiteBalance | DigitalZoomRatio
 			| SceneCaptureType | GainControl | Contrast | Saturation | Sharpness
 			| LensSpecification | LensMake | LensModel | DeviceSettingDescription
 			| SubjectDistanceRange | ImageUniqueID | GPSVersionID | GPSLatitudeRef

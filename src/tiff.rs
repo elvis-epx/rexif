@@ -151,7 +151,7 @@ pub fn parse_ifds(le: bool, ifd0_offset: usize, contents: &[u8]) -> ExifEntryRes
 
 	for entry in &ifd {
 		if entry.tag != (((ExifTag::ExifOffset as u32) & 0xffff) as u16) &&
-				entry.tag != (((ExifTag::GPSOffset as u32) & 0xffff) as u16) {
+				entry.tag != (((ExifTag::GPSInfo as u32) & 0xffff) as u16) {
 			continue;
 		}
 
