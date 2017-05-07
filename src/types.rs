@@ -44,9 +44,6 @@ pub struct IfdEntry {
 	/// Raw data contained within the IFD structure. If count * sizeof(format) >= 4,
 	/// this item contains the offset where the actual data can be found
 	pub ifd_data: Vec<u8>,
-	/// Raw data contained outside of the IFD structure and pointed by ifd_data,
-	/// if data would not fit within the IFD structure
-	pub ext_data: Vec<u8>,
 	/// If true, integer and offset formats must be parsed from raw data as little-endian.
 	/// If false, integer and offset formats must be parsed from raw data as big-endian.
 	///
@@ -149,7 +146,7 @@ pub enum ExifTag {
 	LensSpecification = 0x0000a432,
 	LensMake = 0x0000a433,
 	LensModel = 0x0000a434,
-		
+
 	GPSVersionID = 0x00000,
 	GPSLatitudeRef = 0x00001,
 	GPSLatitude = 0x00002,
@@ -341,7 +338,7 @@ pub struct ExifEntry {
 	pub unit: String,
 	/// Human-readable and "pretty" version of `value`.
 	/// Enumerations and tuples are interpreted and combined. If `value`
-	/// has a unit, it is also added. 
+	/// has a unit, it is also added.
 	/// If tag is `UnknownToMe`,
 	/// this member contains the same string as `value_readable`.
 	pub value_more_readable: String,
@@ -363,11 +360,11 @@ pub enum TagValue {
 	I8(Vec<i8>),
 	/// Array of bytes with opaque internal structure. Used by manufacturer-specific
 	/// tags, SIG-specific tags, tags that contain Unicode (UCS-2) or Japanese (JIS)
-	/// strings (i.e. strings that are not 7-bit-clean), tags that contain 
+	/// strings (i.e. strings that are not 7-bit-clean), tags that contain
 	/// dissimilar or variant types, etc.
 	///
 	/// This item has a "little endian"
-	/// boolean parameter that reports the whole TIFF's endianness. 
+	/// boolean parameter that reports the whole TIFF's endianness.
 	/// Any sort of internal structure that is sensitive to endianess
 	/// should be interpreted accordignly to this parameter (true=LE, false=BE).
 	Undefined(Vec<u8>, bool),
@@ -385,7 +382,7 @@ pub enum TagValue {
 	/// is most likely a corrupted tag.
 	///
 	/// This variant has a "little endian"
-	/// boolean parameter that reports the whole TIFF's endianness. 
+	/// boolean parameter that reports the whole TIFF's endianness.
 	/// Any sort of internal structure that is sensitive to endianess
 	/// should be interpreted accordignly to this parameter (true=LE, false=BE).
 	Unknown(Vec<u8>, bool),

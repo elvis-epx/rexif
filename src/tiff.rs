@@ -85,7 +85,7 @@ pub fn parse_ifd(subifd: bool, le: bool, count: u16, contents: &[u8]) -> (Vec<If
 		let entry = IfdEntry{namespace: Namespace::Standard,
 					tag: tag, format: ifdformat_new(format),
 					count: count, ifd_data: data, le: le,
-					ext_data: Vec::new(), data: Vec::new()};
+					data: Vec::new()};
 		entries.push(entry);
 	}
 

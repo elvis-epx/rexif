@@ -90,9 +90,8 @@ impl IfdEntry {
 		}
 
 		let ext_data = &contents[offset..(offset + self.length())];
-		self.ext_data.clear();	
-		self.ext_data.extend(ext_data);
-		self.data = self.ext_data.clone();
+		self.data.clear();
+		self.data.extend(ext_data);
 		return true;
 	}
 }
