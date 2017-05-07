@@ -1,5 +1,4 @@
 use super::types::*;
-use super::types_impl::*;
 use super::lowlevel::*;
 use super::ifdformat::*;
 use super::debug::*;
@@ -81,7 +80,7 @@ pub fn parse_ifd(subifd: bool, le: bool, count: u16, contents: &[u8]) -> (Vec<If
 		let data = data.to_vec();
 
 		let entry = IfdEntry{namespace: Namespace::Standard,
-					tag: tag, format: ifdformat_new(format),
+					tag: tag, format: IfdFormat::new(format),
 					count: count, le: le, data: data};
 		entries.push(entry);
 	}

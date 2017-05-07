@@ -6,23 +6,23 @@ use super::types::*;
 use super::lowlevel::*;
 use super::ifdformat::numarray_to_string;
 
-/// Convert an IFD format code to the IfdFormat enumeration
-pub fn ifdformat_new(n: u16) -> IfdFormat
-{
-	match n {
-		1 => IfdFormat::U8,
-		2 => IfdFormat::Ascii,
-		3 => IfdFormat::U16,
-		4 => IfdFormat::U32,
-		5 => IfdFormat::URational,
-		6 => IfdFormat::I8,
-		7 => IfdFormat::Undefined,
-		8 => IfdFormat::I16,
-		9 => IfdFormat::I32,
-		10 => IfdFormat::IRational,
-		11 => IfdFormat::F32,
-		12 => IfdFormat::F64,
-		_ => IfdFormat::Unknown,
+impl IfdFormat {
+	pub fn new(n: u16) -> IfdFormat {
+		match n {
+			1 => IfdFormat::U8,
+			2 => IfdFormat::Ascii,
+			3 => IfdFormat::U16,
+			4 => IfdFormat::U32,
+			5 => IfdFormat::URational,
+			6 => IfdFormat::I8,
+			7 => IfdFormat::Undefined,
+			8 => IfdFormat::I16,
+			9 => IfdFormat::I32,
+			10 => IfdFormat::IRational,
+			11 => IfdFormat::F32,
+			12 => IfdFormat::F64,
+			_ => IfdFormat::Unknown,
+		}
 	}
 }
 
