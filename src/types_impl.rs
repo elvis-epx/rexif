@@ -24,6 +24,28 @@ impl IfdFormat {
 			_ => IfdFormat::Unknown,
 		}
 	}
+
+	/// Returns the size of an individual element (e.g. U8=1, U16=2...). Every
+	/// IFD entry contains an array of elements, so this is NOT the size of the
+	/// whole entry!
+	pub fn size(&self) -> u8
+	{
+		match self {
+			&IfdFormat::U8 => 1,
+			&IfdFormat::Ascii => 1,
+			&IfdFormat::U16 => 2,
+			&IfdFormat::U32 => 4,
+			&IfdFormat::URational => 8,
+			&IfdFormat::I8 => 1,
+			&IfdFormat::Undefined => 1,
+			&IfdFormat::I16 => 2,
+			&IfdFormat::I32 => 4,
+			&IfdFormat::IRational => 8,
+			&IfdFormat::F32 => 4,
+			&IfdFormat::F64 => 8,
+			&IfdFormat::Unknown => 1,
+		}
+	}
 }
 
 impl IfdEntry {
@@ -35,32 +57,10 @@ impl IfdEntry {
 		read_u32(self.le, &(self.data[0..4])) as usize
 	}
 
-	/// Returns the size of an individual element (e.g. U8=1, U16=2...). Every
-	/// IFD entry contains an array of elements, so this is NOT the size of the
-	/// whole entry!
-	pub fn size(&self) -> u8
-	{
-		match self.format {
-			IfdFormat::U8 => 1,
-			IfdFormat::Ascii => 1,
-			IfdFormat::U16 => 2,
-			IfdFormat::U32 => 4,
-			IfdFormat::URational => 8,
-			IfdFormat::I8 => 1,
-			IfdFormat::Undefined => 1,
-			IfdFormat::I16 => 2,
-			IfdFormat::I32 => 4,
-			IfdFormat::IRational => 8,
-			IfdFormat::F32 => 4,
-			IfdFormat::F64 => 8,
-			IfdFormat::Unknown => 1,
-		}
-	}
-
 	/// Total length of the whole IFD entry (element count x element size)
 	pub fn length(&self) -> usize
 	{
-		(self.size() as usize) * (self.count as usize)
+		(self.format.size() as usize) * (self.count as usize)
 	}
 
 	/// Returns true if data is contained within the IFD structure, false when
