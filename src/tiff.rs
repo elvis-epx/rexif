@@ -20,11 +20,10 @@ pub fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 			ifd: f.clone(),
 			tag: ExifTag::UnknownToMe,
 			value: value.clone(),
-			unit: "Unknown".to_string(),
 			value_more_readable: format!("{}", value),
 			};
 
-	let (tag, unit, format, min_count, max_count, more_readable) = tag_to_exif(f.tag);
+	let (tag, format, min_count, max_count, more_readable) = tag_to_exif(f.tag);
 
 	if tag == ExifTag::UnknownToMe {
 		// Unknown EXIF tag type
@@ -59,7 +58,6 @@ pub fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 	}
 
 	e.tag = tag;
-	e.unit = unit.to_string();
 	e.value_more_readable = more_readable(&e.value);
 
 	return e;

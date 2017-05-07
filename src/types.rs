@@ -324,15 +324,6 @@ pub struct ExifEntry {
 	pub tag: ExifTag,
 	/// EXIF tag value as an enumeration. Behaves as a "variant" value
 	pub value: TagValue,
-	/// Unit of the value, if applicable. If tag is `UnknownToMe`, unit will be empty.
-	/// If the tag has been parsed and it is indeed unitless, it will be `"none"`.
-	///
-	/// Note that
-	/// unit refers to the contents of `value`, not to the readable string. For example,
-	/// a GPS latitude is a triplet of rational values, so unit is D/M/S, even though
-	/// `value_more_readable` contains a single string with all three parts
-	/// combined.
-	pub unit: String,
 	/// Human-readable and "pretty" version of `value`.
 	/// Enumerations and tuples are interpreted and combined. If `value`
 	/// has a unit, it is also added.

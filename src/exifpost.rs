@@ -20,7 +20,6 @@ pub fn exif_postprocessing(entry: &mut ExifEntry, entries: &Vec<ExifEntry>)
 	ExifTag::XResolution =>
 	match other_tag(ExifTag::ResolutionUnit, entries) {
 		Some(f) => {
-			entry.unit = f.value_more_readable.clone();
 			entry.value_more_readable.push_str(" pixels per ");
 			entry.value_more_readable.push_str(&f.value_more_readable);
 			},
@@ -30,7 +29,6 @@ pub fn exif_postprocessing(entry: &mut ExifEntry, entries: &Vec<ExifEntry>)
 	ExifTag::YResolution =>
 	match other_tag(ExifTag::ResolutionUnit, entries) {
 		Some(f) => {
-			entry.unit = f.value_more_readable.clone();
 			entry.value_more_readable.push_str(" pixels per ");
 			entry.value_more_readable.push_str(&f.value_more_readable);
 		},
@@ -40,7 +38,6 @@ pub fn exif_postprocessing(entry: &mut ExifEntry, entries: &Vec<ExifEntry>)
 	ExifTag::FocalPlaneXResolution =>
 	match other_tag(ExifTag::FocalPlaneResolutionUnit, entries) {
 		Some(f) => {
-			entry.unit = f.value_more_readable.clone();
 			entry.value_more_readable.push_str(" pixels per ");
 			entry.value_more_readable.push_str(&f.value_more_readable);
 			},
@@ -50,7 +47,6 @@ pub fn exif_postprocessing(entry: &mut ExifEntry, entries: &Vec<ExifEntry>)
 	ExifTag::FocalPlaneYResolution =>
 	match other_tag(ExifTag::FocalPlaneResolutionUnit, entries) {
 		Some(f) => {
-			entry.unit = f.value_more_readable.clone();
 			entry.value_more_readable.push_str(" pixels per ");
 			entry.value_more_readable.push_str(&f.value_more_readable);
 		},
@@ -111,7 +107,6 @@ pub fn exif_postprocessing(entry: &mut ExifEntry, entries: &Vec<ExifEntry>)
 	ExifTag::GPSDestDistance =>
 	match other_tag(ExifTag::GPSDestDistanceRef, entries) {
 		Some(f) => {
-			entry.unit = f.value_more_readable.clone();
 			entry.value_more_readable.push_str(" ");
 			entry.value_more_readable.push_str(&f.value_more_readable);
 		},
@@ -121,7 +116,6 @@ pub fn exif_postprocessing(entry: &mut ExifEntry, entries: &Vec<ExifEntry>)
 	ExifTag::GPSSpeed =>
 	match other_tag(ExifTag::GPSSpeedRef, entries) {
 		Some(f) => {
-			entry.unit = f.value_more_readable.clone();
 			entry.value_more_readable.push_str(" ");
 			entry.value_more_readable.push_str(&f.value_more_readable);
 		},

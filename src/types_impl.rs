@@ -95,6 +95,58 @@ impl IfdEntry {
 	}
 }
 
+impl ExifEntry {
+	/// Unit of the value, if applicable. If tag is `UnknownToMe`, unit will be empty.
+	/// If the tag has been parsed and it is indeed unitless, it will be `"none"`.
+	///
+	/// Note that
+	/// unit refers to the contents of `value`, not to the readable string. For example,
+	/// a GPS latitude is a triplet of rational values, so unit is D/M/S, even though
+	/// `value_more_readable` contains a single string with all three parts
+	/// combined.
+	pub fn unit(&self) -> &'static str {
+		use ExifTag::*;
+		match self.tag {
+			XResolution | YResolution => "pixels per res unit",
+			WhitePoint | PrimaryChromaticities => "CIE 1931 coordinates",
+			ReferenceBlackWhite => "RGB or YCbCr",
+			ExifOffset | GPSOffset => "byte offset",
+			ExposureTime => "s",
+			FNumber => "f-number",
+			SpectralSensitivity => "ASTM string",
+			ISOSpeedRatings => "ISO",
+			ShutterSpeedValue | ApertureValue | BrightnessValue | ExposureBiasValue
+			| MaxApertureValue => "APEX",
+			SubjectDistance | GPSAltitude => "m",
+			FocalLength | FocalLengthIn35mmFilm => "mm",
+			SubjectArea => "px",
+			FlashEnergy => "BCPS",
+			FocalPlaneXResolution | FocalPlaneYResolution => "@FocalPlaneResolutionUnit",
+			SubjectLocation => "X,Y",
+			ExposureIndex => "EI",
+			GPSLatitude | GPSLongitude | GPSDestLatitude | GPSDestLongitude => "D/M/S",
+			GPSTimeStamp => "UTC time",
+			GPSSpeed => "@GPSSpeedRef",
+			GPSTrack | GPSImgDirection | GPSDestBearing => "deg",
+			GPSDestDistance => "@GPSDestDistanceRef",
+			ImageDescription | Make | HostComputer | Model | Orientation | ResolutionUnit
+			| Software | DateTime | YCbCrCoefficients | Copyright | ExposureProgram | OECF
+			| ExifVersion | DateTimeOriginal | DateTimeDigitized | MeteringMode | LightSource
+			| Flash | MakerNote | UserComment | FlashPixVersion | ColorSpace | RelatedSoundFile
+			| FocalPlaneResolutionUnit | SensingMethod | FileSource | SceneType | CFAPattern
+			| CustomRendered | ExposureMode | WhiteBalanceMode | DigitalZoomRatio
+			| SceneCaptureType | GainControl | Contrast | Saturation | Sharpness
+			| LensSpecification | LensMake | LensModel | DeviceSettingDescription
+			| SubjectDistanceRange | ImageUniqueID | GPSVersionID | GPSLatitudeRef
+			| GPSLongitudeRef | GPSAltitudeRef | GPSSatellites | GPSStatus | GPSMeasureMode
+			| GPSDOP | GPSSpeedRef | GPSTrackRef | GPSImgDirectionRef | GPSMapDatum
+			| GPSDestLatitudeRef | GPSDestLongitudeRef | GPSDestBearingRef | GPSDestDistanceRef
+			| GPSProcessingMethod | GPSDateStamp | GPSDifferential => "none",
+			_ => "",
+		}
+	}
+}
+
 impl Error for ExifError {
 	fn description(&self) -> &str {
 		match *self {
