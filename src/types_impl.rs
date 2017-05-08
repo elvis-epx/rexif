@@ -30,20 +30,20 @@ impl IfdFormat {
 	/// whole entry!
 	pub fn size(&self) -> u8
 	{
-		match self {
-			&IfdFormat::U8 => 1,
-			&IfdFormat::Ascii => 1,
-			&IfdFormat::U16 => 2,
-			&IfdFormat::U32 => 4,
-			&IfdFormat::URational => 8,
-			&IfdFormat::I8 => 1,
-			&IfdFormat::Undefined => 1,
-			&IfdFormat::I16 => 2,
-			&IfdFormat::I32 => 4,
-			&IfdFormat::IRational => 8,
-			&IfdFormat::F32 => 4,
-			&IfdFormat::F64 => 8,
-			&IfdFormat::Unknown => 1,
+		match *self {
+			IfdFormat::U8 => 1,
+			IfdFormat::Ascii => 1,
+			IfdFormat::U16 => 2,
+			IfdFormat::U32 => 4,
+			IfdFormat::URational => 8,
+			IfdFormat::I8 => 1,
+			IfdFormat::Undefined => 1,
+			IfdFormat::I16 => 2,
+			IfdFormat::I32 => 4,
+			IfdFormat::IRational => 8,
+			IfdFormat::F32 => 4,
+		    IfdFormat::F64 => 8,
+			IfdFormat::Unknown => 1,
 		}
 	}
 }
