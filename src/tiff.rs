@@ -1,64 +1,8 @@
 use super::types::*;
 use super::lowlevel::*;
-use super::ifdformat::*;
-use super::debug::*;
-use super::exif::*;
 use super::exifpost::*;
 
 type InExifResult = Result<(), ExifError>;
-
-/// Parse of raw IFD entry into EXIF data, if it is of a known type, and returns
-/// an ExifEntry object. If the tag is unknown, the enumeration is set to Unknown(tag),
-/// but the raw information of tag is still available in the ifd member.
-pub fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
-{
-	let value = tag_value_new(f);
-
-	let mut e = ExifEntry {
-			namespace: f.namespace,
-			tag: IfdTag::Unknown(f.tag),
-			value: value.clone(),
-			value_more_readable: format!("{}", value),
-			};
-
-	let (tag, format, min_count, max_count, more_readable) = tag_to_exif(f.tag);
-
-	if tag.is_unknown() {
-		return e;
-	}
-
-	// Internal assert:
-	// 1) tag must match enum
-	// 2) all types except Ascii, Undefined, Unknown must have definite length
-	// 3) Str type must not have a definite length
-	if tag.value() != f.tag ||
-		(min_count == -1 && (format != IfdFormat::Ascii &&
-				format != IfdFormat::Undefined &&
-				format != IfdFormat::Unknown)) ||
-		(min_count != -1 && format == IfdFormat::Ascii) {
-		panic!("Internal error {:x}", f.tag);
-	}
-
-	if format != f.format {
-		warning(&format!("EXIF tag {:x} {} ({}), expected format {} ({:?}), found {} ({:?})",
-			f.tag, f.tag, tag, format as u8, format, f.format as u8, f.format));
-		return e;
-	}
-
-	if min_count != -1 &&
-			((f.count as i32) < min_count ||
-			(f.count as i32) > max_count) {
-		warning(&format!("EXIF tag {:x} {} ({:?}), format {}, expected count {}..{} found {}",
-			f.tag, f.tag, tag, format as u8, min_count,
-			max_count, f.count));
-		return e;
-	}
-
-	e.tag = tag;
-	e.value_more_readable = more_readable(&e.value);
-
-	return e;
-}
 
 /// Superficial parse of IFD that can't fail
 pub fn parse_ifd(subifd: bool, le: bool, count: u16, contents: &[u8]) -> (Vec<IfdEntry>, usize)
@@ -111,14 +55,14 @@ fn parse_exif_ifd(le: bool, contents: &[u8], ioffset: usize,
 		return Err(ExifError::ExifIfdTruncated("Truncated at dir listing".to_string()));
 	}
 
-	let (mut ifd, _) = parse_ifd(true, le, count, &contents[offset..offset + ifd_length]);
+	let (ifd, _) = parse_ifd(true, le, count, &contents[offset..offset + ifd_length]);
 
-	for entry in &mut ifd {
-		if ! entry.copy_data(&contents) {
+	for mut entry in ifd {
+		if !entry.copy_data(&contents) {
 			// data is probably beyond EOF
 			continue;
 		}
-		let exif_entry = parse_exif_entry(&entry);
+		let exif_entry = entry.into_exif_entry();
 		exif_entries.push(exif_entry);
 	}
 

@@ -5,6 +5,9 @@ use std::io;
 use super::types::*;
 use super::lowlevel::*;
 use super::ifdformat::numarray_to_string;
+use super::ifdformat::tag_value_new;
+use exif::tag_to_exif;
+use debug::warning;
 
 impl IfdFormat {
 	pub fn new(n: u16) -> IfdFormat {
@@ -46,6 +49,18 @@ impl IfdFormat {
 			IfdFormat::Unknown => 1,
 		}
 	}
+}
+
+fn is_min_count_valid(min_count: i32, format: IfdFormat) -> bool {
+	match format {
+		IfdFormat::Ascii => min_count == -1,
+		IfdFormat::Undefined | IfdFormat::Unknown => true,
+		_ => min_count != -1,
+	}
+}
+
+fn is_count_within_bounds(count: i32, min: i32, max: i32) -> bool {
+	min == -1 || (count >= min && count <= max)
 }
 
 impl IfdEntry {
@@ -93,6 +108,40 @@ impl IfdEntry {
 		self.data.extend(ext_data);
 		return true;
 	}
+
+	pub fn into_exif_entry(self) -> ExifEntry {
+		let (tag, format, min_count, max_count, more_readable) = tag_to_exif(self.tag);
+		let value = tag_value_new(&self);
+		let value_more_readable = more_readable(&value);
+
+		//TODO: Remove these panics and warnings, return a Result instead.
+		if tag.value() != self.tag {
+			panic!("Internal error: tag {:x} does not match mapped value {:x}", self.tag,
+				tag.value());
+		}
+
+		if !is_min_count_valid(min_count, format) {
+			panic!("Internal error: tag {:x} has an invalid count ({}) for its format, ({:?})", self.tag, min_count, format);
+		}
+
+		if tag.is_known() && format != self.format {
+			warning(&format!("EXIF tag {:x} {} ({}), expected format {} ({:?}), found {} ({:?})",
+				self.tag, self.tag, tag, format as u8, format, self.format as u8, self.format));
+		}
+
+		if !is_count_within_bounds(self.count as i32, min_count, max_count) {
+			warning(&format!("EXIF tag {:x} {} ({:?}), format {}, expected count {}..{} found {}",
+				self.tag, self.tag, tag, format as u8, min_count,
+				max_count, self.count));
+		}
+
+		ExifEntry {
+			namespace: self.namespace,
+			tag,
+			value,
+			value_more_readable,
+		}
+	}
 }
 
 impl IfdTag {
@@ -108,6 +157,10 @@ impl IfdTag {
 			IfdTag::Unknown(_) => true,
 			_ => false,
 		}
+	}
+
+	pub fn is_known(&self) -> bool {
+		!self.is_unknown()
 	}
 }
 
