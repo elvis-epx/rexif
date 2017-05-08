@@ -8,7 +8,7 @@ use super::exifpost::*;
 type InExifResult = Result<(), ExifError>;
 
 /// Parse of raw IFD entry into EXIF data, if it is of a known type, and returns
-/// an ExifEntry object. If the tag is unknown, the enumeration is set to UnknownToMe,
+/// an ExifEntry object. If the tag is unknown, the enumeration is set to Unknown(tag),
 /// but the raw information of tag is still available in the ifd member.
 pub fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 {
@@ -17,15 +17,14 @@ pub fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 	let mut e = ExifEntry {
 			namespace: f.namespace,
 			ifd: f.clone(),
-			tag: ExifTag::UnknownToMe,
+			tag: IfdTag::Unknown(f.tag),
 			value: value.clone(),
 			value_more_readable: format!("{}", value),
 			};
 
 	let (tag, format, min_count, max_count, more_readable) = tag_to_exif(f.tag);
 
-	if tag == ExifTag::UnknownToMe {
-		// Unknown EXIF tag type
+	if tag.is_unknown() {
 		return e;
 	}
 
@@ -33,7 +32,7 @@ pub fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 	// 1) tag must match enum
 	// 2) all types except Ascii, Undefined, Unknown must have definite length
 	// 3) Str type must not have a definite length
-	if (((tag as u32) & 0xffff) as u16) != f.tag ||
+	if tag.value() != f.tag ||
 		(min_count == -1 && (format != IfdFormat::Ascii &&
 				format != IfdFormat::Undefined &&
 				format != IfdFormat::Unknown)) ||

@@ -3,7 +3,7 @@ use std::process;
 use std::io::Write;
 extern crate rexif;
 
-use rexif::ExifTag;
+use rexif::IfdTag;
 
 /// Tries to extract EXIF data from all files passed as CLI parameters,
 /// assuming that the files contain images.
@@ -20,15 +20,13 @@ fn main()
 				println!("{} {} exif entries: {}",
 					arg, exif.mime, exif.entries.len());
 				for entry in &exif.entries {
-					if entry.tag == ExifTag::UnknownToMe {
-						/*
-						println!("	{} {}",
-							entry.tag_readable, entry.value_readable);
-						*/
-					} else {
-						println!("	{}: {}",
-								entry.tag,
-								entry.value_more_readable);
+					match entry.tag {
+						IfdTag::Unknown(_) => {},
+						IfdTag::Exif(tag) => {
+							println!("	{}: {}",
+									tag,
+									entry.value_more_readable);
+						},
 					}
 				}
 			},

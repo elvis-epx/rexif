@@ -71,9 +71,6 @@ pub enum Namespace {
 /// MarkerNote tag, that contains embedded manufacturer-specific tags.
 #[derive(Copy, Clone, Debug, PartialEq, Hash)]
 pub enum ExifTag {
-	/// Tag not recognized are partially parsed. The client may still try to interpret
-	/// the tag by reading into the IfdFormat structure.
-	UnknownToMe = 0xffff,
 	ImageDescription = 0x010e,
 	Make = 0x010f,
 	Model = 0x0110,
@@ -282,7 +279,6 @@ impl fmt::Display for ExifTag {
 			ExifTag::GPSAreaInformation => "GPS area information",
 			ExifTag::GPSDateStamp => "GPS date stamp",
 			ExifTag::GPSDifferential => "GPS differential",
-			ExifTag::UnknownToMe => "Unknown to this library, or manufacturer-specific",
 		})
 	}
 }
@@ -308,6 +304,15 @@ pub enum IfdFormat {
 	F64 = 12,
 }
 
+/// Enumeration that stores the tag value of an IFD entry. If this crate recognises a tag, it will
+/// be stored as an enumeration, otherwise its raw value will be stored so that the client may
+/// interpret it themselves.
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum IfdTag {
+	Unknown(u16),
+	Exif(ExifTag),
+}
+
 /// Structure that represents a parsed EXIF tag.
 #[derive(Clone, Debug)]
 pub struct ExifEntry {
@@ -316,19 +321,19 @@ pub struct ExifEntry {
 	/// may be embedded in MarkerNote blob tag.
 	pub namespace: Namespace,
 	/// Low-level IFD entry that contains the EXIF tag. The client may look into this
-	/// structure to get tag's raw data, or to parse the tag herself if `tag` is `UnknownToMe`.
+	/// structure to get tag's raw data, or to parse the tag herself if `tag` is `Unknown`.
 	pub ifd: IfdEntry,
-	/// EXIF tag type as an enumeration. If `UnknownToMe`, the crate did not know the
+	/// EXIF tag type as an enumeration. If `Unknown(x)`, the crate did not know the
 	/// tag in detail, and parsing will be incomplete. The client may read into
-	/// `ifd` to discover more about the unparsed tag.
-	pub tag: ExifTag,
+	/// `x` to discover more about the unparsed tag.
+	pub tag: IfdTag,
 	/// EXIF tag value as an enumeration. Behaves as a "variant" value
 	pub value: TagValue,
 	/// Human-readable and "pretty" version of `value`.
 	/// Enumerations and tuples are interpreted and combined. If `value`
 	/// has a unit, it is also added.
-	/// If tag is `UnknownToMe`,
-	/// this member contains the same string as `value_readable`.
+	/// If tag is `Unknown`,
+	/// this member contains the same string as obtained by formatting `value`.
 	pub value_more_readable: String,
 }
 

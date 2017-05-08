@@ -95,8 +95,33 @@ impl IfdEntry {
 	}
 }
 
+impl IfdTag {
+	pub fn value(&self) -> u16 {
+		match *self {
+			IfdTag::Unknown(value) => value,
+			IfdTag::Exif(value) => value as u16,
+		}
+	}
+
+	pub fn is_unknown(&self) -> bool {
+		match *self {
+			IfdTag::Unknown(_) => true,
+			_ => false,
+		}
+	}
+}
+
+impl fmt::Display for IfdTag {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		match *self {
+			IfdTag::Unknown(value) => write!(f, "{}", value),
+			IfdTag::Exif(value) => write!(f, "{}", value),
+		}
+	}
+}
+
 impl ExifEntry {
-	/// Unit of the value, if applicable. If tag is `UnknownToMe`, unit will be empty.
+	/// Unit of the value, if applicable. If tag is `Unknown`, unit will be empty.
 	/// If the tag has been parsed and it is indeed unitless, it will be `"none"`.
 	///
 	/// Note that
@@ -106,43 +131,47 @@ impl ExifEntry {
 	/// combined.
 	pub fn unit(&self) -> &'static str {
 		use ExifTag::*;
-		match self.tag {
-			XResolution | YResolution => "pixels per res unit",
-			WhitePoint | PrimaryChromaticities => "CIE 1931 coordinates",
-			ReferenceBlackWhite => "RGB or YCbCr",
-			ExifOffset | GPSInfo => "byte offset",
-			ExposureTime => "s",
-			FNumber => "f-number",
-			SpectralSensitivity => "ASTM string",
-			PhotographicSensitivity => "ISO",
-			ShutterSpeedValue | ApertureValue | BrightnessValue | ExposureBiasValue
-			| MaxApertureValue => "APEX",
-			SubjectDistance | GPSAltitude => "m",
-			FocalLength | FocalLengthIn35mmFilm => "mm",
-			SubjectArea => "px",
-			FlashEnergy => "BCPS",
-			FocalPlaneXResolution | FocalPlaneYResolution => "@FocalPlaneResolutionUnit",
-			SubjectLocation => "X,Y",
-			ExposureIndex => "EI",
-			GPSLatitude | GPSLongitude | GPSDestLatitude | GPSDestLongitude => "D/M/S",
-			GPSTimeStamp => "UTC time",
-			GPSSpeed => "@GPSSpeedRef",
-			GPSTrack | GPSImgDirection | GPSDestBearing => "deg",
-			GPSDestDistance => "@GPSDestDistanceRef",
-			ImageDescription | Make | HostComputer | Model | Orientation | ResolutionUnit
-			| Software | DateTime | YCbCrCoefficients | Copyright | ExposureProgram | OECF
-			| ExifVersion | DateTimeOriginal | DateTimeDigitized | MeteringMode | LightSource
-			| Flash | MakerNote | UserComment | FlashpixVersion | ColorSpace | RelatedSoundFile
-			| FocalPlaneResolutionUnit | SensingMethod | FileSource | SceneType | CFAPattern
-			| CustomRendered | ExposureMode | WhiteBalance | DigitalZoomRatio
-			| SceneCaptureType | GainControl | Contrast | Saturation | Sharpness
-			| LensSpecification | LensMake | LensModel | DeviceSettingDescription
-			| SubjectDistanceRange | ImageUniqueID | GPSVersionID | GPSLatitudeRef
-			| GPSLongitudeRef | GPSAltitudeRef | GPSSatellites | GPSStatus | GPSMeasureMode
-			| GPSDOP | GPSSpeedRef | GPSTrackRef | GPSImgDirectionRef | GPSMapDatum
-			| GPSDestLatitudeRef | GPSDestLongitudeRef | GPSDestBearingRef | GPSDestDistanceRef
-			| GPSProcessingMethod | GPSDateStamp | GPSDifferential => "none",
-			_ => "",
+		if let IfdTag::Exif(exif_tag) = self.tag {
+			match exif_tag {
+				XResolution | YResolution => "pixels per res unit",
+				WhitePoint | PrimaryChromaticities => "CIE 1931 coordinates",
+				ReferenceBlackWhite => "RGB or YCbCr",
+				ExifOffset | GPSInfo => "byte offset",
+				ExposureTime => "s",
+				FNumber => "f-number",
+				SpectralSensitivity => "ASTM string",
+				PhotographicSensitivity => "ISO",
+				ShutterSpeedValue | ApertureValue | BrightnessValue | ExposureBiasValue
+				| MaxApertureValue => "APEX",
+				SubjectDistance | GPSAltitude => "m",
+				FocalLength | FocalLengthIn35mmFilm => "mm",
+				SubjectArea => "px",
+				FlashEnergy => "BCPS",
+				FocalPlaneXResolution | FocalPlaneYResolution => "@FocalPlaneResolutionUnit",
+				SubjectLocation => "X,Y",
+				ExposureIndex => "EI",
+				GPSLatitude | GPSLongitude | GPSDestLatitude | GPSDestLongitude => "D/M/S",
+				GPSTimeStamp => "UTC time",
+				GPSSpeed => "@GPSSpeedRef",
+				GPSTrack | GPSImgDirection | GPSDestBearing => "deg",
+				GPSDestDistance => "@GPSDestDistanceRef",
+				ImageDescription | Make | HostComputer | Model | Orientation | ResolutionUnit
+				| Software | DateTime | YCbCrCoefficients | Copyright | ExposureProgram | OECF
+				| ExifVersion | DateTimeOriginal | DateTimeDigitized | MeteringMode | LightSource
+				| Flash | MakerNote | UserComment | FlashpixVersion | ColorSpace | RelatedSoundFile
+				| FocalPlaneResolutionUnit | SensingMethod | FileSource | SceneType | CFAPattern
+				| CustomRendered | ExposureMode | WhiteBalance | DigitalZoomRatio
+				| SceneCaptureType | GainControl | Contrast | Saturation | Sharpness
+				| LensSpecification | LensMake | LensModel | DeviceSettingDescription
+				| SubjectDistanceRange | ImageUniqueID | GPSVersionID | GPSLatitudeRef
+				| GPSLongitudeRef | GPSAltitudeRef | GPSSatellites | GPSStatus | GPSMeasureMode
+				| GPSDOP | GPSSpeedRef | GPSTrackRef | GPSImgDirectionRef | GPSMapDatum
+				| GPSDestLatitudeRef | GPSDestLongitudeRef | GPSDestBearingRef | GPSDestDistanceRef
+				| GPSProcessingMethod | GPSDateStamp | GPSDifferential => "none",
+				_ => "",
+			}
+		} else {
+			""
 		}
 	}
 }
