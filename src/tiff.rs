@@ -4,9 +4,7 @@ use super::exifpost::*;
 
 type InExifResult = Result<(), ExifError>;
 
-/// Superficial parse of IFD that can't fail
-pub fn parse_ifd(subifd: bool, le: bool, count: u16, contents: &[u8]) -> (Vec<IfdEntry>, usize)
-{
+fn parse_sub_ifd(le: bool, count: u16, contents: &[u8]) -> Vec<IfdEntry> {
 	let mut entries: Vec<IfdEntry> = Vec::new();
 
 	for i in 0..count {
@@ -27,12 +25,16 @@ pub fn parse_ifd(subifd: bool, le: bool, count: u16, contents: &[u8]) -> (Vec<If
 		entries.push(entry);
 	}
 
-	let next_ifd = match subifd {
-		true => 0,
-		false => read_u32(le, &contents[count as usize * 12..]) as usize
-	};
+	entries
+}
 
-	return (entries, next_ifd);
+/// Superficial parse of IFD that can't fail
+fn parse_ifd(le: bool, count: u16, contents: &[u8]) -> (Vec<IfdEntry>, usize)
+{
+	let entries = parse_sub_ifd(le, count, contents);
+	let next_ifd = read_u32(le, &contents[count as usize * 12..]) as usize;
+
+	(entries, next_ifd)
 }
 
 /// Deep parse of IFD that grabs EXIF data from IFD0, SubIFD and GPS IFD
@@ -55,7 +57,7 @@ fn parse_exif_ifd(le: bool, contents: &[u8], ioffset: usize,
 		return Err(ExifError::ExifIfdTruncated("Truncated at dir listing".to_string()));
 	}
 
-	let (ifd, _) = parse_ifd(true, le, count, &contents[offset..offset + ifd_length]);
+	let ifd = parse_sub_ifd(le, count, &contents[offset..offset + ifd_length]);
 
 	for mut entry in ifd {
 		if !entry.copy_data(&contents) {
@@ -89,7 +91,7 @@ pub fn parse_ifds(le: bool, ifd0_offset: usize, contents: &[u8]) -> ExifEntryRes
 	let ifd_length = (count as usize) * 12 + 4;
 	offset += 2;
 
-	let (ifd, _) = parse_ifd(false, le, count, &contents[offset..offset + ifd_length]);
+	let (ifd, _) = parse_ifd(le, count, &contents[offset..offset + ifd_length]);
 
 	for entry in &ifd {
 		if entry.tag != (((ExifTag::ExifOffset as u32) & 0xffff) as u16) &&
