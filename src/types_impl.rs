@@ -6,6 +6,7 @@ use super::types::*;
 use super::lowlevel::*;
 use super::ifdformat::numarray_to_string;
 use super::ifdformat::tag_value_new;
+use exif::CountBounds;
 use exif::tag_to_exif;
 use debug::warning;
 
@@ -51,16 +52,16 @@ impl IfdFormat {
 	}
 }
 
-fn is_min_count_valid(min_count: i32, format: IfdFormat) -> bool {
+fn are_format_count_bounds_valid(format: IfdFormat, count_bounds: Option<CountBounds>) -> bool {
 	match format {
-		IfdFormat::Ascii => min_count == -1,
+		IfdFormat::Ascii => count_bounds.is_none(),
 		IfdFormat::Undefined | IfdFormat::Unknown => true,
-		_ => min_count != -1,
+		_ => count_bounds.is_some(),
 	}
 }
 
-fn is_count_within_bounds(count: i32, min: i32, max: i32) -> bool {
-	min == -1 || (count >= min && count <= max)
+fn is_count_within_bounds(count: u32, min: u32, max: u32) -> bool {
+	count >= min && count <= max
 }
 
 impl IfdEntry {
@@ -110,29 +111,38 @@ impl IfdEntry {
 	}
 
 	pub fn into_exif_entry(self) -> ExifEntry {
-		let (tag, format, min_count, max_count, more_readable) = tag_to_exif(self.tag);
+		let (tag, format, count_bounds, more_readable) = tag_to_exif(self.tag);
 		let value = tag_value_new(&self);
 		let value_more_readable = more_readable(&value);
 
-		//TODO: Remove these panics and warnings, return a Result instead.
+		//TODO: This is a code self-consistency check that should really be made into a unit test.
 		if tag.value() != self.tag {
 			panic!("Internal error: tag {:x} does not match mapped value {:x}", self.tag,
 				tag.value());
 		}
 
-		if !is_min_count_valid(min_count, format) {
-			panic!("Internal error: tag {:x} has an invalid count ({}) for its format, ({:?})", self.tag, min_count, format);
+		//TODO: This is a code self-consistency check that should really be made into a unit test.
+		if !are_format_count_bounds_valid(format, count_bounds) {
+			panic!("Internal error: tag {:x} has an invalid count ({:?}) for its format, ({:?})",
+				self.tag, count_bounds, format);
 		}
 
+		//TODO: Turn this into a failure instead of just warning in a manner that could be overlooked entirely.
 		if tag.is_known() && format != self.format {
 			warning(&format!("EXIF tag {:x} {} ({}), expected format {} ({:?}), found {} ({:?})",
 				self.tag, self.tag, tag, format as u8, format, self.format as u8, self.format));
 		}
 
-		if !is_count_within_bounds(self.count as i32, min_count, max_count) {
-			warning(&format!("EXIF tag {:x} {} ({:?}), format {}, expected count {}..{} found {}",
-				self.tag, self.tag, tag, format as u8, min_count,
-				max_count, self.count));
+		//TODO: Turn this into a failure instead of just warning in a manner that could be overlooked entirely.
+		if let Some(bounds) = count_bounds {
+			let min_count = bounds.0;
+			let max_count = bounds.1;
+
+			if !is_count_within_bounds(self.count, min_count, max_count) {
+				warning(&format!("EXIF tag {:x} {} ({:?}), format {}, expected count {}..{} found {}",
+					self.tag, self.tag, tag, format as u8, min_count,
+					max_count, self.count));
+			}
 		}
 
 		ExifEntry {
