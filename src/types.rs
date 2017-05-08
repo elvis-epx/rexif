@@ -320,9 +320,6 @@ pub struct ExifEntry {
 	/// official standard. Other namespaces accomodate manufacturer-specific tags that
 	/// may be embedded in MarkerNote blob tag.
 	pub namespace: Namespace,
-	/// Low-level IFD entry that contains the EXIF tag. The client may look into this
-	/// structure to get tag's raw data, or to parse the tag herself if `tag` is `Unknown`.
-	pub ifd: IfdEntry,
 	/// EXIF tag type as an enumeration. If `Unknown(x)`, the crate did not know the
 	/// tag in detail, and parsing will be incomplete. The client may read into
 	/// `x` to discover more about the unparsed tag.

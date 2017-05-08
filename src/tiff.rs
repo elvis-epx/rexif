@@ -16,7 +16,6 @@ pub fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
 
 	let mut e = ExifEntry {
 			namespace: f.namespace,
-			ifd: f.clone(),
 			tag: IfdTag::Unknown(f.tag),
 			value: value.clone(),
 			value_more_readable: format!("{}", value),
