@@ -379,7 +379,7 @@ pub enum TagValue {
 	/// Type that could not be parsed due to some sort of error (e.g. buffer too
 	/// short for the count and type size). Variant contains raw data, LE/BE,
 	/// format (as u16) and count.
-	Invalid(Vec<u8>, bool, u16, u32)
+	Invalid(Vec<u8>, bool, IfdFormat, u32)
 }
 
 /// Type returned by image file parsing
