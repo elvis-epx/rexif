@@ -227,8 +227,8 @@ impl fmt::Display for TagValue {
 			TagValue::URational(ref a) => write!(f, "{}", numarray_to_string(a)),
 			TagValue::IRational(ref a) => write!(f, "{}", numarray_to_string(a)),
 			TagValue::Undefined(ref a, _) => write!(f, "{}", numarray_to_string(a)),
-			TagValue::Unknown(ref _a, _) => write!(f, "<unknown blob>"),
-			TagValue::Invalid(ref _data, _le, _fmt, _cnt) => write!(f, "Invalid"),
+			TagValue::Unknown(_, _) => write!(f, "<unknown blob>"),
+			TagValue::Invalid(_, _, _, _) => write!(f, "Invalid"),
 		}
 	}
 }
