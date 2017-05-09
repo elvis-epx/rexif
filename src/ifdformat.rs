@@ -1,28 +1,22 @@
 use std::fmt::Display;
+use itertools::Itertools;
 use super::types::*;
 use super::lowlevel::*;
 
-/// generic function that prints a string representation of a vector
-pub fn numarray_to_string<T: Display>(numbers: &Vec<T>) -> String
-{
-	if numbers.len() < 1 {
-		return "".to_string();
-	} else if numbers.len() == 1 {
-		return format!("{}", &numbers[0]);
-	}
+pub trait ToCsv<T> {
+	fn to_csv(&self) -> String;
+}
 
-	let mut s = "".to_string();
-	let mut first = true;
-	for number in numbers {
-		if !first {
-			s = s + ", ";
-		}
-		first = false;
-		let s2 = format!("{}", number);
-		s = s + &s2;
+impl<T: Display> ToCsv<T> for Vec<T> {
+	fn to_csv(&self) -> String {
+		self.iter().join(", ")
 	}
+}
 
-	return s;
+impl<T: Display> ToCsv<T> for [T] {
+	fn to_csv(&self) -> String {
+		self.iter().join(", ")
+	}
 }
 
 /// Convert a IfdEntry into a tuple of TagValue
@@ -127,5 +121,38 @@ pub fn tag_value_new(f: &IfdEntry) -> TagValue
 		},
 
 		_ => TagValue::Unknown(f.data.clone(), f.le)
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn to_csv_should_comma_space_separate_elements() {
+		let vec = vec![0, 1, 2, 3];
+
+		assert_eq!("0, 1, 2, 3", vec.to_csv());
+	}
+
+	#[test]
+	fn to_csv_should_return_empty_string_for_empty_vector() {
+		let vec: Vec<u8> = vec![];
+
+		assert_eq!("", vec.to_csv());
+	}
+
+	#[test]
+	fn to_csv_should_return_a_one_element_vector_as_that_element_stringified() {
+		let vec = vec![5];
+
+		assert_eq!("5", vec.to_csv());
+	}
+
+	#[test]
+	fn to_csv_should_comma_space_separate_elements_of_a_slice() {
+		let vec = vec![0, 1, 2, 3];
+
+		assert_eq!("0, 1, 2, 3", vec[..].to_csv());
 	}
 }

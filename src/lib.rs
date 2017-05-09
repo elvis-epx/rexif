@@ -1,5 +1,5 @@
 //! RExif is a native Rust create, written to extract EXIF data from JPEG and TIFF images.
-//! 
+//!
 //! Note that it is in very early stages of development. Any sort of feedback is welcome!
 //!
 //! The crate contains a
@@ -10,10 +10,10 @@
 //! `cargo run [image file 1] [image file 2] ...`
 //!
 //!
-//! To learn to use this crate, start by the documentation of function `parse_file()`, 
+//! To learn to use this crate, start by the documentation of function `parse_file()`,
 //! and the struct `ExifData` that is returned by the parser. The rest falls more or less into place.
 //!
-//! Code sample lightly edited from src/bin.rs: 
+//! Code sample lightly edited from src/bin.rs:
 //!
 //! ```
 //! use std::error::Error;
@@ -34,6 +34,8 @@
 //!	}
 //! }
 //! ```
+
+extern crate itertools;
 
 use std::fs::File;
 use std::io::{Seek,SeekFrom,Read};

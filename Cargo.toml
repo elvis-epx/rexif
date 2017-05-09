@@ -16,3 +16,6 @@ path = "src/lib.rs"
 [[bin]]
 name = "rexiftool"
 path = "src/main.rs"
+
+[dependencies]
+itertools = "0.6.0"

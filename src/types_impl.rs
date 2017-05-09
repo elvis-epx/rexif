@@ -4,7 +4,7 @@ use std::error::Error;
 use std::io;
 use super::types::*;
 use super::lowlevel::*;
-use super::ifdformat::numarray_to_string;
+use super::ifdformat::ToCsv;
 use super::ifdformat::tag_value_new;
 use exif::CountBounds;
 use exif::tag_to_exif;
@@ -279,17 +279,17 @@ impl fmt::Display for TagValue {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match *self {
 			TagValue::Ascii(ref s) => write!(f, "{}", s),
-			TagValue::U16(ref a) => write!(f, "{}", numarray_to_string(a)),
-			TagValue::I16(ref a) => write!(f, "{}", numarray_to_string(a)),
-			TagValue::U8(ref a) => write!(f, "{}", numarray_to_string(a)),
-			TagValue::I8(ref a) => write!(f, "{}", numarray_to_string(a)),
-			TagValue::U32(ref a) => write!(f, "{}", numarray_to_string(a)),
-			TagValue::I32(ref a) => write!(f, "{}", numarray_to_string(a)),
-			TagValue::F32(ref a) => write!(f, "{}", numarray_to_string(a)),
-			TagValue::F64(ref a) => write!(f, "{}", numarray_to_string(a)),
-			TagValue::URational(ref a) => write!(f, "{}", numarray_to_string(a)),
-			TagValue::IRational(ref a) => write!(f, "{}", numarray_to_string(a)),
-			TagValue::Undefined(ref a, _) => write!(f, "{}", numarray_to_string(a)),
+			TagValue::U16(ref a) => write!(f, "{}", a.to_csv()),
+			TagValue::I16(ref a) => write!(f, "{}", a.to_csv()),
+			TagValue::U8(ref a) => write!(f, "{}", a.to_csv()),
+			TagValue::I8(ref a) => write!(f, "{}", a.to_csv()),
+			TagValue::U32(ref a) => write!(f, "{}", a.to_csv()),
+			TagValue::I32(ref a) => write!(f, "{}", a.to_csv()),
+			TagValue::F32(ref a) => write!(f, "{}", a.to_csv()),
+			TagValue::F64(ref a) => write!(f, "{}", a.to_csv()),
+			TagValue::URational(ref a) => write!(f, "{}", a.to_csv()),
+			TagValue::IRational(ref a) => write!(f, "{}", a.to_csv()),
+			TagValue::Undefined(ref a, _) => write!(f, "{}", a.to_csv()),
 			TagValue::Unknown(_, _) => write!(f, "<unknown blob>"),
 			TagValue::Invalid(_, _, _, _) => write!(f, "Invalid"),
 		}

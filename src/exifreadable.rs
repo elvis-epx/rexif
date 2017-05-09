@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use super::types::*;
 use super::ifdformat::*;
 use super::lowlevel::read_u16_array;
@@ -57,8 +58,7 @@ pub fn rational_values(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::URational(ref v) => {
-			let ve: Vec<f64> = v.iter().map(|&x| x.value()).collect();
-			numarray_to_string(&ve)
+			v.iter().map(|x| x.value()).join(", ")
 		},
 		_ => panic!(INV),
 	};
@@ -186,7 +186,7 @@ pub fn iso_speeds(e: &TagValue) -> String
 		} else if v.len() == 2 || v.len() == 3 {
 			format!("ISO {} latitude {}", v[0], v[1])
 		} else {
-			format!("Unknown ({})", numarray_to_string(&v))
+			format!("Unknown ({})", v.to_csv())
 		}
 	},
 	_ => panic!(INV),
@@ -417,7 +417,7 @@ pub fn undefined_as_u8(e: &TagValue) -> String
 {
 	let s = match e {
 	&TagValue::Undefined(ref v, _) => {
-		numarray_to_string(v)
+		v.to_csv()
 	},
 	_ => panic!(INV),
 	};
@@ -440,14 +440,13 @@ pub fn undefined_as_encoded_string(e: &TagValue) -> String
 	match e {
 	&TagValue::Undefined(ref v, le) => {
 		if v.len() < 8 {
-			format!("String w/ truncated preamble {}", numarray_to_string(v))
+			format!("String w/ truncated preamble {}", v.to_csv())
 		} else if v[0..8] == ASC[..] {
 			let v8 = &v[8..];
 			let s = String::from_utf8_lossy(v8);
 			s.into_owned()
 		} else if v[0..8] == JIS[..] {
-			let v8: Vec<u8> = v[8..].iter().map(|&x| x).collect();
-			format!("JIS string {}", numarray_to_string(&v8))
+			format!("JIS string {}", v[8..].to_csv())
 		} else if v[0..8] == UNICODE[..] {
 			let v8 = &v[8..];
 			// reinterpret as vector of u16
@@ -455,7 +454,7 @@ pub fn undefined_as_encoded_string(e: &TagValue) -> String
 			let v16 = read_u16_array(le, v16_size, v8);
 			String::from_utf16_lossy(&v16)
 		} else {
-			format!("String w/ undefined encoding {}", numarray_to_string(v))
+			format!("String w/ undefined encoding {}", v.to_csv())
 		}
 	},
 	_ => panic!(INV),
@@ -677,7 +676,7 @@ pub fn subject_area(e: &TagValue) -> String
 			2 => format!("at pixel {},{}", v[0], v[1]),
 			3 => format!("at center {},{} radius {}", v[0], v[1], v[2]),
 			4 => format!("at rectangle {},{} width {} height {}", v[0], v[1], v[2], v[3]),
-			_ => format!("Unknown ({}) ", numarray_to_string(v)),
+			_ => format!("Unknown ({}) ", v.to_csv()),
 			}
 		},
 		_ => panic!(INV),
@@ -925,3 +924,27 @@ pub fn lens_spec(e: &TagValue) -> String
 	}
 }
 
+#[cfg(test)]
+mod tests {
+	use rational::URational;
+	use super::*;
+
+	#[test]
+	fn rational_values_should_return_comma_separated_list_of_values() {
+		let tag = TagValue::URational(vec![
+			URational { numerator: 1, denominator: 3},
+			URational { numerator: 42, denominator: 7},
+		]);
+		let string = rational_values(&tag);
+
+		assert_eq!("0.3333333333333333, 6", string);
+	}
+
+	#[test]
+	fn undefined_as_encoded_string_should_return_a_jis_string_as_a_csv_list_of_byte_values() {
+		let tag = TagValue::Undefined(vec![0x4a, 0x49, 0x53, 0, 0, 0, 0, 0, 56, 32, 91, 33], true);
+		let string = undefined_as_encoded_string(&tag);
+
+		assert_eq!("JIS string 56, 32, 91, 33", string);
+	}
+}
