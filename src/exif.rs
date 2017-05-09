@@ -48,19 +48,19 @@ pub fn tag_to_exif(f: u16) -> (IfdTag, IfdFormat, Option<CountBounds>,
 
 	0x013e =>
     (IfdTag::Exif(ExifTag::WhitePoint),
-	IfdFormat::URational, Some((2, 2)), rational_values),
+	IfdFormat::URational, Some((2, 2)), rational_value),
 
 	0x013f =>
     (IfdTag::Exif(ExifTag::PrimaryChromaticities),
-	IfdFormat::URational, Some((6, 6)), rational_values),
+	IfdFormat::URational, Some((6, 6)), rational_value),
 
 	0x0211 =>
     (IfdTag::Exif(ExifTag::YCbCrCoefficients),
-	IfdFormat::URational, Some((3, 3)), rational_values),
+	IfdFormat::URational, Some((3, 3)), rational_value),
 
 	0x0214 =>
     (IfdTag::Exif(ExifTag::ReferenceBlackWhite),
-	IfdFormat::URational, Some((6, 6)), rational_values),
+	IfdFormat::URational, Some((6, 6)), rational_value),
 
 	0x8298 =>
     (IfdTag::Exif(ExifTag::Copyright), IfdFormat::Ascii, None, strpass),

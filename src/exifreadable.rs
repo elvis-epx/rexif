@@ -36,21 +36,9 @@ pub fn rational_value(e: &TagValue) -> String
 {
 	let s = match e {
 		&TagValue::URational(ref v) => {
-			format!("{}", v[0].value())
+			v.iter().map(|x| x.value()).join(", ")
 		},
 		&TagValue::IRational(ref v) => {
-			format!("{}", v[0].value())
-		},
-		_ => panic!(INV),
-	};
-
-	return s.to_string();
-}
-
-pub fn rational_values(e: &TagValue) -> String
-{
-	let s = match e {
-		&TagValue::URational(ref v) => {
 			v.iter().map(|x| x.value()).join(", ")
 		},
 		_ => panic!(INV),
@@ -919,16 +907,34 @@ pub fn lens_spec(e: &TagValue) -> String
 
 #[cfg(test)]
 mod tests {
+	use rational::IRational;
 	use rational::URational;
 	use super::*;
 
 	#[test]
-	fn rational_values_should_return_comma_separated_list_of_values() {
+	fn rational_value_should_return_a_single_element_vector_as_that_element_stringified() {
+		let tag = TagValue::URational(vec![
+			URational { numerator: 42, denominator: 7},
+		]);
+		let string = rational_value(&tag);
+
+		assert_eq!("6", string);
+
+		let tag = TagValue::IRational(vec![
+			IRational { numerator: -42, denominator: 7},
+		]);
+		let string = rational_value(&tag);
+
+		assert_eq!("-6", string);
+	}
+
+	#[test]
+	fn rational_value_should_return_comma_separated_list_of_values() {
 		let tag = TagValue::URational(vec![
 			URational { numerator: 1, denominator: 3},
 			URational { numerator: 42, denominator: 7},
 		]);
-		let string = rational_values(&tag);
+		let string = rational_value(&tag);
 
 		assert_eq!("0.3333333333333333, 6", string);
 	}
