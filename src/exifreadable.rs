@@ -5,13 +5,6 @@ use super::lowlevel::read_u16_array;
 
 static INV: &'static str = "Invalid data for this tag";
 
-/// No-op for readable value tag function. Should not be used by any EXIF tag descriptor,
-/// except for the catch-all match that handles unknown tags
-pub fn nop(e: &TagValue) -> String
-{
-	format!("{}", e)
-}
-
 /// No-op for readable value tag function. Used for ASCII string tags, or when the
 /// default readable representation of value is pretty enough.
 pub fn strpass(e: &TagValue) -> String

@@ -399,7 +399,7 @@ pub fn tag_to_exif(f: u16) -> (IfdTag, IfdFormat, Option<CountBounds>,
 
 	tag @ _ =>
     (IfdTag::Unknown(tag),
-	IfdFormat::Unknown, None, nop)
+	IfdFormat::Unknown, None, strpass)
 
 	}
 }
