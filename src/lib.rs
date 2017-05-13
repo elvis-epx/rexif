@@ -51,7 +51,7 @@ pub use self::types_impl::*;
 mod debug;
 mod image;
 use self::image::*;
-mod ifdformat;
+mod to_csv;
 mod tiff;
 use self::tiff::*;
 mod exifreadable;

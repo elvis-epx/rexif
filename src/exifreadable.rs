@@ -1,6 +1,6 @@
 use itertools::Itertools;
 use super::types::*;
-use super::ifdformat::*;
+use super::to_csv::ToCsv;
 use super::lowlevel::read_u16_array;
 
 static INV: &'static str = "Invalid data for this tag";
