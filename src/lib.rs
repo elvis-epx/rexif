@@ -37,6 +37,7 @@
 
 use std::fs::File;
 use std::io::{Seek,SeekFrom,Read};
+use std::path::Path;
 
 mod lowlevel;
 mod rational;
@@ -93,7 +94,7 @@ pub fn read_file(f: &mut File) -> ExifResult
 }
 
 /// Opens an image (passed as a file name), tries to read and parse it.
-pub fn parse_file(fname: &str) -> ExifResult
+pub fn parse_file<P: AsRef<Path>>(fname: P) -> ExifResult
 {
 	read_file(&mut try!(File::open(fname)))
 }
