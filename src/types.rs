@@ -75,7 +75,7 @@ pub enum Namespace {
 /// the `Namespace` enumeration. The namespace is 0 for standard Exif tags.
 /// The non-standard namespaces exist to accomodate future parsing of the
 /// MarkerNote tag, that contains embedded manufacturer-specific tags.
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Hash)]
 pub enum ExifTag {
 	/// Tag not recognized are partially parsed. The client may still try to interpret
 	/// the tag by reading into the IfdFormat structure.
@@ -182,6 +182,9 @@ pub enum ExifTag {
 	GPSDateStamp = 0x00001d,
 	GPSDifferential = 0x00001e,
 }
+
+impl Eq for ExifTag {}
+
 
 impl fmt::Display for ExifTag {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
