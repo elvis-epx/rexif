@@ -150,7 +150,8 @@ pub enum ExifTag {
 	LensSpecification = 0x0000a432,
 	LensMake = 0x0000a433,
 	LensModel = 0x0000a434,
-		
+	Gamma = 0xa500,
+
 	GPSVersionID = 0x00000,
 	GPSLatitudeRef = 0x00001,
 	GPSLatitude = 0x00002,
@@ -256,6 +257,7 @@ impl fmt::Display for ExifTag {
 			ExifTag::LensSpecification => "Lens specification",
 			ExifTag::LensMake => "Lens manufacturer",
 			ExifTag::LensModel => "Lens model",
+			ExifTag::Gamma => "Gamma",
 			ExifTag::DeviceSettingDescription => "Device setting description",
 			ExifTag::SubjectDistanceRange => "Subject distance range",
 			ExifTag::ImageUniqueID => "Image unique ID",

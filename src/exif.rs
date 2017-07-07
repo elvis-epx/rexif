@@ -264,6 +264,10 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, IfdFormat, i32, i32,
 	(ExifTag::LensModel, "none",
 	IfdFormat::Ascii, -1i32, -1i32, strpass),
 
+	0xa500 =>
+	(ExifTag::Gamma, "none",
+	IfdFormat::URational, 1, 1, rational_value),
+
 	// collaborate if you have any idea how to interpret this
 	0xa40b =>
 	(ExifTag::DeviceSettingDescription, "none",
