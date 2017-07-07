@@ -1,73 +1,10 @@
 use super::types::*;
-use super::types_impl::*;
 use super::lowlevel::*;
-use super::ifdformat::*;
-use super::debug::*;
-use super::exif::*;
 use super::exifpost::*;
 
 type InExifResult = Result<(), ExifError>;
 
-/// Parse of raw IFD entry into EXIF data, if it is of a known type, and returns
-/// an ExifEntry object. If the tag is unknown, the enumeration is set to UnknownToMe,
-/// but the raw information of tag is still available in the ifd member.
-pub fn parse_exif_entry(f: &IfdEntry) -> ExifEntry
-{
-	let value = tag_value_new(f);
-
-	let mut e = ExifEntry {
-			namespace: f.namespace,
-			ifd: f.clone(),
-			tag: ExifTag::UnknownToMe,
-			value: value.clone(),
-			unit: "Unknown".to_string(),
-			value_more_readable: format!("{}", value),
-			};
-
-	let (tag, unit, format, min_count, max_count, more_readable) = tag_to_exif(f.tag);
-
-	if tag == ExifTag::UnknownToMe {
-		// Unknown EXIF tag type
-		return e;
-	}
-
-	// Internal assert:
-	// 1) tag must match enum
-	// 2) all types except Ascii, Undefined, Unknown must have definite length
-	// 3) Str type must not have a definite length
-	if (((tag as u32) & 0xffff) as u16) != f.tag ||
-		(min_count == -1 && (format != IfdFormat::Ascii &&
-				format != IfdFormat::Undefined &&
-				format != IfdFormat::Unknown)) ||
-		(min_count != -1 && format == IfdFormat::Ascii) {
-		panic!("Internal error {:x}", f.tag);
-	}
-
-	if format != f.format {
-		warning(&format!("EXIF tag {:x} {} ({}), expected format {} ({:?}), found {} ({:?})",
-			f.tag, f.tag, tag, format as u8, format, f.format as u8, f.format));
-		return e;
-	}
-
-	if min_count != -1 &&
-			((f.count as i32) < min_count ||
-			(f.count as i32) > max_count) {
-		warning(&format!("EXIF tag {:x} {} ({:?}), format {}, expected count {}..{} found {}",
-			f.tag, f.tag, tag, format as u8, min_count,
-			max_count, f.count));
-		return e;
-	}
-
-	e.tag = tag;
-	e.unit = unit.to_string();
-	e.value_more_readable = more_readable(&e.value);
-
-	return e;
-}
-
-/// Superficial parse of IFD that can't fail
-pub fn parse_ifd(subifd: bool, le: bool, count: u16, contents: &[u8]) -> (Vec<IfdEntry>, usize)
-{
+fn parse_sub_ifd(le: bool, count: u16, contents: &[u8]) -> Vec<IfdEntry> {
 	let mut entries: Vec<IfdEntry> = Vec::new();
 
 	for i in 0..count {
@@ -83,18 +20,21 @@ pub fn parse_ifd(subifd: bool, le: bool, count: u16, contents: &[u8]) -> (Vec<If
 		let data = data.to_vec();
 
 		let entry = IfdEntry{namespace: Namespace::Standard,
-					tag: tag, format: ifdformat_new(format),
-					count: count, ifd_data: data, le: le,
-					ext_data: Vec::new(), data: Vec::new()};
+					tag: tag, format: IfdFormat::new(format),
+					count: count, le: le, data: data};
 		entries.push(entry);
 	}
 
-	let next_ifd = match subifd {
-		true => 0,
-		false => read_u32(le, &contents[count as usize * 12..]) as usize
-	};
+	entries
+}
 
-	return (entries, next_ifd);
+/// Superficial parse of IFD that can't fail
+fn parse_ifd(le: bool, count: u16, contents: &[u8]) -> (Vec<IfdEntry>, usize)
+{
+	let entries = parse_sub_ifd(le, count, contents);
+	let next_ifd = read_u32(le, &contents[count as usize * 12..]) as usize;
+
+	(entries, next_ifd)
 }
 
 /// Deep parse of IFD that grabs EXIF data from IFD0, SubIFD and GPS IFD
@@ -117,14 +57,14 @@ fn parse_exif_ifd(le: bool, contents: &[u8], ioffset: usize,
 		return Err(ExifError::ExifIfdTruncated("Truncated at dir listing".to_string()));
 	}
 
-	let (mut ifd, _) = parse_ifd(true, le, count, &contents[offset..offset + ifd_length]);
+	let ifd = parse_sub_ifd(le, count, &contents[offset..offset + ifd_length]);
 
-	for entry in &mut ifd {
-		if ! entry.copy_data(&contents) {
+	for mut entry in ifd {
+		if !entry.copy_data(&contents) {
 			// data is probably beyond EOF
 			continue;
 		}
-		let exif_entry = parse_exif_entry(&entry);
+		let exif_entry = entry.into_exif_entry();
 		exif_entries.push(exif_entry);
 	}
 
@@ -151,11 +91,11 @@ pub fn parse_ifds(le: bool, ifd0_offset: usize, contents: &[u8]) -> ExifEntryRes
 	let ifd_length = (count as usize) * 12 + 4;
 	offset += 2;
 
-	let (ifd, _) = parse_ifd(false, le, count, &contents[offset..offset + ifd_length]);
+	let (ifd, _) = parse_ifd(le, count, &contents[offset..offset + ifd_length]);
 
 	for entry in &ifd {
 		if entry.tag != (((ExifTag::ExifOffset as u32) & 0xffff) as u16) &&
-				entry.tag != (((ExifTag::GPSOffset as u32) & 0xffff) as u16) {
+				entry.tag != (((ExifTag::GPSInfo as u32) & 0xffff) as u16) {
 			continue;
 		}
 

@@ -41,12 +41,6 @@ pub struct IfdEntry {
 	/// Raw data as a vector of bytes. Length is sizeof(format) * count.
 	/// Depending on its size, it came from different parts of the image file.
 	pub data: Vec<u8>,
-	/// Raw data contained within the IFD structure. If count * sizeof(format) >= 4,
-	/// this item contains the offset where the actual data can be found
-	pub ifd_data: Vec<u8>,
-	/// Raw data contained outside of the IFD structure and pointed by ifd_data,
-	/// if data would not fit within the IFD structure
-	pub ext_data: Vec<u8>,
 	/// If true, integer and offset formats must be parsed from raw data as little-endian.
 	/// If false, integer and offset formats must be parsed from raw data as big-endian.
 	///
@@ -77,110 +71,107 @@ pub enum Namespace {
 /// MarkerNote tag, that contains embedded manufacturer-specific tags.
 #[derive(Copy, Clone, Debug, PartialEq, Hash)]
 pub enum ExifTag {
-	/// Tag not recognized are partially parsed. The client may still try to interpret
-	/// the tag by reading into the IfdFormat structure.
-	UnknownToMe = 0x0000ffff,
-	ImageDescription = 0x0000010e,
-	Make = 0x0000010f,
-	Model = 0x00000110,
-	Orientation = 0x00000112,
-	XResolution = 0x0000011a,
-	YResolution = 0x0000011b,
-	ResolutionUnit = 0x00000128,
-	Software = 0x00000131,
-	DateTime = 0x00000132,
-	HostComputer = 0x0000013c,
-	WhitePoint = 0x0000013e,
-	PrimaryChromaticities = 0x0000013f,
-	YCbCrCoefficients = 0x00000211,
-	ReferenceBlackWhite = 0x00000214,
-	Copyright = 0x00008298,
-	ExifOffset = 0x00008769,
-	GPSOffset = 0x00008825,
+	ImageDescription = 0x010e,
+	Make = 0x010f,
+	Model = 0x0110,
+	Orientation = 0x0112,
+	XResolution = 0x011a,
+	YResolution = 0x011b,
+	ResolutionUnit = 0x0128,
+	Software = 0x0131,
+	DateTime = 0x0132,
+	HostComputer = 0x013c,
+	WhitePoint = 0x013e,
+	PrimaryChromaticities = 0x013f,
+	YCbCrCoefficients = 0x0211,
+	ReferenceBlackWhite = 0x0214,
+	Copyright = 0x8298,
+	ExifOffset = 0x8769,
+	GPSInfo = 0x8825,
 
-	ExposureTime = 0x0000829a,
-	FNumber = 0x0000829d,
-	ExposureProgram = 0x00008822,
-	SpectralSensitivity = 0x00008824,
-	ISOSpeedRatings = 0x00008827,
-	OECF = 0x00008828,
-	ExifVersion = 0x00009000,
-	DateTimeOriginal = 0x00009003,
-	DateTimeDigitized = 0x00009004,
-	ShutterSpeedValue = 0x00009201,
-	ApertureValue = 0x00009202,
-	BrightnessValue = 0x00009203,
-	ExposureBiasValue = 0x00009204,
-	MaxApertureValue = 0x00009205,
-	SubjectDistance = 0x00009206,
-	MeteringMode = 0x00009207,
-	LightSource = 0x00009208,
-	Flash = 0x00009209,
-	FocalLength = 0x0000920a,
-	SubjectArea = 0x00009214,
-	MakerNote = 0x0000927c,
-	UserComment = 0x00009286,
-	FlashPixVersion = 0x0000a000,
-	ColorSpace = 0x0000a001,
-	RelatedSoundFile = 0x0000a004,
-	FlashEnergy = 0x0000a20b,
-	FocalPlaneXResolution = 0x0000a20e,
-	FocalPlaneYResolution = 0x0000a20f,
-	FocalPlaneResolutionUnit = 0x0000a210,
-	SubjectLocation = 0x0000a214,
-	ExposureIndex = 0x0000a215,
-	SensingMethod = 0x0000a217,
-	FileSource = 0x0000a300,
-	SceneType = 0x0000a301,
-	CFAPattern = 0x0000a302,
-	CustomRendered = 0x0000a401,
-	ExposureMode = 0x0000a402,
-	WhiteBalanceMode = 0x0000a403,
-	DigitalZoomRatio = 0x0000a404,
-	FocalLengthIn35mmFilm = 0x0000a405,
-	SceneCaptureType = 0x0000a406,
-	GainControl = 0x0000a407,
-	Contrast = 0x0000a408,
-	Saturation = 0x0000a409,
-	Sharpness = 0x0000a40a,
-	DeviceSettingDescription = 0x0000a40b,
-	SubjectDistanceRange = 0x0000a40c,
-	ImageUniqueID = 0x0000a420,
-	LensSpecification = 0x0000a432,
-	LensMake = 0x0000a433,
-	LensModel = 0x0000a434,
-		
-	GPSVersionID = 0x00000,
-	GPSLatitudeRef = 0x00001,
-	GPSLatitude = 0x00002,
-	GPSLongitudeRef = 0x00003,
-	GPSLongitude = 0x00004,
-	GPSAltitudeRef = 0x00005,
-	GPSAltitude = 0x00006,
-	GPSTimeStamp = 0x00007,
-	GPSSatellites = 0x00008,
-	GPSStatus = 0x00009,
-	GPSMeasureMode = 0x0000a,
-	GPSDOP = 0x0000b,
-	GPSSpeedRef = 0x0000c,
-	GPSSpeed = 0x0000d,
-	GPSTrackRef = 0x0000e,
-	GPSTrack = 0x0000f,
-	GPSImgDirectionRef = 0x000010,
-	GPSImgDirection = 0x000011,
-	GPSMapDatum = 0x000012,
-	GPSDestLatitudeRef = 0x000013,
-	GPSDestLatitude = 0x000014,
-	GPSDestLongitudeRef = 0x000015,
-	GPSDestLongitude = 0x000016,
-	GPSDestBearingRef = 0x000017,
-	GPSDestBearing = 0x000018,
-	GPSDestDistanceRef = 0x000019,
-	GPSDestDistance = 0x00001a,
-	GPSProcessingMethod = 0x00001b,
-	GPSAreaInformation = 0x00001c,
-	GPSDateStamp = 0x00001d,
-	GPSDifferential = 0x00001e,
+	ExposureTime = 0x829a,
+	FNumber = 0x829d,
+	ExposureProgram = 0x8822,
+	SpectralSensitivity = 0x8824,
+	PhotographicSensitivity = 0x8827,
+	OECF = 0x8828,
+	ExifVersion = 0x9000,
+	DateTimeOriginal = 0x9003,
+	DateTimeDigitized = 0x9004,
+	ShutterSpeedValue = 0x9201,
+	ApertureValue = 0x9202,
+	BrightnessValue = 0x9203,
+	ExposureBiasValue = 0x9204,
+	MaxApertureValue = 0x9205,
+	SubjectDistance = 0x9206,
+	MeteringMode = 0x9207,
+	LightSource = 0x9208,
+	Flash = 0x9209,
+	FocalLength = 0x920a,
+	SubjectArea = 0x9214,
+	MakerNote = 0x927c,
+	UserComment = 0x9286,
+	FlashpixVersion = 0xa000,
+	ColorSpace = 0xa001,
+	RelatedSoundFile = 0xa004,
+	FlashEnergy = 0xa20b,
+	FocalPlaneXResolution = 0xa20e,
+	FocalPlaneYResolution = 0xa20f,
+	FocalPlaneResolutionUnit = 0xa210,
+	SubjectLocation = 0xa214,
+	ExposureIndex = 0xa215,
+	SensingMethod = 0xa217,
+	FileSource = 0xa300,
+	SceneType = 0xa301,
+	CFAPattern = 0xa302,
+	CustomRendered = 0xa401,
+	ExposureMode = 0xa402,
+	WhiteBalance = 0xa403,
+	DigitalZoomRatio = 0xa404,
+	FocalLengthIn35mmFilm = 0xa405,
+	SceneCaptureType = 0xa406,
+	GainControl = 0xa407,
+	Contrast = 0xa408,
+	Saturation = 0xa409,
+	Sharpness = 0xa40a,
+	DeviceSettingDescription = 0xa40b,
+	SubjectDistanceRange = 0xa40c,
+	ImageUniqueID = 0xa420,
+	LensSpecification = 0xa432,
+	LensMake = 0xa433,
+	LensModel = 0xa434,
+
+	GPSVersionID = 0x0,
+	GPSLatitudeRef = 0x1,
+	GPSLatitude = 0x2,
+	GPSLongitudeRef = 0x3,
+	GPSLongitude = 0x4,
+	GPSAltitudeRef = 0x5,
+	GPSAltitude = 0x6,
+	GPSTimeStamp = 0x7,
+	GPSSatellites = 0x8,
+	GPSStatus = 0x9,
+	GPSMeasureMode = 0xa,
+	GPSDOP = 0xb,
+	GPSSpeedRef = 0xc,
+	GPSSpeed = 0xd,
+	GPSTrackRef = 0xe,
+	GPSTrack = 0xf,
+	GPSImgDirectionRef = 0x10,
+	GPSImgDirection = 0x11,
+	GPSMapDatum = 0x12,
+	GPSDestLatitudeRef = 0x13,
+	GPSDestLatitude = 0x14,
+	GPSDestLongitudeRef = 0x15,
+	GPSDestLongitude = 0x16,
+	GPSDestBearingRef = 0x17,
+	GPSDestBearing = 0x18,
+	GPSDestDistanceRef = 0x19,
+	GPSDestDistance = 0x1a,
+	GPSProcessingMethod = 0x1b,
+	GPSAreaInformation = 0x1c,
+	GPSDateStamp = 0x1d,
+	GPSDifferential = 0x1e,
 }
 
 impl Eq for ExifTag {}
@@ -205,12 +196,12 @@ impl fmt::Display for ExifTag {
 			ExifTag::ReferenceBlackWhite => "Reference Black/White",
 			ExifTag::Copyright => "Copyright",
 			ExifTag::ExifOffset => "This image has an Exif SubIFD",
-			ExifTag::GPSOffset => "This image has a GPS SubIFD",
+			ExifTag::GPSInfo => "This image has a GPS SubIFD",
 			ExifTag::ExposureTime => "Exposure time",
 			ExifTag::FNumber => "Aperture",
 			ExifTag::ExposureProgram => "Exposure program",
 			ExifTag::SpectralSensitivity => "Spectral sensitivity",
-			ExifTag::ISOSpeedRatings => "ISO speed ratings",
+			ExifTag::PhotographicSensitivity => "ISO speed ratings",
 			ExifTag::OECF => "OECF",
 			ExifTag::ExifVersion => "Exif version",
 			ExifTag::DateTimeOriginal => "Date of original image",
@@ -228,7 +219,7 @@ impl fmt::Display for ExifTag {
 			ExifTag::SubjectArea => "Subject area",
 			ExifTag::MakerNote => "Maker note",
 			ExifTag::UserComment => "User comment",
-			ExifTag::FlashPixVersion => "Flashpix version",
+			ExifTag::FlashpixVersion => "Flashpix version",
 			ExifTag::ColorSpace => "Color space",
 			ExifTag::FlashEnergy => "Flash energy",
 			ExifTag::RelatedSoundFile => "Related sound file",
@@ -243,7 +234,7 @@ impl fmt::Display for ExifTag {
 			ExifTag::CFAPattern => "CFA Pattern",
 			ExifTag::CustomRendered => "Custom rendered",
 			ExifTag::ExposureMode => "Exposure mode",
-			ExifTag::WhiteBalanceMode => "White balance mode",
+			ExifTag::WhiteBalance => "White balance mode",
 			ExifTag::DigitalZoomRatio => "Digital zoom ratio",
 			ExifTag::FocalLengthIn35mmFilm => "Equivalent focal length in 35mm",
 			ExifTag::SceneCaptureType => "Scene capture type",
@@ -288,7 +279,6 @@ impl fmt::Display for ExifTag {
 			ExifTag::GPSAreaInformation => "GPS area information",
 			ExifTag::GPSDateStamp => "GPS date stamp",
 			ExifTag::GPSDifferential => "GPS differential",
-			ExifTag::UnknownToMe => "Unknown to this library, or manufacturer-specific",
 		})
 	}
 }
@@ -314,6 +304,15 @@ pub enum IfdFormat {
 	F64 = 12,
 }
 
+/// Enumeration that stores the tag value of an IFD entry. If this crate recognises a tag, it will
+/// be stored as an enumeration, otherwise its raw value will be stored so that the client may
+/// interpret it themselves.
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum IfdTag {
+	Unknown(u16),
+	Exif(ExifTag),
+}
+
 /// Structure that represents a parsed EXIF tag.
 #[derive(Clone, Debug)]
 pub struct ExifEntry {
@@ -321,29 +320,17 @@ pub struct ExifEntry {
 	/// official standard. Other namespaces accomodate manufacturer-specific tags that
 	/// may be embedded in MarkerNote blob tag.
 	pub namespace: Namespace,
-	/// Low-level IFD entry that contains the EXIF tag. The client may look into this
-	/// structure to get tag's raw data, or to parse the tag herself if `tag` is `UnknownToMe`.
-	pub ifd: IfdEntry,
-	/// EXIF tag type as an enumeration. If `UnknownToMe`, the crate did not know the
+	/// EXIF tag type as an enumeration. If `Unknown(x)`, the crate did not know the
 	/// tag in detail, and parsing will be incomplete. The client may read into
-	/// `ifd` to discover more about the unparsed tag.
-	pub tag: ExifTag,
+	/// `x` to discover more about the unparsed tag.
+	pub tag: IfdTag,
 	/// EXIF tag value as an enumeration. Behaves as a "variant" value
 	pub value: TagValue,
-	/// Unit of the value, if applicable. If tag is `UnknownToMe`, unit will be empty.
-	/// If the tag has been parsed and it is indeed unitless, it will be `"none"`.
-	///
-	/// Note that
-	/// unit refers to the contents of `value`, not to the readable string. For example,
-	/// a GPS latitude is a triplet of rational values, so unit is D/M/S, even though
-	/// `value_more_readable` contains a single string with all three parts
-	/// combined.
-	pub unit: String,
 	/// Human-readable and "pretty" version of `value`.
 	/// Enumerations and tuples are interpreted and combined. If `value`
-	/// has a unit, it is also added. 
-	/// If tag is `UnknownToMe`,
-	/// this member contains the same string as `value_readable`.
+	/// has a unit, it is also added.
+	/// If tag is `Unknown`,
+	/// this member contains the same string as obtained by formatting `value`.
 	pub value_more_readable: String,
 }
 
@@ -363,11 +350,11 @@ pub enum TagValue {
 	I8(Vec<i8>),
 	/// Array of bytes with opaque internal structure. Used by manufacturer-specific
 	/// tags, SIG-specific tags, tags that contain Unicode (UCS-2) or Japanese (JIS)
-	/// strings (i.e. strings that are not 7-bit-clean), tags that contain 
+	/// strings (i.e. strings that are not 7-bit-clean), tags that contain
 	/// dissimilar or variant types, etc.
 	///
 	/// This item has a "little endian"
-	/// boolean parameter that reports the whole TIFF's endianness. 
+	/// boolean parameter that reports the whole TIFF's endianness.
 	/// Any sort of internal structure that is sensitive to endianess
 	/// should be interpreted accordignly to this parameter (true=LE, false=BE).
 	Undefined(Vec<u8>, bool),
@@ -385,14 +372,14 @@ pub enum TagValue {
 	/// is most likely a corrupted tag.
 	///
 	/// This variant has a "little endian"
-	/// boolean parameter that reports the whole TIFF's endianness. 
+	/// boolean parameter that reports the whole TIFF's endianness.
 	/// Any sort of internal structure that is sensitive to endianess
 	/// should be interpreted accordignly to this parameter (true=LE, false=BE).
 	Unknown(Vec<u8>, bool),
 	/// Type that could not be parsed due to some sort of error (e.g. buffer too
 	/// short for the count and type size). Variant contains raw data, LE/BE,
 	/// format (as u16) and count.
-	Invalid(Vec<u8>, bool, u16, u32)
+	Invalid(Vec<u8>, bool, IfdFormat, u32)
 }
 
 /// Type returned by image file parsing

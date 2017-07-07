@@ -1,401 +1,405 @@
 use super::types::*;
 use super::exifreadable::*;
 
+/// First u32 is the minimum bound, second is the maximum bound.
+pub type CountBounds = (u32, u32);
+
 /// Convert a numeric tag into ExifTag enumeration, and yields information about the tag. This information
 /// is used by the main body of the parser to sanity-check the tags found in image
 /// and make sure that EXIF tags have the right data types
-pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, IfdFormat, i32, i32,
+pub fn tag_to_exif(f: u16) -> (IfdTag, IfdFormat, Option<CountBounds>,
 					           fn(&TagValue) -> String)
 {
+
 	match f {
 
 	0x010e =>
-	(ExifTag::ImageDescription, "none", IfdFormat::Ascii,
-	-1i32, -1i32, strpass),
+    (IfdTag::Exif(ExifTag::ImageDescription), IfdFormat::Ascii,
+	None, strpass),
 
 	0x010f =>
-	(ExifTag::Make, "none", IfdFormat::Ascii, -1i32, -1i32, strpass),
+    (IfdTag::Exif(ExifTag::Make), IfdFormat::Ascii, None, strpass),
 
 	0x013c =>
-	(ExifTag::HostComputer, "none", IfdFormat::Ascii, -1i32, -1i32, strpass),
+    (IfdTag::Exif(ExifTag::HostComputer), IfdFormat::Ascii, None, strpass),
 
 	0x0110 =>
-	(ExifTag::Model, "none", IfdFormat::Ascii, -1i32, -1i32, strpass),
+    (IfdTag::Exif(ExifTag::Model), IfdFormat::Ascii, None, strpass),
 
 	0x0112 =>
-	(ExifTag::Orientation, "none", IfdFormat::U16, 1, 1, orientation),
+    (IfdTag::Exif(ExifTag::Orientation), IfdFormat::U16, Some((1, 1)), orientation),
 
 	0x011a =>
-	(ExifTag::XResolution, "pixels per res unit",
-	IfdFormat::URational, 1, 1, rational_value),
+    (IfdTag::Exif(ExifTag::XResolution),
+	IfdFormat::URational, Some((1, 1)), rational_value),
 
 	0x011b =>
-	(ExifTag::YResolution, "pixels per res unit",
-	IfdFormat::URational, 1, 1, rational_value),
+    (IfdTag::Exif(ExifTag::YResolution),
+	IfdFormat::URational, Some((1, 1)), rational_value),
 
 	0x0128 =>
-	(ExifTag::ResolutionUnit, "none", IfdFormat::U16, 1, 1, resolution_unit),
+    (IfdTag::Exif(ExifTag::ResolutionUnit), IfdFormat::U16, Some((1, 1)), resolution_unit),
 
 	0x0131 =>
-	(ExifTag::Software, "none", IfdFormat::Ascii, -1i32, -1i32, strpass),
+    (IfdTag::Exif(ExifTag::Software), IfdFormat::Ascii, None, strpass),
 
 	0x0132 =>
-	(ExifTag::DateTime, "none", IfdFormat::Ascii, -1i32, -1i32, strpass),
+    (IfdTag::Exif(ExifTag::DateTime), IfdFormat::Ascii, None, strpass),
 
 	0x013e =>
-	(ExifTag::WhitePoint, "CIE 1931 coordinates",
-	IfdFormat::URational, 2, 2, rational_values),
+    (IfdTag::Exif(ExifTag::WhitePoint),
+	IfdFormat::URational, Some((2, 2)), rational_value),
 
 	0x013f =>
-	(ExifTag::PrimaryChromaticities, "CIE 1931 coordinates",
-	IfdFormat::URational, 6, 6, rational_values),
+    (IfdTag::Exif(ExifTag::PrimaryChromaticities),
+	IfdFormat::URational, Some((6, 6)), rational_value),
 
 	0x0211 =>
-	(ExifTag::YCbCrCoefficients, "none",
-	IfdFormat::URational, 3, 3, rational_values),
+    (IfdTag::Exif(ExifTag::YCbCrCoefficients),
+	IfdFormat::URational, Some((3, 3)), rational_value),
 
 	0x0214 =>
-	(ExifTag::ReferenceBlackWhite, "RGB or YCbCr",
-	IfdFormat::URational, 6, 6, rational_values),
+    (IfdTag::Exif(ExifTag::ReferenceBlackWhite),
+	IfdFormat::URational, Some((6, 6)), rational_value),
 
 	0x8298 =>
-	(ExifTag::Copyright, "none", IfdFormat::Ascii, -1i32, -1i32, strpass),
+    (IfdTag::Exif(ExifTag::Copyright), IfdFormat::Ascii, None, strpass),
 
 	0x8769 =>
-	(ExifTag::ExifOffset, "byte offset",
-	IfdFormat::U32, 1, 1, strpass),
+    (IfdTag::Exif(ExifTag::ExifOffset),
+	IfdFormat::U32, Some((1, 1)), strpass),
 
 	0x8825 =>
-	(ExifTag::GPSOffset, "byte offset",
-	IfdFormat::U32, 1, 1, strpass),
+    (IfdTag::Exif(ExifTag::GPSInfo),
+	IfdFormat::U32, Some((1, 1)), strpass),
 
 	0x829a =>
-	(ExifTag::ExposureTime, "s",
-	IfdFormat::URational, 1, 1, exposure_time),
+    (IfdTag::Exif(ExifTag::ExposureTime),
+	IfdFormat::URational, Some((1, 1)), exposure_time),
 
 	0x829d =>
-	(ExifTag::FNumber, "f-number",
-	IfdFormat::URational, 1, 1, f_number),
+    (IfdTag::Exif(ExifTag::FNumber),
+	IfdFormat::URational, Some((1, 1)), f_number),
 
 	0x8822 =>
-	(ExifTag::ExposureProgram, "none",
-	IfdFormat::U16, 1, 1, exposure_program),
+    (IfdTag::Exif(ExifTag::ExposureProgram),
+	IfdFormat::U16, Some((1, 1)), exposure_program),
 
 	0x8824 =>
-	(ExifTag::SpectralSensitivity, "ASTM string",
-	IfdFormat::Ascii, -1i32, -1i32, strpass),
+    (IfdTag::Exif(ExifTag::SpectralSensitivity),
+	IfdFormat::Ascii, None, strpass),
 
 	0x8827 =>
-	(ExifTag::ISOSpeedRatings, "ISO",
-	IfdFormat::U16, 1, 3, iso_speeds),
+    (IfdTag::Exif(ExifTag::PhotographicSensitivity),
+	IfdFormat::U16, Some((1, 3)), iso_speeds),
 
 	0x8828 =>
-	(ExifTag::OECF, "none",
-	IfdFormat::Undefined, -1i32, -1i32, undefined_as_blob),
+    (IfdTag::Exif(ExifTag::OECF),
+	IfdFormat::Undefined, None, undefined_as_blob),
 
 	0x9000 =>
-	(ExifTag::ExifVersion, "none",
-	IfdFormat::Undefined, -1i32, -1i32, undefined_as_ascii),
+    (IfdTag::Exif(ExifTag::ExifVersion),
+	IfdFormat::Undefined, None, undefined_as_ascii),
 
 	0x9003 =>
-	(ExifTag::DateTimeOriginal, "none",
-	IfdFormat::Ascii, -1i32, -1i32, strpass),
+    (IfdTag::Exif(ExifTag::DateTimeOriginal),
+	IfdFormat::Ascii, None, strpass),
 
 	0x9004 =>
-	(ExifTag::DateTimeDigitized, "none",
-	IfdFormat::Ascii, -1i32, -1i32, strpass),
+    (IfdTag::Exif(ExifTag::DateTimeDigitized),
+	IfdFormat::Ascii, None, strpass),
 
 	0x9201 =>
-	(ExifTag::ShutterSpeedValue, "APEX",
-	IfdFormat::IRational, 1, 1, apex_tv),
-	
+    (IfdTag::Exif(ExifTag::ShutterSpeedValue),
+	IfdFormat::IRational, Some((1, 1)), apex_tv),
+
 	0x9202 =>
-	(ExifTag::ApertureValue, "APEX",
-	IfdFormat::URational, 1, 1, apex_av),
+    (IfdTag::Exif(ExifTag::ApertureValue),
+	IfdFormat::URational, Some((1, 1)), apex_av),
 
 	0x9203 =>
-	(ExifTag::BrightnessValue, "APEX",
-	IfdFormat::IRational, 1, 1, apex_brightness),
+    (IfdTag::Exif(ExifTag::BrightnessValue),
+	IfdFormat::IRational, Some((1, 1)), apex_brightness),
 
 	0x9204 =>
-	(ExifTag::ExposureBiasValue, "APEX",
-	IfdFormat::IRational, 1, 1, apex_ev),
+    (IfdTag::Exif(ExifTag::ExposureBiasValue),
+	IfdFormat::IRational, Some((1, 1)), apex_ev),
 
 	0x9205 =>
-	(ExifTag::MaxApertureValue,
-        "APEX", IfdFormat::URational, 1, 1, apex_av),
+    (IfdTag::Exif(ExifTag::MaxApertureValue), IfdFormat::URational, Some((1, 1)), apex_av),
 
 	0x9206 =>
-	(ExifTag::SubjectDistance, "m",
-	IfdFormat::URational, 1, 1, meters),
+    (IfdTag::Exif(ExifTag::SubjectDistance),
+	IfdFormat::URational, Some((1, 1)), meters),
 
 	0x9207 =>
-	(ExifTag::MeteringMode, "none",
-	IfdFormat::U16, 1, 1, metering_mode),
+    (IfdTag::Exif(ExifTag::MeteringMode),
+	IfdFormat::U16, Some((1, 1)), metering_mode),
 
 	0x9208 =>
-	(ExifTag::LightSource, "none",
-	IfdFormat::U16, 1, 1, light_source),
+    (IfdTag::Exif(ExifTag::LightSource),
+	IfdFormat::U16, Some((1, 1)), light_source),
 
-	0x9209 => (ExifTag::Flash, "none",
-	IfdFormat::U16, 1, 2, flash),
+	0x9209 => (IfdTag::Exif(ExifTag::Flash),
+	IfdFormat::U16, Some((1, 2)), flash),
 
 	0x920a =>
-	(ExifTag::FocalLength, "mm",
-	IfdFormat::URational, 1, 1, focal_length),
+    (IfdTag::Exif(ExifTag::FocalLength),
+	IfdFormat::URational, Some((1, 1)), focal_length),
 
 	0x9214 =>
-	(ExifTag::SubjectArea, "px",
-	IfdFormat::U16, 2, 4, subject_area),
+    (IfdTag::Exif(ExifTag::SubjectArea),
+	IfdFormat::U16, Some((2, 4)), subject_area),
 
 	0x927c =>
-	(ExifTag::MakerNote, "none",
-	IfdFormat::Undefined, -1i32, -1i32, undefined_as_blob),
+    (IfdTag::Exif(ExifTag::MakerNote),
+	IfdFormat::Undefined, None, undefined_as_blob),
 
 	0x9286 =>
-	(ExifTag::UserComment, "none",
-	IfdFormat::Undefined, -1i32, -1i32, undefined_as_encoded_string),
+    (IfdTag::Exif(ExifTag::UserComment),
+	IfdFormat::Undefined, None, undefined_as_encoded_string),
 
 	0xa000 =>
-	(ExifTag::FlashPixVersion, "none",
-	IfdFormat::Undefined, -1i32, -1i32, undefined_as_ascii),
+    (IfdTag::Exif(ExifTag::FlashpixVersion),
+	IfdFormat::Undefined, None, undefined_as_ascii),
 
 	0xa001 =>
-	(ExifTag::ColorSpace, "none",
-	IfdFormat::U16, 1, 1, color_space),
+    (IfdTag::Exif(ExifTag::ColorSpace),
+	IfdFormat::U16, Some((1, 1)), color_space),
 
 	0xa004 =>
-	(ExifTag::RelatedSoundFile, "none",
-	IfdFormat::Ascii, -1i32, -1i32, strpass),
+    (IfdTag::Exif(ExifTag::RelatedSoundFile),
+	IfdFormat::Ascii, None, strpass),
 
-	0xa20b => (ExifTag::FlashEnergy, "BCPS",
-	IfdFormat::URational, 1, 1, flash_energy),
+	0xa20b => (IfdTag::Exif(ExifTag::FlashEnergy),
+	IfdFormat::URational, Some((1, 1)), flash_energy),
 
 	0xa20e =>
-	(ExifTag::FocalPlaneXResolution, "@FocalPlaneResolutionUnit",
-	IfdFormat::URational, 1, 1, rational_value),
+    (IfdTag::Exif(ExifTag::FocalPlaneXResolution),
+	IfdFormat::URational, Some((1, 1)), rational_value),
 
 	0xa20f =>
-	(ExifTag::FocalPlaneYResolution, "@FocalPlaneResolutionUnit",
-	IfdFormat::URational, 1, 1, rational_value),
+    (IfdTag::Exif(ExifTag::FocalPlaneYResolution),
+	IfdFormat::URational, Some((1, 1)), rational_value),
 
 	0xa210 =>
-	(ExifTag::FocalPlaneResolutionUnit, "none",
-	IfdFormat::U16, 1, 1, resolution_unit),
+    (IfdTag::Exif(ExifTag::FocalPlaneResolutionUnit),
+	IfdFormat::U16, Some((1, 1)), resolution_unit),
 
 	0xa214 =>
-	(ExifTag::SubjectLocation, "X,Y",
-	IfdFormat::U16, 2, 2, subject_location),
+    (IfdTag::Exif(ExifTag::SubjectLocation),
+	IfdFormat::U16, Some((2, 2)), subject_location),
 
 	// TODO check if rational as decimal value is the best for this one
 	0xa215 =>
-	(ExifTag::ExposureIndex, "EI",
-	IfdFormat::URational, 1, 1, rational_value),
+    (IfdTag::Exif(ExifTag::ExposureIndex),
+	IfdFormat::URational, Some((1, 1)), rational_value),
 
 	0xa217 =>
-	(ExifTag::SensingMethod, "none",
-	IfdFormat::U16, 1, 1, sensing_method),
+    (IfdTag::Exif(ExifTag::SensingMethod),
+	IfdFormat::U16, Some((1, 1)), sensing_method),
 
 	0xa300 =>
-	(ExifTag::FileSource, "none",
-	IfdFormat::Undefined, 1, 1, file_source),
+    (IfdTag::Exif(ExifTag::FileSource),
+	IfdFormat::Undefined, Some((1, 1)), file_source),
 
 	0xa301 =>
-	(ExifTag::SceneType, "none",
-	IfdFormat::Undefined, 1, 1, scene_type),
+    (IfdTag::Exif(ExifTag::SceneType),
+	IfdFormat::Undefined, Some((1, 1)), scene_type),
 
 	0xa302 =>
-	(ExifTag::CFAPattern, "none",
-	IfdFormat::Undefined, -1i32, -1i32, undefined_as_u8),
+    (IfdTag::Exif(ExifTag::CFAPattern),
+	IfdFormat::Undefined, None, undefined_as_u8),
 
 	0xa401 =>
-	(ExifTag::CustomRendered, "none",
-	IfdFormat::U16, 1, 1, custom_rendered),
+    (IfdTag::Exif(ExifTag::CustomRendered),
+	IfdFormat::U16, Some((1, 1)), custom_rendered),
 
 	0xa402 =>
-	(ExifTag::ExposureMode, "none",
-	IfdFormat::U16, 1, 1, exposure_mode),
+    (IfdTag::Exif(ExifTag::ExposureMode),
+	IfdFormat::U16, Some((1, 1)), exposure_mode),
 
 	0xa403 =>
-	(ExifTag::WhiteBalanceMode, "none",
-	IfdFormat::U16, 1, 1, white_balance_mode),
+    (IfdTag::Exif(ExifTag::WhiteBalance),
+	IfdFormat::U16, Some((1, 1)), white_balance_mode),
 
 	0xa404 =>
-	(ExifTag::DigitalZoomRatio, "none",
-	IfdFormat::URational, 1, 1, rational_value),
+    (IfdTag::Exif(ExifTag::DigitalZoomRatio),
+	IfdFormat::URational, Some((1, 1)), rational_value),
 
 	0xa405 =>
-	(ExifTag::FocalLengthIn35mmFilm, "mm",
-	IfdFormat::U16, 1, 1, focal_length_35),
+    (IfdTag::Exif(ExifTag::FocalLengthIn35mmFilm),
+	IfdFormat::U16, Some((1, 1)), focal_length_35),
 
 	0xa406 =>
-	(ExifTag::SceneCaptureType, "none",
-	IfdFormat::U16, 1, 1, scene_capture_type),
+    (IfdTag::Exif(ExifTag::SceneCaptureType),
+	IfdFormat::U16, Some((1, 1)), scene_capture_type),
 
 	0xa407 =>
-	(ExifTag::GainControl, "none",
-	IfdFormat::U16, 1, 1, gain_control),
+    (IfdTag::Exif(ExifTag::GainControl),
+	IfdFormat::U16, Some((1, 1)), gain_control),
 
 	0xa408 =>
-	(ExifTag::Contrast, "none",
-	IfdFormat::U16, 1, 1, contrast),
+    (IfdTag::Exif(ExifTag::Contrast),
+	IfdFormat::U16, Some((1, 1)), contrast),
 
 	0xa409 =>
-	(ExifTag::Saturation, "none",
-	IfdFormat::U16, 1, 1, saturation),
+    (IfdTag::Exif(ExifTag::Saturation),
+	IfdFormat::U16, Some((1, 1)), saturation),
 
 	0xa40a =>
-	(ExifTag::Sharpness, "none",
-	IfdFormat::U16, 1, 1, sharpness),
+    (IfdTag::Exif(ExifTag::Sharpness),
+	IfdFormat::U16, Some((1, 1)), sharpness),
 
 	0xa432 =>
-	(ExifTag::LensSpecification, "none",
-	IfdFormat::URational, 4, 4, lens_spec),
+    (IfdTag::Exif(ExifTag::LensSpecification),
+	IfdFormat::URational, Some((4, 4)), lens_spec),
 
 	0xa433 =>
-	(ExifTag::LensMake, "none",
-	IfdFormat::Ascii, -1i32, -1i32, strpass),
+    (IfdTag::Exif(ExifTag::LensMake),
+	IfdFormat::Ascii, None, strpass),
 
 	0xa434 =>
-	(ExifTag::LensModel, "none",
-	IfdFormat::Ascii, -1i32, -1i32, strpass),
+    (IfdTag::Exif(ExifTag::LensModel),
+	IfdFormat::Ascii, None, strpass),
 
 	// collaborate if you have any idea how to interpret this
 	0xa40b =>
-	(ExifTag::DeviceSettingDescription, "none",
-	IfdFormat::Undefined, -1i32, -1i32, undefined_as_blob),
+    (IfdTag::Exif(ExifTag::DeviceSettingDescription),
+	IfdFormat::Undefined, None, undefined_as_blob),
 
 	0xa40c =>
-	(ExifTag::SubjectDistanceRange, "none",
-	IfdFormat::U16, 1, 1, subject_distance_range),
+    (IfdTag::Exif(ExifTag::SubjectDistanceRange),
+	IfdFormat::U16, Some((1, 1)), subject_distance_range),
 
 	0xa420 =>
-	(ExifTag::ImageUniqueID, "none",
-	IfdFormat::Ascii, -1i32, -1i32, strpass),
-		
+    (IfdTag::Exif(ExifTag::ImageUniqueID),
+	IfdFormat::Ascii, None, strpass),
+
 	0x0 =>
-	(ExifTag::GPSVersionID, "none",
-	IfdFormat::U8, 4, 4, strpass),
+    (IfdTag::Exif(ExifTag::GPSVersionID),
+	IfdFormat::U8, Some((4, 4)), strpass),
 
 	0x1 =>
-	(ExifTag::GPSLatitudeRef, "none",
-	IfdFormat::Ascii, -1i32, -1i32, strpass),
+    (IfdTag::Exif(ExifTag::GPSLatitudeRef),
+	IfdFormat::Ascii, None, strpass),
 
 	0x2 =>
-	(ExifTag::GPSLatitude, "D/M/S",
-	IfdFormat::URational, 3, 3, dms),
+    (IfdTag::Exif(ExifTag::GPSLatitude),
+	IfdFormat::URational, Some((3, 3)), dms),
 
 	0x3 =>
-	(ExifTag::GPSLongitudeRef, "none",
-	IfdFormat::Ascii, -1i32, -1i32, strpass),
+    (IfdTag::Exif(ExifTag::GPSLongitudeRef),
+	IfdFormat::Ascii, None, strpass),
 
 	0x4 =>
-	(ExifTag::GPSLongitude, "D/M/S",
-	IfdFormat::URational, 3, 3, dms),
+    (IfdTag::Exif(ExifTag::GPSLongitude),
+	IfdFormat::URational, Some((3, 3)), dms),
 
 	0x5 =>
-	(ExifTag::GPSAltitudeRef, "none",
-	IfdFormat::U8, 1, 1, gps_alt_ref),
+    (IfdTag::Exif(ExifTag::GPSAltitudeRef),
+	IfdFormat::U8, Some((1, 1)), gps_alt_ref),
 
 	0x6 =>
-	(ExifTag::GPSAltitude, "m",
-	IfdFormat::URational, 1, 1, meters),
+    (IfdTag::Exif(ExifTag::GPSAltitude),
+	IfdFormat::URational, Some((1, 1)), meters),
 
 	0x7 =>
-	(ExifTag::GPSTimeStamp, "UTC time",
-	IfdFormat::URational, 3, 3, gpstimestamp),
+    (IfdTag::Exif(ExifTag::GPSTimeStamp),
+	IfdFormat::URational, Some((3, 3)), gpstimestamp),
 
-	0x8 => (ExifTag::GPSSatellites, "none",
-	IfdFormat::Ascii, -1i32, -1i32, strpass),
+	0x8 => (IfdTag::Exif(ExifTag::GPSSatellites),
+	IfdFormat::Ascii, None, strpass),
 
-	0x9 => (ExifTag::GPSStatus, "none",
-	IfdFormat::Ascii, -1i32, -1i32, gpsstatus),
+	0x9 => (IfdTag::Exif(ExifTag::GPSStatus),
+	IfdFormat::Ascii, None, gpsstatus),
 
-	0xa => (ExifTag::GPSMeasureMode, "none",
-	IfdFormat::Ascii, -1i32, -1i32, gpsmeasuremode),
+	0xa => (IfdTag::Exif(ExifTag::GPSMeasureMode),
+	IfdFormat::Ascii, None, gpsmeasuremode),
 
 	0xb =>
-	(ExifTag::GPSDOP, "none",
-	IfdFormat::URational, 1, 1, rational_value),
+    (IfdTag::Exif(ExifTag::GPSDOP),
+	IfdFormat::URational, Some((1, 1)), rational_value),
 
 	0xc =>
-	(ExifTag::GPSSpeedRef, "none",
-	IfdFormat::Ascii, -1i32, -1i32, gpsspeedref),
+    (IfdTag::Exif(ExifTag::GPSSpeedRef),
+	IfdFormat::Ascii, None, gpsspeedref),
 
 	0xd =>
-	(ExifTag::GPSSpeed, "@GPSSpeedRef",
-	IfdFormat::URational, 1, 1, gpsspeed),
+    (IfdTag::Exif(ExifTag::GPSSpeed),
+	IfdFormat::URational, Some((1, 1)), gpsspeed),
 
 	0xe =>
-	(ExifTag::GPSTrackRef, "none",
-	IfdFormat::Ascii, -1i32, -1i32, gpsbearingref),
+    (IfdTag::Exif(ExifTag::GPSTrackRef),
+	IfdFormat::Ascii, None, gpsbearingref),
 
 	0xf =>
-	(ExifTag::GPSTrack, "deg",
-	IfdFormat::URational, 1, 1, gpsbearing),
+    (IfdTag::Exif(ExifTag::GPSTrack),
+	IfdFormat::URational, Some((1, 1)), gpsbearing),
 
 	0x10 =>
-	(ExifTag::GPSImgDirectionRef, "none",
-	IfdFormat::Ascii, -1i32, -1i32, gpsbearingref),
+    (IfdTag::Exif(ExifTag::GPSImgDirectionRef),
+	IfdFormat::Ascii, None, gpsbearingref),
 
 	0x11 =>
-	(ExifTag::GPSImgDirection, "deg",
-	IfdFormat::URational, 1, 1, gpsbearing),
+    (IfdTag::Exif(ExifTag::GPSImgDirection),
+	IfdFormat::URational, Some((1, 1)), gpsbearing),
 
 	0x12 =>
-	(ExifTag::GPSMapDatum, "none",
-	IfdFormat::Ascii, -1i32, -1i32, strpass),
+    (IfdTag::Exif(ExifTag::GPSMapDatum),
+	IfdFormat::Ascii, None, strpass),
 
 	0x13 =>
-	(ExifTag::GPSDestLatitudeRef, "none",
-	IfdFormat::Ascii, -1i32, -1i32, strpass),
+    (IfdTag::Exif(ExifTag::GPSDestLatitudeRef),
+	IfdFormat::Ascii, None, strpass),
 
 	0x14 =>
-	(ExifTag::GPSDestLatitude, "D/M/S",
-	IfdFormat::URational, 3, 3, dms),
+    (IfdTag::Exif(ExifTag::GPSDestLatitude),
+	IfdFormat::URational, Some((3, 3)), dms),
 
 	0x15 =>
-	(ExifTag::GPSDestLongitudeRef, "none",
-	IfdFormat::Ascii, -1i32, -1i32, strpass),
+    (IfdTag::Exif(ExifTag::GPSDestLongitudeRef),
+	IfdFormat::Ascii, None, strpass),
 
 	0x16 =>
-	(ExifTag::GPSDestLongitude, "D/M/S",
-	IfdFormat::URational, 3, 3, dms),
+    (IfdTag::Exif(ExifTag::GPSDestLongitude),
+	IfdFormat::URational, Some((3, 3)), dms),
 
 	0x17 =>
-	(ExifTag::GPSDestBearingRef, "none",
-	IfdFormat::Ascii, -1i32, -1i32, gpsbearingref),
+    (IfdTag::Exif(ExifTag::GPSDestBearingRef),
+	IfdFormat::Ascii, None, gpsbearingref),
 
 	0x18 =>
-	(ExifTag::GPSDestBearing, "deg",
-	IfdFormat::URational, 1, 1, gpsbearing),
+    (IfdTag::Exif(ExifTag::GPSDestBearing),
+	IfdFormat::URational, Some((1, 1)), gpsbearing),
 
 	0x19 =>
-	(ExifTag::GPSDestDistanceRef, "none",
-	IfdFormat::Ascii, -1i32, -1i32, gpsdestdistanceref),
+    (IfdTag::Exif(ExifTag::GPSDestDistanceRef),
+	IfdFormat::Ascii, None, gpsdestdistanceref),
 
 	0x1a =>
-	(ExifTag::GPSDestDistance, "@GPSDestDistanceRef",
-	IfdFormat::URational, 1, 1, gpsdestdistance),
+    (IfdTag::Exif(ExifTag::GPSDestDistance),
+	IfdFormat::URational, Some((1, 1)), gpsdestdistance),
 
 	0x1b =>
-	(ExifTag::GPSProcessingMethod, "none",
-	IfdFormat::Undefined, -1i32, -1i32, undefined_as_encoded_string),
+    (IfdTag::Exif(ExifTag::GPSProcessingMethod),
+	IfdFormat::Undefined, None, undefined_as_encoded_string),
 
-	0x1c => (ExifTag::GPSAreaInformation,
-	"none", IfdFormat::Undefined, -1i32, -1i32, undefined_as_encoded_string),
+	0x1c =>
+    (IfdTag::Exif(ExifTag::GPSAreaInformation),
+	IfdFormat::Undefined, None, undefined_as_encoded_string),
 
 	0x1d =>
-	(ExifTag::GPSDateStamp, "none",
-	IfdFormat::Ascii, -1i32, -1i32, strpass),
+    (IfdTag::Exif(ExifTag::GPSDateStamp),
+	IfdFormat::Ascii, None, strpass),
 
 	0x1e =>
-	(ExifTag::GPSDifferential, "none",
-	IfdFormat::U16, 1, 1, gpsdiff),
+    (IfdTag::Exif(ExifTag::GPSDifferential),
+	IfdFormat::U16, Some((1, 1)), gpsdiff),
 
-	_ =>
-	(ExifTag::UnknownToMe, "Unknown unit",
-	IfdFormat::Unknown, -1i32, -1i32, nop)
+	tag @ _ =>
+    (IfdTag::Unknown(tag),
+	IfdFormat::Unknown, None, strpass)
 
 	}
 }
