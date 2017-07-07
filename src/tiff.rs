@@ -189,12 +189,12 @@ pub fn parse_tiff(contents: &[u8]) -> ExifEntryResult
 
 	if contents.len() < 8 {
 		return Err(ExifError::TiffTruncated);
-	} else if contents[0] == ('I' as u8) &&
-			contents[1] == ('I' as u8) &&
+	} else if contents[0] == b'I' &&
+			contents[1] == b'I' &&
 			contents[2] == 42 && contents[3] == 0 {
 		/* TIFF little-endian */
 		le = true;
-	} else if contents[0] == ('M' as u8) && contents[1] == ('M' as u8) &&
+	} else if contents[0] == b'M' && contents[1] == b'M' &&
 			contents[2] == 0 && contents[3] == 42 {
 		/* TIFF big-endian */
 	} else {

@@ -6,7 +6,7 @@ pub fn warning(msg: &str) {
 	match io::stderr().write(msg.as_bytes()) {
 		_ => (),
 	};
-	match io::stderr().write("\n".as_bytes()) {
+	match io::stderr().write(b"\n") {
 		_ => (),
 	};
 }
