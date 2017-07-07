@@ -9,24 +9,24 @@ pub fn detect_type(contents: &[u8]) -> &str
 
 	if contents[0] == 0xff && contents[1] == 0xd8 &&
 			contents[2] == 0xff && // contents[3] == 0xe0 &&
-			contents[6] == ('J' as u8) && contents[7] == ('F' as u8) &&
-			contents[8] == ('I' as u8) && contents[9] == ('F' as u8) &&
+			contents[6] == b'J' && contents[7] == b'F' &&
+			contents[8] == b'I' && contents[9] == b'F' &&
 			contents[10] == 0 {
 		return "image/jpeg";
 	}
 	if contents[0] == 0xff && contents[1] == 0xd8 &&
 			contents[2] == 0xff && // contents[3] == 0xe0 &&
-			contents[6] == ('E' as u8) && contents[7] == ('x' as u8) &&
-			contents[8] == ('i' as u8) && contents[9] == ('f' as u8) &&
+			contents[6] == b'E' && contents[7] == b'x' &&
+			contents[8] == b'i' && contents[9] == b'f' &&
 			contents[10] == 0 {
 		return "image/jpeg";
 	}
-	if contents[0] == ('I' as u8) && contents[1] == ('I' as u8) &&
+	if contents[0] == b'I' && contents[1] == b'I' &&
 			contents[2] == 42 && contents[3] == 0 {
 		/* TIFF little-endian */
 		return "image/tiff";
 	}
-	if contents[0] == ('M' as u8) && contents[1] == ('M' as u8) &&
+	if contents[0] == b'M' && contents[1] == b'M' &&
 			contents[2] == 0 && contents[3] == 42 {
 		/* TIFF big-endian */
 		return "image/tiff";
@@ -68,7 +68,7 @@ pub fn find_embedded_tiff_in_jpeg(contents: &[u8])
 			}
 
 			if contents[offset + 2 .. offset + 8]
-				!= [('E' as u8), ('x' as u8), ('i' as u8), ('f' as u8), 0, 0] {
+				!= [b'E', b'x', b'i', b'f', 0, 0] {
 				return Err(ExifError::JpegWithoutExif("EXIF preamble unrecognized".to_string()))
 			}
 
