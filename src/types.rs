@@ -104,6 +104,7 @@ pub enum ExifTag {
 	SpectralSensitivity = 0x00008824,
 	ISOSpeedRatings = 0x00008827,
 	OECF = 0x00008828,
+	SensitivityType = 0x00008830,
 	ExifVersion = 0x00009000,
 	DateTimeOriginal = 0x00009003,
 	DateTimeDigitized = 0x00009004,
@@ -149,7 +150,8 @@ pub enum ExifTag {
 	LensSpecification = 0x0000a432,
 	LensMake = 0x0000a433,
 	LensModel = 0x0000a434,
-		
+	Gamma = 0xa500,
+
 	GPSVersionID = 0x00000,
 	GPSLatitudeRef = 0x00001,
 	GPSLatitude = 0x00002,
@@ -207,6 +209,7 @@ impl fmt::Display for ExifTag {
 			ExifTag::ExifOffset => "This image has an Exif SubIFD",
 			ExifTag::GPSOffset => "This image has a GPS SubIFD",
 			ExifTag::ExposureTime => "Exposure time",
+			ExifTag::SensitivityType => "Sensitivity type",
 			ExifTag::FNumber => "Aperture",
 			ExifTag::ExposureProgram => "Exposure program",
 			ExifTag::SpectralSensitivity => "Spectral sensitivity",
@@ -254,6 +257,7 @@ impl fmt::Display for ExifTag {
 			ExifTag::LensSpecification => "Lens specification",
 			ExifTag::LensMake => "Lens manufacturer",
 			ExifTag::LensModel => "Lens model",
+			ExifTag::Gamma => "Gamma",
 			ExifTag::DeviceSettingDescription => "Device setting description",
 			ExifTag::SubjectDistanceRange => "Subject distance range",
 			ExifTag::ImageUniqueID => "Image unique ID",

@@ -85,6 +85,10 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, IfdFormat, i32, i32,
 	(ExifTag::SpectralSensitivity, "ASTM string",
 	IfdFormat::Ascii, -1i32, -1i32, strpass),
 
+	0x8830 =>
+	(ExifTag::SensitivityType, "none",
+	IfdFormat::U16, 1, 1, sensitivity_type),
+
 	0x8827 =>
 	(ExifTag::ISOSpeedRatings, "ISO",
 	IfdFormat::U16, 1, 3, iso_speeds),
@@ -259,6 +263,10 @@ pub fn tag_to_exif(f: u16) -> (ExifTag, &'static str, IfdFormat, i32, i32,
 	0xa434 =>
 	(ExifTag::LensModel, "none",
 	IfdFormat::Ascii, -1i32, -1i32, strpass),
+
+	0xa500 =>
+	(ExifTag::Gamma, "none",
+	IfdFormat::URational, 1, 1, rational_value),
 
 	// collaborate if you have any idea how to interpret this
 	0xa40b =>
