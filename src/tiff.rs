@@ -89,10 +89,7 @@ pub fn parse_ifd(subifd: bool, le: bool, count: u16, contents: &[u8]) -> (Vec<If
 		entries.push(entry);
 	}
 
-	let next_ifd = match subifd {
-		true => 0,
-		false => read_u32(le, &contents[count as usize * 12..]) as usize
-	};
+	let next_ifd = if subifd {0} else {read_u32(le, &contents[count as usize * 12..]) as usize};
 
 	return (entries, next_ifd);
 }
@@ -120,11 +117,11 @@ fn parse_exif_ifd(le: bool, contents: &[u8], ioffset: usize,
 	let (mut ifd, _) = parse_ifd(true, le, count, &contents[offset..offset + ifd_length]);
 
 	for entry in &mut ifd {
-		if ! entry.copy_data(&contents) {
+		if ! entry.copy_data(contents) {
 			// data is probably beyond EOF
 			continue;
 		}
-		let exif_entry = parse_exif_entry(&entry);
+		let exif_entry = parse_exif_entry(entry);
 		exif_entries.push(exif_entry);
 	}
 
@@ -139,7 +136,7 @@ pub fn parse_ifds(le: bool, ifd0_offset: usize, contents: &[u8]) -> ExifEntryRes
 
 	// fills exif_entries with data from IFD0
 
-	match parse_exif_ifd(le, &contents, offset, &mut exif_entries) {
+	match parse_exif_ifd(le, contents, offset, &mut exif_entries) {
 		Ok(_) => true,
 		Err(e) => return Err(e),
 	};
@@ -165,7 +162,7 @@ pub fn parse_ifds(le: bool, ifd0_offset: usize, contents: &[u8]) -> ExifEntryRes
 			return Err(ExifError::ExifIfdTruncated("Exif SubIFD goes past EOF".to_string()));
 		}
 
-		match parse_exif_ifd(le, &contents, exif_offset, &mut exif_entries) {
+		match parse_exif_ifd(le, contents, exif_offset, &mut exif_entries) {
 			Ok(_) => true,
 			Err(e) => return Err(e),
 		};

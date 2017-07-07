@@ -70,7 +70,7 @@ pub fn parse_buffer(contents: &[u8]) -> ExifResult
 			try!(parse_tiff(&contents[offset .. offset + size]))
 		},
 		_ => {
-			try!(parse_tiff(&contents))
+			try!(parse_tiff(contents))
 		}
 	};
 
