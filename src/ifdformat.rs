@@ -3,7 +3,7 @@ use super::types::*;
 use super::lowlevel::*;
 
 /// generic function that prints a string representation of a vector
-pub fn numarray_to_string<T: Display>(numbers: &Vec<T>) -> String
+pub fn numarray_to_string<T: Display>(numbers: &[T]) -> String
 {
 	if numbers.len() < 1 {
 		return "".to_string();

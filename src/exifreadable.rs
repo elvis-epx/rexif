@@ -446,7 +446,7 @@ pub fn undefined_as_encoded_string(e: &TagValue) -> String
 			let s = String::from_utf8_lossy(v8);
 			s.into_owned()
 		} else if v[0..8] == JIS[..] {
-			let v8: Vec<u8> = v[8..].iter().map(|&x| x).collect();
+			let v8: Vec<u8> = v[8..].to_owned();
 			format!("JIS string {}", numarray_to_string(&v8))
 		} else if v[0..8] == UNICODE[..] {
 			let v8 = &v[8..];
@@ -633,7 +633,7 @@ pub fn flash(e: &TagValue) -> String
 			let mut b6 = "";
 
 			if (n & (1 << 5)) > 0 {
-				return format!("Does not have a flash.");
+				return "Does not have a flash.".to_owned();
 			}
 
 			if (n & 1) > 0 {
