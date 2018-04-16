@@ -925,13 +925,13 @@ pub fn lens_spec(e: &TagValue) -> String
 		let a1 = v[3].value();
 
 		if v[0] == v[1] {
-			if a0 == a0 {
+			if a0.is_finite() {
 				format!("{} mm f/{:.1}", f0, a0)
 			} else {
 				format!("{} mm f/unknown", f0)
 			}
 		} else {
-			if a0 == a0 && a1 == a1 {
+			if a0.is_finite() && a1.is_finite() {
 				format!("{}-{} mm f/{:.1}-{:.1}", f0, f1, a0, a1)
 			} else {
 				format!("{}-{} mm f/unknown", f0, f1)
