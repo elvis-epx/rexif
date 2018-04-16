@@ -65,12 +65,12 @@ pub fn parse_buffer(contents: &[u8]) -> ExifResult
 	let d = match mime {
 		"" => return Err(ExifError::FileTypeUnknown),
 		"image/jpeg" => {
-			let (offset, size) = try!(find_embedded_tiff_in_jpeg(contents));
+			let (offset, size) = find_embedded_tiff_in_jpeg(contents)?;
 			// println!("Offset {} size {}", offset, size);
-			try!(parse_tiff(&contents[offset .. offset + size]))
+			parse_tiff(&contents[offset .. offset + size])?
 		},
 		_ => {
-			try!(parse_tiff(contents))
+			parse_tiff(contents)?
 		}
 	};
 
@@ -83,18 +83,18 @@ pub fn parse_buffer(contents: &[u8]) -> ExifResult
 /// Try to read and parse an open file that is expected to contain an image
 pub fn read_file(f: &mut File) -> ExifResult
 {
-	try!(f.seek(SeekFrom::Start(0)));
+	f.seek(SeekFrom::Start(0))?;
 
 	// TODO: should read only the relevant parts of a file,
 	// and pass a StringIO-like object instead of a Vec buffer
 
 	let mut contents: Vec<u8> = Vec::new();
-	try!(f.read_to_end(&mut contents));
+	f.read_to_end(&mut contents)?;
 	parse_buffer(&contents)
 }
 
 /// Opens an image (passed as a file name), tries to read and parse it.
 pub fn parse_file<P: AsRef<Path>>(fname: P) -> ExifResult
 {
-	read_file(&mut try!(File::open(fname)))
+	read_file(&mut File::open(fname)?)
 }
