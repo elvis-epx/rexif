@@ -39,8 +39,8 @@ pub fn sensitivity_type(e: &TagValue) -> String {
 
 pub fn orientation(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::U16(ref v) => {
+	let s = match *e {
+		TagValue::U16(ref v) => {
 			let n = v[0];
 			match n {
 				1 => "Straight",
@@ -59,11 +59,11 @@ pub fn orientation(e: &TagValue) -> String
 
 pub fn rational_value(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::URational(ref v) => {
+	let s = match *e {
+		TagValue::URational(ref v) => {
 			format!("{}", v[0].value())
 		},
-		&TagValue::IRational(ref v) => {
+		TagValue::IRational(ref v) => {
 			format!("{}", v[0].value())
 		},
 		_ => panic!(INV),
@@ -74,8 +74,8 @@ pub fn rational_value(e: &TagValue) -> String
 
 pub fn rational_values(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::URational(ref v) => {
+	let s = match *e {
+		TagValue::URational(ref v) => {
 			let ve: Vec<f64> = v.iter().map(|&x| x.value()).collect();
 			numarray_to_string(&ve)
 		},
@@ -87,8 +87,8 @@ pub fn rational_values(e: &TagValue) -> String
 
 pub fn resolution_unit(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::U16(ref v) => {
+	let s = match *e {
+		TagValue::U16(ref v) => {
 			let n = v[0];
 			match n {
 				1 => "Unitless",
@@ -105,8 +105,8 @@ pub fn resolution_unit(e: &TagValue) -> String
 
 pub fn exposure_time(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::URational(ref v) => {
+	let s = match *e {
+		TagValue::URational(ref v) => {
 			let r = v[0];
 			if r.numerator == 1 && r.denominator > 1 {
 				// traditional 1/x exposure time
@@ -127,8 +127,8 @@ pub fn exposure_time(e: &TagValue) -> String
 
 pub fn f_number(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::URational(ref v) => {
+	let s = match *e {
+		TagValue::URational(ref v) => {
 			format!("f/{:.1}", v[0].value())
 		},
 		_ => panic!(INV),
@@ -139,8 +139,8 @@ pub fn f_number(e: &TagValue) -> String
 
 pub fn exposure_program(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::U16(ref v) => {
+	let s = match *e {
+		TagValue::U16(ref v) => {
 			let n = v[0];
 			match n {
 				1 => "Manual control",
@@ -162,8 +162,8 @@ pub fn exposure_program(e: &TagValue) -> String
 
 pub fn focal_length(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::URational(ref v) => {
+	let s = match *e {
+		TagValue::URational(ref v) => {
 			format!("{} mm", v[0].value())
 		},
 		_ => panic!(INV),
@@ -174,8 +174,8 @@ pub fn focal_length(e: &TagValue) -> String
 
 pub fn focal_length_35(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::U16(ref v) => {
+	let s = match *e {
+		TagValue::U16(ref v) => {
 			format!("{} mm", v[0])
 		},
 		_ => panic!(INV),
@@ -186,8 +186,8 @@ pub fn focal_length_35(e: &TagValue) -> String
 
 pub fn meters(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::URational(ref v) => {
+	let s = match *e {
+		TagValue::URational(ref v) => {
 			format!("{:.1} m", v[0].value())
 		},
 		_ => panic!(INV),
@@ -198,8 +198,8 @@ pub fn meters(e: &TagValue) -> String
 
 pub fn iso_speeds(e: &TagValue) -> String
 {
-	let s = match e {
-	&TagValue::U16(ref v) => {
+	let s = match *e {
+	TagValue::U16(ref v) => {
 		if v.len() == 1 {
 			format!("ISO {}", v[0])
 		} else if v.len() == 2 || v.len() == 3 {
@@ -216,8 +216,8 @@ pub fn iso_speeds(e: &TagValue) -> String
 
 pub fn dms(e: &TagValue) -> String
 {
-	let s = match e {
-	&TagValue::URational(ref v) => {
+	let s = match *e {
+	TagValue::URational(ref v) => {
 		let deg = v[0];
 		let min = v[1];
 		let sec = v[2];
@@ -238,8 +238,8 @@ pub fn dms(e: &TagValue) -> String
 
 pub fn gps_alt_ref(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::U8(ref v) => {
+	let s = match *e {
+		TagValue::U8(ref v) => {
 			let n = v[0];
 			match n {
 				0 => "Above sea level",
@@ -255,8 +255,8 @@ pub fn gps_alt_ref(e: &TagValue) -> String
 
 pub fn gpsdestdistanceref(e: &TagValue) -> String
 {
-	let s = match e {
-	&TagValue::Ascii(ref v) => {
+	let s = match *e {
+	TagValue::Ascii(ref v) => {
 		if v == "N" {
 			"kn"
 		} else if v == "K" {
@@ -275,8 +275,8 @@ pub fn gpsdestdistanceref(e: &TagValue) -> String
 
 pub fn gpsdestdistance(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::URational(ref v) => {
+	let s = match *e {
+		TagValue::URational(ref v) => {
 			format!("{:.3}", v[0].value())
 		},
 		_ => panic!(INV),
@@ -287,8 +287,8 @@ pub fn gpsdestdistance(e: &TagValue) -> String
 
 pub fn gpsspeedref(e: &TagValue) -> String
 {
-	let s = match e {
-	&TagValue::Ascii(ref v) => {
+	let s = match *e {
+	TagValue::Ascii(ref v) => {
 		if v == "N" {
 			"kn"
 		} else if v == "K" {
@@ -307,8 +307,8 @@ pub fn gpsspeedref(e: &TagValue) -> String
 
 pub fn gpsspeed(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::URational(ref v) => {
+	let s = match *e {
+		TagValue::URational(ref v) => {
 			format!("{:.1}", v[0].value())
 		},
 		_ => panic!(INV),
@@ -319,8 +319,8 @@ pub fn gpsspeed(e: &TagValue) -> String
 
 pub fn gpsbearingref(e: &TagValue) -> String
 {
-	let s = match e {
-	&TagValue::Ascii(ref v) => {
+	let s = match *e {
+	TagValue::Ascii(ref v) => {
 		if v == "T" {
 			"True bearing"
 		} else if v == "M" {
@@ -337,8 +337,8 @@ pub fn gpsbearingref(e: &TagValue) -> String
 
 pub fn gpsbearing(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::URational(ref v) => {
+	let s = match *e {
+		TagValue::URational(ref v) => {
 			format!("{:.2}°", v[0].value())
 		},
 		_ => panic!(INV),
@@ -349,8 +349,8 @@ pub fn gpsbearing(e: &TagValue) -> String
 
 pub fn gpstimestamp(e: &TagValue) -> String
 {
-	let s = match e {
-	&TagValue::URational(ref v) => {
+	let s = match *e {
+	TagValue::URational(ref v) => {
 		let hour = v[0];
 		let min = v[1];
 		let sec = v[2];
@@ -364,8 +364,8 @@ pub fn gpstimestamp(e: &TagValue) -> String
 
 pub fn gpsdiff(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::U16(ref v) => {
+	let s = match *e {
+		TagValue::U16(ref v) => {
 			let n = v[0];
 			match n {
 				0 => "Measurement without differential correction",
@@ -381,8 +381,8 @@ pub fn gpsdiff(e: &TagValue) -> String
 
 pub fn gpsstatus(e: &TagValue) -> String
 {
-	let s = match e {
-	&TagValue::Ascii(ref v) => {
+	let s = match *e {
+	TagValue::Ascii(ref v) => {
 		if v == "A" {
 			"Measurement in progress"
 		} else if v == "V" {
@@ -399,8 +399,8 @@ pub fn gpsstatus(e: &TagValue) -> String
 
 pub fn gpsmeasuremode(e: &TagValue) -> String
 {
-	let s = match e {
-	&TagValue::Ascii(ref v) => {
+	let s = match *e {
+	TagValue::Ascii(ref v) => {
 		if v == "2" {
 			"2-dimension"
 		} else if v == "3" {
@@ -420,8 +420,8 @@ pub fn gpsmeasuremode(e: &TagValue) -> String
 /// strings, should they be accepted by EXIF standard in the future.
 pub fn undefined_as_ascii(e: &TagValue) -> String
 {
-	let s = match e {
-	&TagValue::Undefined(ref v, _) => {
+	let s = match *e {
+	TagValue::Undefined(ref v, _) => {
 		String::from_utf8_lossy(&v[..])
 	},
 	_ => panic!(INV),
@@ -434,8 +434,8 @@ pub fn undefined_as_ascii(e: &TagValue) -> String
 /// that are opaque and small-sized
 pub fn undefined_as_u8(e: &TagValue) -> String
 {
-	let s = match e {
-	&TagValue::Undefined(ref v, _) => {
+	let s = match *e {
+	TagValue::Undefined(ref v, _) => {
 		numarray_to_string(v)
 	},
 	_ => panic!(INV),
@@ -456,8 +456,8 @@ pub fn undefined_as_encoded_string(e: &TagValue) -> String
 	// "UNICODE\0"
 	static UNICODE: [u8; 8] = [0x55, 0x4e, 0x49, 0x43, 0x4f, 0x44, 0x45, 0x00];
 
-	match e {
-	&TagValue::Undefined(ref v, le) => {
+	match *e {
+	TagValue::Undefined(ref v, le) => {
 		if v.len() < 8 {
 			format!("String w/ truncated preamble {}", numarray_to_string(v))
 		} else if v[0..8] == ASC[..] {
@@ -484,8 +484,8 @@ pub fn undefined_as_encoded_string(e: &TagValue) -> String
 /// Prints an opaque and long Undefined tag simply as as "blob", noting its length
 pub fn undefined_as_blob(e: &TagValue) -> String
 {
-	let s = match e {
-	&TagValue::Undefined(ref v, _) => {
+	let s = match *e {
+	TagValue::Undefined(ref v, _) => {
 		format!("Blob of {} bytes", v.len())
 	},
 	_ => panic!(INV),
@@ -496,8 +496,8 @@ pub fn undefined_as_blob(e: &TagValue) -> String
 
 pub fn apex_tv(e: &TagValue) -> String
 {
-	match e {
-		&TagValue::IRational(ref v) => {
+	match *e {
+		TagValue::IRational(ref v) => {
 			format!("{:.1} Tv APEX", v[0].value())
 		},
 		_ => panic!(INV),
@@ -506,8 +506,8 @@ pub fn apex_tv(e: &TagValue) -> String
 
 pub fn apex_av(e: &TagValue) -> String
 {
-	match e {
-		&TagValue::URational(ref v) => {
+	match *e {
+		TagValue::URational(ref v) => {
 			format!("{:.1} Av APEX", v[0].value())
 		},
 		_ => panic!(INV),
@@ -516,8 +516,8 @@ pub fn apex_av(e: &TagValue) -> String
 
 pub fn apex_brightness(e: &TagValue) -> String
 {
-	match e {
-		&TagValue::IRational(ref v) => {
+	match *e {
+		TagValue::IRational(ref v) => {
 			// numerator 0xffffffff = unknown
 			if v[0].numerator == -1 {
 				"Unknown".to_string()
@@ -531,8 +531,8 @@ pub fn apex_brightness(e: &TagValue) -> String
 
 pub fn apex_ev(e: &TagValue) -> String
 {
-	match e {
-		&TagValue::IRational(ref v) => {
+	match *e {
+		TagValue::IRational(ref v) => {
 			format!("{:.2} EV APEX", v[0].value())
 		},
 		_ => panic!(INV),
@@ -541,8 +541,8 @@ pub fn apex_ev(e: &TagValue) -> String
 
 pub fn file_source(e: &TagValue) -> String
 {
-	let s = match e {
-	&TagValue::Undefined(ref v, _) => {
+	let s = match *e {
+	TagValue::Undefined(ref v, _) => {
 		if v.len() > 0 && v[0] == 3 {
 			"DSC"
 		} else {
@@ -557,8 +557,8 @@ pub fn file_source(e: &TagValue) -> String
 
 pub fn flash_energy(e: &TagValue) -> String
 {
-	match e {
-		&TagValue::URational(ref v) => {
+	match *e {
+		TagValue::URational(ref v) => {
 			format!("{} BCPS", v[0].value())
 		},
 		_ => panic!(INV),
@@ -567,8 +567,8 @@ pub fn flash_energy(e: &TagValue) -> String
 
 pub fn metering_mode(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::U16(ref v) => {
+	let s = match *e {
+		TagValue::U16(ref v) => {
 			let n = v[0];
 			match n {
 				0 => "Unknown",
@@ -590,8 +590,8 @@ pub fn metering_mode(e: &TagValue) -> String
 
 pub fn light_source(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::U16(ref v) => {
+	let s = match *e {
+		TagValue::U16(ref v) => {
 			let n = v[0];
 			match n {
 				0 => "Unknown",
@@ -626,8 +626,8 @@ pub fn light_source(e: &TagValue) -> String
 
 pub fn color_space(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::U16(ref v) => {
+	let s = match *e {
+		TagValue::U16(ref v) => {
 			let n = v[0];
 			match n {
 				1 => "sRGB",
@@ -643,8 +643,8 @@ pub fn color_space(e: &TagValue) -> String
 
 pub fn flash(e: &TagValue) -> String
 {
-	match e {
-		&TagValue::U16(ref v) => {
+	match *e {
+		TagValue::U16(ref v) => {
 			let n = v[0];
 			let mut b0 = "Did not fire. ";
 			let mut b12 = "";
@@ -690,8 +690,8 @@ pub fn flash(e: &TagValue) -> String
 
 pub fn subject_area(e: &TagValue) -> String
 {
-	match e {
-		&TagValue::U16(ref v) => {
+	match *e {
+		TagValue::U16(ref v) => {
 			match v.len() {
 			2 => format!("at pixel {},{}", v[0], v[1]),
 			3 => format!("at center {},{} radius {}", v[0], v[1], v[2]),
@@ -705,8 +705,8 @@ pub fn subject_area(e: &TagValue) -> String
 
 pub fn subject_location(e: &TagValue) -> String
 {
-	match e {
-		&TagValue::U16(ref v) => {
+	match *e {
+		TagValue::U16(ref v) => {
 			format!("at pixel {},{}", v[0], v[1])
 		},
 		_ => panic!(INV),
@@ -715,8 +715,8 @@ pub fn subject_location(e: &TagValue) -> String
 
 pub fn sharpness(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::U16(ref v) => {
+	let s = match *e {
+		TagValue::U16(ref v) => {
 			let n = v[0];
 			match n {
 				0 => "Normal",
@@ -733,8 +733,8 @@ pub fn sharpness(e: &TagValue) -> String
 
 pub fn saturation(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::U16(ref v) => {
+	let s = match *e {
+		TagValue::U16(ref v) => {
 			let n = v[0];
 			match n {
 				0 => "Normal",
@@ -751,8 +751,8 @@ pub fn saturation(e: &TagValue) -> String
 
 pub fn contrast(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::U16(ref v) => {
+	let s = match *e {
+		TagValue::U16(ref v) => {
 			let n = v[0];
 			match n {
 				0 => "Normal",
@@ -769,8 +769,8 @@ pub fn contrast(e: &TagValue) -> String
 
 pub fn gain_control(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::U16(ref v) => {
+	let s = match *e {
+		TagValue::U16(ref v) => {
 			let n = v[0];
 			match n {
 				0 => "None",
@@ -789,8 +789,8 @@ pub fn gain_control(e: &TagValue) -> String
 
 pub fn exposure_mode(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::U16(ref v) => {
+	let s = match *e {
+		TagValue::U16(ref v) => {
 			let n = v[0];
 			match n {
 				0 => "Auto exposure",
@@ -807,8 +807,8 @@ pub fn exposure_mode(e: &TagValue) -> String
 
 pub fn scene_capture_type(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::U16(ref v) => {
+	let s = match *e {
+		TagValue::U16(ref v) => {
 			let n = v[0];
 			match n {
 				0 => "Standard",
@@ -826,8 +826,8 @@ pub fn scene_capture_type(e: &TagValue) -> String
 
 pub fn scene_type(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::Undefined(ref v, _) => {
+	let s = match *e {
+		TagValue::Undefined(ref v, _) => {
 			let n = v[0];
 			match n {
 				1 => "Directly photographed image",
@@ -842,8 +842,8 @@ pub fn scene_type(e: &TagValue) -> String
 
 pub fn white_balance_mode(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::U16(ref v) => {
+	let s = match *e {
+		TagValue::U16(ref v) => {
 			let n = v[0];
 			match n {
 				0 => "Auto",
@@ -859,8 +859,8 @@ pub fn white_balance_mode(e: &TagValue) -> String
 
 pub fn sensing_method(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::U16(ref v) => {
+	let s = match *e {
+		TagValue::U16(ref v) => {
 			let n = v[0];
 			match n {
 				1 => "Not defined",
@@ -881,8 +881,8 @@ pub fn sensing_method(e: &TagValue) -> String
 
 pub fn custom_rendered(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::U16(ref v) => {
+	let s = match *e {
+		TagValue::U16(ref v) => {
 			let n = v[0];
 			match n {
 				0 => "Normal",
@@ -898,8 +898,8 @@ pub fn custom_rendered(e: &TagValue) -> String
 
 pub fn subject_distance_range(e: &TagValue) -> String
 {
-	let s = match e {
-		&TagValue::U16(ref v) => {
+	let s = match *e {
+		TagValue::U16(ref v) => {
 			let n = v[0];
 			match n {
 				0 => "Unknown",
@@ -917,8 +917,8 @@ pub fn subject_distance_range(e: &TagValue) -> String
 
 pub fn lens_spec(e: &TagValue) -> String
 {
-	match e {
-	&TagValue::URational(ref v) => {
+	match *e {
+	TagValue::URational(ref v) => {
 		let f0 = v[0].value();
 		let f1 = v[1].value();
 		let a0 = v[2].value();
