@@ -1,6 +1,5 @@
 use std::env;
 use std::process;
-use std::io::Write;
 extern crate rexif;
 
 use rexif::ExifTag;
@@ -11,7 +10,7 @@ fn main()
 {
 	let args: Vec<_> = env::args().collect();
 	if args.len() < 2 {
-		writeln!(std::io::stderr(), "Usage: {} image1 image2 ...", args[0]).unwrap();
+		eprintln!("Usage: {} image1 image2 ...", args[0]);
 		process::exit(2);
 	}
 	for arg in &args[1..] {
@@ -33,7 +32,7 @@ fn main()
 				}
 			},
 			Err(e) => {
-				writeln!(std::io::stderr(), "Error in {}: {}", &arg, e).unwrap();
+				eprintln!("Error in {}: {}", &arg, e);
 			}
 	 	}
 	}
