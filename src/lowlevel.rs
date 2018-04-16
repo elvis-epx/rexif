@@ -4,7 +4,7 @@ use super::rational::*;
 /// Convert u8 to i8
 pub fn read_i8(raw: u8) -> i8
 {
-	let mut u = raw as i16;
+	let mut u = i16::from(raw);
 	if u >= 0x80 {
 		u = u - 0x100;
 	}
@@ -15,16 +15,16 @@ pub fn read_i8(raw: u8) -> i8
 pub fn read_u16(le: bool, raw: &[u8]) -> u16
 {
 	if le {
-		(raw[1] as u16) * 256 + raw[0] as u16
+		u16::from(raw[1]) * 256 + u16::from(raw[0])
 	} else {
-		(raw[0] as u16) * 256 + raw[1] as u16
+		u16::from(raw[0]) * 256 + u16::from(raw[1])
 	}
 }
 
 /// Read value from a stream of bytes
 pub fn read_i16(le: bool, raw: &[u8]) -> i16
 {
-	let mut u = read_u16(le, raw) as i32;
+	let mut u = i32::from(read_u16(le, raw));
 	if u >= 0x8000 {
 		u = u - 0x10000;
 	}

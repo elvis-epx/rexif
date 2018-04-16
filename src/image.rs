@@ -46,7 +46,7 @@ pub fn find_embedded_tiff_in_jpeg(contents: &[u8])
 			return Err(ExifError::JpegWithoutExif("JPEG truncated in marker header".to_string()))
 		}
 
-		let marker: u16 = (contents[offset] as u16) * 256 + (contents[offset + 1] as u16);
+		let marker: u16 = u16::from(contents[offset]) * 256 + u16::from(contents[offset + 1]);
 
 		if marker < 0xff00 {
 			return Err(ExifError::JpegWithoutExif(format!("Invalid marker {:x}", marker)))
