@@ -345,7 +345,7 @@ pub struct ExifEntry {
 	pub unit: String,
 	/// Human-readable and "pretty" version of `value`.
 	/// Enumerations and tuples are interpreted and combined. If `value`
-	/// has a unit, it is also added. 
+	/// has a unit, it is also added.
 	/// If tag is `UnknownToMe`,
 	/// this member contains the same string as `value_readable`.
 	pub value_more_readable: String,
@@ -367,11 +367,11 @@ pub enum TagValue {
 	I8(Vec<i8>),
 	/// Array of bytes with opaque internal structure. Used by manufacturer-specific
 	/// tags, SIG-specific tags, tags that contain Unicode (UCS-2) or Japanese (JIS)
-	/// strings (i.e. strings that are not 7-bit-clean), tags that contain 
+	/// strings (i.e. strings that are not 7-bit-clean), tags that contain
 	/// dissimilar or variant types, etc.
 	///
 	/// This item has a "little endian"
-	/// boolean parameter that reports the whole TIFF's endianness. 
+	/// boolean parameter that reports the whole TIFF's endianness.
 	/// Any sort of internal structure that is sensitive to endianess
 	/// should be interpreted accordignly to this parameter (true=LE, false=BE).
 	Undefined(Vec<u8>, bool),
@@ -389,7 +389,7 @@ pub enum TagValue {
 	/// is most likely a corrupted tag.
 	///
 	/// This variant has a "little endian"
-	/// boolean parameter that reports the whole TIFF's endianness. 
+	/// boolean parameter that reports the whole TIFF's endianness.
 	/// Any sort of internal structure that is sensitive to endianess
 	/// should be interpreted accordignly to this parameter (true=LE, false=BE).
 	Unknown(Vec<u8>, bool),
@@ -397,6 +397,40 @@ pub enum TagValue {
 	/// short for the count and type size). Variant contains raw data, LE/BE,
 	/// format (as u16) and count.
 	Invalid(Vec<u8>, bool, u16, u32)
+}
+
+impl TagValue {
+	/// Get value as an integer
+	/// Out of bounds indexes and invalid types return `None`
+	pub fn to_i64(&self, index: usize) -> Option<i64> {
+		match *self {
+			TagValue::U8(ref v) => v.get(index).cloned().map(From::from),
+			TagValue::U16(ref v) => v.get(index).cloned().map(From::from),
+			TagValue::U32(ref v) => v.get(index).cloned().map(From::from),
+			TagValue::I8(ref v) => v.get(index).cloned().map(From::from),
+			TagValue::I16(ref v) => v.get(index).cloned().map(From::from),
+			TagValue::I32(ref v) => v.get(index).cloned().map(From::from),
+			_ => None,
+		}
+	}
+
+	/// Get value as a floating-point number
+	/// Out of bounds indexes and invalid types return `None`
+	pub fn to_f64(&self, index: usize) -> Option<f64> {
+		match *self {
+			TagValue::U8(ref v) => v.get(index).cloned().map(From::from),
+			TagValue::U16(ref v) => v.get(index).cloned().map(From::from),
+			TagValue::U32(ref v) => v.get(index).cloned().map(From::from),
+			TagValue::I8(ref v) => v.get(index).cloned().map(From::from),
+			TagValue::I16(ref v) => v.get(index).cloned().map(From::from),
+			TagValue::I32(ref v) => v.get(index).cloned().map(From::from),
+			TagValue::F32(ref v) => v.get(index).cloned().map(From::from),
+			TagValue::F64(ref v) => v.get(index).cloned().map(From::from),
+			TagValue::IRational(ref v) => v.get(index).cloned().map(|v| v.value()),
+			TagValue::URational(ref v) => v.get(index).cloned().map(|v| v.value()),
+			_ => None,
+		}
+	}
 }
 
 /// Type returned by image file parsing
