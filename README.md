@@ -1,5 +1,11 @@
 # rexif
 
+# NOTE: THIS VERSION IS OBSOLETE
+
+The current maintainer repository of this library is https://github.com/kornelski/rexif.
+
+# Old documentation
+
 RExif is a native Rust crate, written to extract EXIF data from JPEG and TIFF images.
 
 It is in very early stages of development. Documentation and examples are still scarce,
